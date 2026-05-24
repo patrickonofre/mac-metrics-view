@@ -4,10 +4,17 @@ import XCTest
 @MainActor
 final class LaunchAtLoginSettingsTests: XCTestCase {
     func testLaunchAtLoginStatusFormatsInPortuguese() {
-        XCTAssertEqual(LaunchAtLoginStatus.enabled.localizedName, "Ativado")
-        XCTAssertEqual(LaunchAtLoginStatus.disabled.localizedName, "Desativado")
-        XCTAssertEqual(LaunchAtLoginStatus.unavailable.localizedName, "Indisponível")
-        XCTAssertEqual(LaunchAtLoginStatus.error.localizedName, "Erro")
+        XCTAssertEqual(LaunchAtLoginStatus.enabled.localizedName(in: .portuguese), "Ativado")
+        XCTAssertEqual(LaunchAtLoginStatus.disabled.localizedName(in: .portuguese), "Desativado")
+        XCTAssertEqual(LaunchAtLoginStatus.unavailable.localizedName(in: .portuguese), "Indisponível")
+        XCTAssertEqual(LaunchAtLoginStatus.error.localizedName(in: .portuguese), "Erro")
+    }
+
+    func testLaunchAtLoginStatusFormatsInEnglish() {
+        XCTAssertEqual(LaunchAtLoginStatus.enabled.localizedName(in: .english), "Enabled")
+        XCTAssertEqual(LaunchAtLoginStatus.disabled.localizedName(in: .english), "Disabled")
+        XCTAssertEqual(LaunchAtLoginStatus.unavailable.localizedName(in: .english), "Unavailable")
+        XCTAssertEqual(LaunchAtLoginStatus.error.localizedName(in: .english), "Error")
     }
 
     func testSettingsInitializeWithManagerStatus() {

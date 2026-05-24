@@ -93,7 +93,7 @@ final class StatusItemController {
 
         if attributedTitle.length == 0 {
             attributedTitle.append(NSAttributedString(
-                string: "Metrics",
+                string: Strings.metricsPlaceholder(),
                 attributes: baseAttributes(color: .labelColor)
             ))
         }
@@ -260,9 +260,9 @@ private enum MenuBarMetric {
         case .ram:
             return "RAM"
         case .network:
-            return "Network"
+            return Strings.network()
         case .temperature:
-            return "Temperatura"
+            return Strings.temperature()
         }
     }
 }

@@ -14,7 +14,7 @@ enum TemperatureFormatter {
         }
 
         guard sample.state != .unavailable else { return "--" }
-        return sample.state.localizedName
+        return sample.state.localizedName()
     }
 
     static func celsiusString(_ value: Double?) -> String {

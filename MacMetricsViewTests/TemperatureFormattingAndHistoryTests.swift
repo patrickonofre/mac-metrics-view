@@ -3,11 +3,19 @@ import XCTest
 
 final class TemperatureFormattingAndHistoryTests: XCTestCase {
     func testTemperatureStateFormatsInPortuguese() {
-        XCTAssertEqual(TemperatureState.normal.localizedName, "Normal")
-        XCTAssertEqual(TemperatureState.warm.localizedName, "Aquecido")
-        XCTAssertEqual(TemperatureState.hot.localizedName, "Quente")
-        XCTAssertEqual(TemperatureState.critical.localizedName, "Crítico")
-        XCTAssertEqual(TemperatureState.unavailable.localizedName, "Indisponível")
+        XCTAssertEqual(TemperatureState.normal.localizedName(in: .portuguese), "Normal")
+        XCTAssertEqual(TemperatureState.warm.localizedName(in: .portuguese), "Aquecido")
+        XCTAssertEqual(TemperatureState.hot.localizedName(in: .portuguese), "Quente")
+        XCTAssertEqual(TemperatureState.critical.localizedName(in: .portuguese), "Crítico")
+        XCTAssertEqual(TemperatureState.unavailable.localizedName(in: .portuguese), "Indisponível")
+    }
+
+    func testTemperatureStateFormatsInEnglish() {
+        XCTAssertEqual(TemperatureState.normal.localizedName(in: .english), "Normal")
+        XCTAssertEqual(TemperatureState.warm.localizedName(in: .english), "Warm")
+        XCTAssertEqual(TemperatureState.hot.localizedName(in: .english), "Hot")
+        XCTAssertEqual(TemperatureState.critical.localizedName(in: .english), "Critical")
+        XCTAssertEqual(TemperatureState.unavailable.localizedName(in: .english), "Unavailable")
     }
 
     func testTemperatureFormatsCelsiusAsWholeDegrees() {

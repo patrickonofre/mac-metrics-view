@@ -62,7 +62,7 @@ struct PopoverView: View {
 
                     if state.visibility.showNetwork {
                         MetricSection(
-                            title: "Network",
+                            title: Strings.network(),
                             value: networkSummary,
                             values: normalizedNetworkTrend,
                             severity: .normal,
@@ -72,7 +72,7 @@ struct PopoverView: View {
 
                     if state.visibility.showTemperature {
                         MetricSection(
-                            title: "Temperatura",
+                            title: Strings.temperature(),
                             value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
                             values: state.temperatureHistory.samples.compactMap(\.celsius),
                             severity: state.temperatureMenuBarTextStyle,
@@ -97,7 +97,7 @@ struct PopoverView: View {
 
             Divider()
 
-            Button("Quit Mac Metrics View", action: quit)
+            Button(Strings.quit(), action: quit)
                 .font(.caption)
                 .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
@@ -114,12 +114,12 @@ struct PopoverView: View {
                 Text("Mac Metrics View")
                     .font(.callout.weight(.semibold))
 
-                Text("version: beta")
+                Text(Strings.versionBeta())
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
             }
 
-            Text("Desenvolvido por Patrick Onofre")
+            Text(Strings.developedBy())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
@@ -128,27 +128,27 @@ struct PopoverView: View {
 
     private var cpuDetails: [MetricDetailRow] {
         [
-            MetricDetailRow(label: "User", value: CPUFormatter.percentageString(state.latestSample?.userUsagePercent)),
-            MetricDetailRow(label: "System", value: CPUFormatter.percentageString(state.latestSample?.systemUsagePercent)),
-            MetricDetailRow(label: "Idle", value: CPUFormatter.percentageString(state.latestSample?.idlePercent))
+            MetricDetailRow(label: Strings.cpuUser(), value: CPUFormatter.percentageString(state.latestSample?.userUsagePercent)),
+            MetricDetailRow(label: Strings.cpuSystem(), value: CPUFormatter.percentageString(state.latestSample?.systemUsagePercent)),
+            MetricDetailRow(label: Strings.cpuIdle(), value: CPUFormatter.percentageString(state.latestSample?.idlePercent))
         ]
     }
 
     private var ramDetails: [MetricDetailRow] {
         [
-            MetricDetailRow(label: "Total", value: RAMFormatter.usedGBString(state.latestRAMSample?.totalGB)),
-            MetricDetailRow(label: "Used", value: CPUFormatter.percentageString(state.latestRAMSample?.usedPercent))
+            MetricDetailRow(label: Strings.ramTotal(), value: RAMFormatter.usedGBString(state.latestRAMSample?.totalGB)),
+            MetricDetailRow(label: Strings.ramUsed(), value: CPUFormatter.percentageString(state.latestRAMSample?.usedPercent))
         ]
     }
 
     private var networkDetails: [MetricDetailRow] {
         [
             MetricDetailRow(
-                label: "Download",
+                label: Strings.download(),
                 value: NetworkFormatter.byteRateString(state.latestNetworkSample?.downloadBytesPerSecond)
             ),
             MetricDetailRow(
-                label: "Upload",
+                label: Strings.upload(),
                 value: NetworkFormatter.byteRateString(state.latestNetworkSample?.uploadBytesPerSecond)
             )
         ]
@@ -156,7 +156,7 @@ struct PopoverView: View {
 
     private var lastUpdatedFooter: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text("Updated")
+            Text(Strings.updated())
                 .foregroundStyle(.secondary)
             Spacer()
             Text(lastUpdatedText)
@@ -199,7 +199,7 @@ struct PopoverView: View {
 
     private var temperatureDetails: [MetricDetailRow] {
         [
-            MetricDetailRow(label: "Estado", value: state.latestTemperatureSample?.state.localizedName ?? "Indisponível")
+            MetricDetailRow(label: Strings.temperatureStateRow(), value: state.latestTemperatureSample?.state.localizedName() ?? Strings.unavailable())
         ]
     }
 }
@@ -210,13 +210,13 @@ private struct LaunchAtLoginControl: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(alignment: .center, spacing: 8) {
-                Text("Abrir ao inicializar")
+                Text(Strings.openAtLogin())
                     .lineLimit(1)
                     .foregroundStyle(settings.isAvailable ? .primary : .secondary)
 
                 Spacer()
 
-                Toggle("Abrir ao inicializar", isOn: Binding(
+                Toggle(Strings.openAtLogin(), isOn: Binding(
                     get: { settings.isEnabled },
                     set: { settings.setEnabled($0) }
                 ))
@@ -226,11 +226,11 @@ private struct LaunchAtLoginControl: View {
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(settings.status.localizedName)
+                Text(settings.status.localizedName())
                     .foregroundStyle(.secondary)
 
                 if settings.showsError {
-                    Text("Nao foi possivel alterar agora.")
+                    Text(Strings.loginChangeFailed())
                         .foregroundStyle(.red)
                 }
             }
@@ -257,8 +257,8 @@ private struct MetricVisibilityControls: View {
                 }
 
                 GridRow {
-                    SettingSwitch(title: "Network", isOn: $networkVisible)
-                    SettingSwitch(title: "Temperatura", isOn: $temperatureVisible)
+                    SettingSwitch(title: Strings.network(), isOn: $networkVisible)
+                    SettingSwitch(title: Strings.temperature(), isOn: $temperatureVisible)
                 }
             }
 
@@ -276,14 +276,14 @@ private struct MetricIdentifierPicker: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("Display")
+            Text(Strings.displayLabel())
                 .lineLimit(1)
                 .foregroundStyle(.primary)
                 .frame(width: 88, alignment: .leading)
 
-            Picker("Display", selection: $identifierStyle) {
-                Text("Icon").tag(MetricDisplaySettings.IdentifierStyle.icons)
-                Text("Label").tag(MetricDisplaySettings.IdentifierStyle.labels)
+            Picker(Strings.displayLabel(), selection: $identifierStyle) {
+                Text(Strings.displayIcon()).tag(MetricDisplaySettings.IdentifierStyle.icons)
+                Text(Strings.displayText()).tag(MetricDisplaySettings.IdentifierStyle.labels)
             }
             .labelsHidden()
             .pickerStyle(.segmented)
@@ -358,9 +358,9 @@ private struct MetricSection: View {
         case .normal:
             return nil
         case .elevatedCPU:
-            return "Aquecido"
+            return Strings.severityElevated()
         case .highCPU:
-            return "Alto"
+            return Strings.severityHigh()
         }
     }
 
@@ -409,9 +409,9 @@ private struct MetricDetailRow: Identifiable {
 private struct EmptyMetricsState: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("No Metrics Visible")
+            Text(Strings.noMetricsTitle())
                 .font(.callout.weight(.semibold))
-            Text("Turn on CPU, RAM, Network, or Temperatura to show live values.")
+            Text(Strings.noMetricsHint())
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }

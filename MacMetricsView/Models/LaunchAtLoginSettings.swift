@@ -7,17 +7,19 @@ enum LaunchAtLoginStatus: Equatable {
     case unavailable
     case error
 
-    var localizedName: String {
+    func localizedName(in language: AppLanguage = .current) -> String {
+        let text: LocalizedText
         switch self {
         case .enabled:
-            return "Ativado"
+            text = Strings.loginEnabled
         case .disabled:
-            return "Desativado"
+            text = Strings.loginDisabled
         case .unavailable:
-            return "Indisponível"
+            text = Strings.unavailable
         case .error:
-            return "Erro"
+            text = Strings.loginError
         }
+        return text(language)
     }
 }
 

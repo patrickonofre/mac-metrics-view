@@ -7,19 +7,21 @@ enum TemperatureState: Equatable {
     case critical
     case unavailable
 
-    var localizedName: String {
+    func localizedName(in language: AppLanguage = .current) -> String {
+        let text: LocalizedText
         switch self {
         case .normal:
-            return "Normal"
+            text = Strings.tempNormal
         case .warm:
-            return "Aquecido"
+            text = Strings.tempWarm
         case .hot:
-            return "Quente"
+            text = Strings.tempHot
         case .critical:
-            return "Crítico"
+            text = Strings.tempCritical
         case .unavailable:
-            return "Indisponível"
+            text = Strings.unavailable
         }
+        return text(language)
     }
 
     var menuBarTextStyle: CPUMenuBarTextStyle {

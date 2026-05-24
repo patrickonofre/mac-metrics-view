@@ -27,7 +27,7 @@ final class CPUState: ObservableObject {
 
     var menuBarTitle: String {
         let segments = visibleMenuBarTitles
-        guard !segments.isEmpty else { return "Metrics" }
+        guard !segments.isEmpty else { return Strings.metricsPlaceholder() }
         return segments.joined(separator: "  ")
     }
 
@@ -86,10 +86,10 @@ final class CPUState: ObservableObject {
         }
 
         if visibility.showTemperature {
-            segments.append("Temperatura \(TemperatureFormatter.displayString(for: latestTemperatureSample))")
+            segments.append("\(Strings.temperature()) \(TemperatureFormatter.displayString(for: latestTemperatureSample))")
         }
 
-        guard !segments.isEmpty else { return "Metrics" }
+        guard !segments.isEmpty else { return Strings.metricsPlaceholder() }
         return segments.joined(separator: ", ")
     }
 

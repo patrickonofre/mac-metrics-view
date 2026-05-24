@@ -92,7 +92,7 @@ final class MetricVisibilitySettingsTests: XCTestCase {
         state.setRAMVisible(false)
         state.setNetworkVisible(false)
 
-        XCTAssertEqual(state.menuBarTitle, "Metrics")
+        XCTAssertEqual(state.menuBarTitle, Strings.metricsPlaceholder())
     }
 
     @MainActor
@@ -180,7 +180,7 @@ final class MetricVisibilitySettingsTests: XCTestCase {
         state.setTemperatureVisible(false)
         state.update(with: try XCTUnwrap(TemperatureSample(celsius: 69, state: .normal)))
 
-        XCTAssertEqual(state.menuBarTitle, "Metrics")
+        XCTAssertEqual(state.menuBarTitle, Strings.metricsPlaceholder())
         XCTAssertEqual(state.temperatureHistory.samples.map(\.celsius), [68])
     }
 
