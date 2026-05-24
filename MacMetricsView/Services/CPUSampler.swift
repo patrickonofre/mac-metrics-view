@@ -5,13 +5,14 @@ protocol CPUSamplerDelegate: AnyObject {
     func cpuSampler(_ sampler: CPUSampler, didProduce sample: CPUSample)
 }
 
+@MainActor
 final class CPUSampler {
     private let reader: CPUReading
     private let interval: TimeInterval
     private var previousSnapshot: CPUSnapshot?
     private var timer: Timer?
 
-    @MainActor weak var delegate: CPUSamplerDelegate?
+    weak var delegate: CPUSamplerDelegate?
 
     init(reader: CPUReading = MachCPUReader(), interval: TimeInterval = 1) {
         self.reader = reader
@@ -20,14 +21,7 @@ final class CPUSampler {
 
     func start() {
         previousSnapshot = reader.readSnapshot()
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.timer?.invalidate()
-            self.timer = Timer.scheduledTimer(withTimeInterval: self.interval, repeats: true) { [weak self] _ in
-                self?.collect()
-            }
-        }
+        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
     }
 
     func stop() {
@@ -46,9 +40,6 @@ final class CPUSampler {
             return
         }
 
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.delegate?.cpuSampler(self, didProduce: sample)
-        }
+        delegate?.cpuSampler(self, didProduce: sample)
     }
 }

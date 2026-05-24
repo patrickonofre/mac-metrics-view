@@ -15,10 +15,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
 
         state.onVisibilityChange = { [weak self] metric, isVisible in
             self?.setSampler(for: metric, isVisible: isVisible)
-            self?.statusItemController?.updateTitle()
+            self?.statusItemController?.setNeedsTitleUpdate()
         }
         state.onDisplayChange = { [weak self] in
-            self?.statusItemController?.updateTitle()
+            self?.statusItemController?.setNeedsTitleUpdate()
         }
         statusItemController = StatusItemController(
             state: state,
@@ -40,22 +40,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
 
     func cpuSampler(_ sampler: CPUSampler, didProduce sample: CPUSample) {
         state.update(with: sample)
-        statusItemController?.updateTitle()
+        statusItemController?.setNeedsTitleUpdate()
     }
 
     func ramSampler(_ sampler: RAMSampler, didProduce sample: RAMSample) {
         state.update(with: sample)
-        statusItemController?.updateTitle()
+        statusItemController?.setNeedsTitleUpdate()
     }
 
     func networkSampler(_ sampler: NetworkSampler, didProduce sample: NetworkSample) {
         state.update(with: sample)
-        statusItemController?.updateTitle()
+        statusItemController?.setNeedsTitleUpdate()
     }
 
     func temperatureSampler(_ sampler: TemperatureSampler, didProduce sample: TemperatureSample) {
         state.update(with: sample)
-        statusItemController?.updateTitle()
+        statusItemController?.setNeedsTitleUpdate()
     }
 
     private func startVisibleSamplers() {

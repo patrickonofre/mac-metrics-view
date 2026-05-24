@@ -15,12 +15,13 @@ protocol TemperatureSamplerDelegate: AnyObject {
     func temperatureSampler(_ sampler: TemperatureSampler, didProduce sample: TemperatureSample)
 }
 
+@MainActor
 final class TemperatureSampler {
     private let reader: TemperatureReading
     private let interval: TimeInterval
     private var timer: Timer?
 
-    @MainActor weak var delegate: TemperatureSamplerDelegate?
+    weak var delegate: TemperatureSamplerDelegate?
 
     init(reader: TemperatureReading = ProcessInfoTemperatureReader(), interval: TimeInterval = 5) {
         self.reader = reader
@@ -29,14 +30,7 @@ final class TemperatureSampler {
 
     func start() {
         collect()
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.timer?.invalidate()
-            self.timer = Timer.scheduledTimer(withTimeInterval: self.interval, repeats: true) { [weak self] _ in
-                self?.collect()
-            }
-        }
+        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
     }
 
     func stop() {
@@ -46,11 +40,7 @@ final class TemperatureSampler {
 
     private func collect() {
         guard let sample = reader.readSample() else { return }
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.delegate?.temperatureSampler(self, didProduce: sample)
-        }
+        delegate?.temperatureSampler(self, didProduce: sample)
     }
 }
 

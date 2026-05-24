@@ -10,6 +10,7 @@ final class StatusItemController {
     // Tinted SF Symbols only change with metric, severity style, and appearance.
     // Caching them keeps the per-tick title rebuild from re-rendering images.
     private var iconCache: [String: NSImage] = [:]
+    private var titleUpdateScheduled = false
 
     init(
         state: CPUState,
@@ -23,6 +24,21 @@ final class StatusItemController {
         configureStatusItem()
         configurePopover()
         updateTitle()
+    }
+
+    /// Coalesces title rebuilds: several samplers can deliver in the same run-loop
+    /// iteration, and rebuilding the whole title once per delivery is wasted work for
+    /// the same visible frame. This collapses them into a single update.
+    func setNeedsTitleUpdate() {
+        guard !titleUpdateScheduled else { return }
+        titleUpdateScheduled = true
+        RunLoop.main.perform(inModes: [.common]) { [weak self] in
+            MainActor.assumeIsolated {
+                guard let self else { return }
+                self.titleUpdateScheduled = false
+                self.updateTitle()
+            }
+        }
     }
 
     func updateTitle() {

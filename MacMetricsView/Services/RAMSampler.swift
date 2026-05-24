@@ -68,12 +68,13 @@ protocol RAMSamplerDelegate: AnyObject {
     func ramSampler(_ sampler: RAMSampler, didProduce sample: RAMSample)
 }
 
+@MainActor
 final class RAMSampler {
     private let reader: RAMReading
     private let interval: TimeInterval
     private var timer: Timer?
 
-    @MainActor weak var delegate: RAMSamplerDelegate?
+    weak var delegate: RAMSamplerDelegate?
 
     init(reader: RAMReading = MachRAMReader(), interval: TimeInterval = 1) {
         self.reader = reader
@@ -82,14 +83,7 @@ final class RAMSampler {
 
     func start() {
         collect()
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.timer?.invalidate()
-            self.timer = Timer.scheduledTimer(withTimeInterval: self.interval, repeats: true) { [weak self] _ in
-                self?.collect()
-            }
-        }
+        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
     }
 
     func stop() {
@@ -99,10 +93,6 @@ final class RAMSampler {
 
     private func collect() {
         guard let sample = reader.readSample() else { return }
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.delegate?.ramSampler(self, didProduce: sample)
-        }
+        delegate?.ramSampler(self, didProduce: sample)
     }
 }

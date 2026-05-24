@@ -9,13 +9,14 @@ protocol NetworkSamplerDelegate: AnyObject {
     func networkSampler(_ sampler: NetworkSampler, didProduce sample: NetworkSample)
 }
 
+@MainActor
 final class NetworkSampler {
     private let reader: NetworkReading
     private let interval: TimeInterval
     private var previousSnapshot: NetworkCounterSnapshot?
     private var timer: Timer?
 
-    @MainActor weak var delegate: NetworkSamplerDelegate?
+    weak var delegate: NetworkSamplerDelegate?
 
     init(reader: NetworkReading = DarwinNetworkReader(), interval: TimeInterval = 1) {
         self.reader = reader
@@ -24,14 +25,7 @@ final class NetworkSampler {
 
     func start() {
         previousSnapshot = reader.readSnapshot()
-
-        DispatchQueue.main.async { [weak self] in
-            guard let self else { return }
-            self.timer?.invalidate()
-            self.timer = Timer.scheduledTimer(withTimeInterval: self.interval, repeats: true) { [weak self] _ in
-                self?.collect()
-            }
-        }
+        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
     }
 
     func stop() {
@@ -50,9 +44,6 @@ final class NetworkSampler {
             return
         }
 
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            self.delegate?.networkSampler(self, didProduce: sample)
-        }
+        delegate?.networkSampler(self, didProduce: sample)
     }
 }
