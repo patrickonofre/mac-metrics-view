@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Mac Metrics View mostra CPU, RAM e rede direto na barra de menus do macOS.">
+    <meta property="og:title" content="Mac Metrics View">
+    <meta property="og:description" content="CPU, RAM e rede direto na barra de menus do macOS.">
+    <meta property="og:image" content="assets/app-popover-preview.png">
+    <title>Mac Metrics View</title>
+    <link rel="icon" href="assets/app-icon.png">
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Mac Metrics View">
+        <img src="assets/app-icon.png" alt="" width="32" height="32">
+        <span>Mac Metrics View</span>
+      </a>
+      <nav class="nav" aria-label="Navegacao principal">
+        <a href="#features">Recursos</a>
+        <a href="#privacy">Privacidade</a>
+        <a href="#download">Download</a>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Beta para macOS</p>
+          <h1>CPU, RAM e rede direto na menu bar.</h1>
+          <p class="lede">
+            Um app nativo e compacto para entender a pressao do seu Mac sem abrir o Activity Monitor.
+          </p>
+          <div class="actions" aria-label="Acoes principais">
+            <a class="button primary" href="downloads/MacMetricsView-beta.zip" download>Baixar beta</a>
+            <a class="button secondary" href="#features">Ver recursos</a>
+          </div>
+          <p class="note">Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.</p>
+        </div>
+        <div class="hero-visual" aria-label="Previa do Mac Metrics View">
+          <div class="menu-bar-shot">
+            <img src="assets/menu-bar-preview.png" alt="Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS">
+          </div>
+          <img class="product-shot" src="assets/app-popover-preview.png" alt="Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibicao">
+        </div>
+      </section>
+
+      <section class="metrics-strip" aria-label="Metricas exibidas">
+        <div>
+          <span class="metric-label">CPU</span>
+          <strong>uso atual</strong>
+        </div>
+        <div>
+          <span class="metric-label">RAM</span>
+          <strong>memoria em GB</strong>
+        </div>
+        <div>
+          <span class="metric-label">NET</span>
+          <strong>download e upload</strong>
+        </div>
+        <div>
+          <span class="metric-label">TEMP</span>
+          <strong>estado termico</strong>
+        </div>
+      </section>
+
+      <section class="section" id="features">
+        <div class="section-heading">
+          <p class="eyebrow">Feito para ficar quieto</p>
+          <h2>Monitoramento de sistema sem interromper seu fluxo.</h2>
+        </div>
+        <div class="feature-grid">
+          <article>
+            <h3>Menu bar compacta</h3>
+            <p>Veja CPU, RAM e rede perto do relogio do macOS, com indicadores curtos e faceis de escanear.</p>
+          </article>
+          <article>
+            <h3>Popover nativo</h3>
+            <p>Clique no indicador para abrir detalhes recentes, alternar metricas e ajustar a exibicao.</p>
+          </article>
+          <article>
+            <h3>Controle por metrica</h3>
+            <p>Mostre apenas o que importa. Metricas ocultas param de coletar novos dados.</p>
+          </article>
+          <article>
+            <h3>Visual do macOS</h3>
+            <p>Interface discreta, responsiva a claro e escuro, pensada para parecer parte do sistema.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section split" id="privacy">
+        <div>
+          <p class="eyebrow">Privacidade primeiro</p>
+          <h2>Os dados nao saem do seu Mac.</h2>
+        </div>
+        <div class="copy-block">
+          <p>
+            O Mac Metrics View le CPU, memoria e contadores locais de rede. Ele nao exige login,
+            nao envia telemetria e nao depende de servicos externos para funcionar.
+          </p>
+          <ul>
+            <li>Sem conta de usuario</li>
+            <li>Sem analytics dentro do app</li>
+            <li>Sem chamadas externas para monitorar rede</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="download-panel" id="download">
+        <div>
+          <p class="eyebrow">Download</p>
+          <h2>Teste a versao beta.</h2>
+          <p>
+            Esta versao e um beta local para macOS. Na primeira abertura, o macOS pode pedir
+            confirmacao por ser um app ainda nao notarizado.
+          </p>
+        </div>
+        <a class="button primary large" href="downloads/MacMetricsView-beta.zip" download>Baixar MacMetricsView-beta.zip</a>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span>Mac Metrics View</span>
+      <span>Beta para macOS</span>
+    </footer>
+  </body>
+</html>

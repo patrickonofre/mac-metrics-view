@@ -1,0 +1,4 @@
+interface:
+  display_name: "macOS Native App"
+  short_description: "Build native macOS menu bar apps"
+  default_prompt: "Use $macos-native-app to plan or implement a native macOS SwiftUI menu bar feature."

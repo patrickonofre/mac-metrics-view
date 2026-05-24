@@ -1,0 +1,4 @@
+interface:
+  display_name: "System Metrics CPU"
+  short_description: "Collect and validate CPU metrics on macOS"
+  default_prompt: "Use $system-metrics-cpu to implement or verify CPU usage collection for macOS."

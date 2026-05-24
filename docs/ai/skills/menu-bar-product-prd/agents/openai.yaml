@@ -1,0 +1,4 @@
+interface:
+  display_name: "Menu Bar Product PRD"
+  short_description: "Scope focused macOS menu bar product work"
+  default_prompt: "Use $menu-bar-product-prd to draft or refine PRDs for this macOS metrics menu bar app."
