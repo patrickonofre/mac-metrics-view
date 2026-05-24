@@ -155,3 +155,27 @@ Alternatives Considered:
 - `launchctl` or manual LaunchAgent plist: rejected because it is heavier, harder to test safely, and less appropriate for a bundled macOS app.
 - Add the app silently at first launch: rejected because launch-at-login should be an explicit user choice.
 - Store only a `UserDefaults` boolean: rejected because it can drift from the actual macOS login item state.
+
+## TD-007: Define RAM "Used" as App Memory + Wired + Compressed
+
+Status: Accepted
+
+Decision: Compute displayed RAM usage from `vm_statistics64` as `(internal_page_count - purgeable_count) + wire_count + compressor_page_count`, multiplied by the page size. This approximates Activity Monitor's "Memory Used" (App Memory + Wired Memory + Compressed). Inactive and other file-cache pages are excluded because the system treats them as available.
+
+Rationale:
+
+- The product answers "is my Mac under memory pressure right now?", so the number should track what the system considers actually in use, not reclaimable cache.
+- The previous formula (`active + inactive + wire + compressor`) included `inactive`, which is largely reclaimable file cache, and so read consistently higher than Activity Monitor — confusing for users comparing the two.
+- `internal_page_count - purgeable_count` is the commonly used approximation of Apple's "App Memory" (anonymous, non-purgeable app pages).
+
+Implications:
+
+- The menu bar still displays GB (not percent); severity thresholds keep using `usedPercent`.
+- The reader must guard against `purgeable_count > internal_page_count` to avoid unsigned underflow (clamped to 0).
+- The value is still an approximation: it can differ from Activity Monitor by a small amount because Apple's exact accounting is not fully public. It should be close, not bit-exact.
+
+Alternatives Considered:
+
+- Keep `active + inactive + wire + compressor`: rejected because including reclaimable inactive cache overstates usage versus Activity Monitor.
+- Align to `active + wire + compressor` (drop only inactive): rejected as a less accurate approximation of App Memory than the internal/purgeable form.
+- Report memory pressure level instead of GB: rejected for V1 because the GB figure is the established, glanceable signal and matches the CPU/network pattern.

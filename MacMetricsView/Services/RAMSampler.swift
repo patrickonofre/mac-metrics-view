@@ -35,8 +35,13 @@ final class MachRAMReader: RAMReading {
         let totalBytes = ProcessInfo.processInfo.physicalMemory
         guard totalBytes > 0 else { return nil }
 
-        let usedPages = UInt64(stats.active_count)
-            + UInt64(stats.inactive_count)
+        // Mirror Activity Monitor's "Memory Used" = App Memory + Wired + Compressed,
+        // where App Memory ≈ internal pages minus purgeable (reclaimable) pages.
+        // Inactive/file-cache pages are treated as available, so they're excluded.
+        let internalPages = UInt64(stats.internal_page_count)
+        let purgeablePages = UInt64(stats.purgeable_count)
+        let appMemoryPages = internalPages > purgeablePages ? internalPages - purgeablePages : 0
+        let usedPages = appMemoryPages
             + UInt64(stats.wire_count)
             + UInt64(stats.compressor_page_count)
         let usedBytes = usedPages * UInt64(pageSize)
