@@ -180,3 +180,30 @@ Alternatives Considered:
 - Keep `active + inactive + wire + compressor`: rejected because including reclaimable inactive cache overstates usage versus Activity Monitor.
 - Align to `active + wire + compressor` (drop only inactive): rejected as a less accurate approximation of App Memory than the internal/purgeable form.
 - Report memory pressure level instead of GB: rejected for V1 because the GB figure is the established, glanceable signal and matches the CPU/network pattern.
+
+## TD-008: Suppress Input via CGEventTap for the Cleaning Lock
+
+Status: Accepted
+
+Decision: Implement the temporary keyboard/trackpad lock ("modo limpeza") with a `CGEventTap` installed at the session level that consumes keyboard and pointing-device events while a lock session is active. The tap lives behind a testable `InputLockService` protocol in `Services/`, isolated from UI. The feature is opt-in, requires the user to grant macOS Accessibility permission, and always releases input on timer expiry, emergency abort, or app termination.
+
+Rationale:
+
+- A `CGEventTap` that returns `nil` from its callback is the only privilege-free, stable way to suppress hardware input on macOS without disabling devices via IOKit/`hidutil`.
+- Keeping the tap behind a protocol matches the project's "system access isolated from UI, testable with fakes" pattern (Readers/Samplers).
+- A glanceable, local-only utility should not require `sudo`, kernel extensions, or device reconfiguration.
+
+Implications:
+
+- **New capability:** the app must request and verify Accessibility permission (`AXIsProcessTrusted`); without it the lock cannot start and the UI must guide the user to System Settings → Privacy & Security → Accessibility.
+- **Non-sandbox requirement:** event taps do not work under App Sandbox, so this feature confirms the app is distributed outside the App Store. The Xcode target must remain non-sandboxed. This is a conscious trade-off that **forecloses App Store distribution** while the feature exists.
+- **No permanent lockout:** the lock is always bounded by a timer; an always-visible full-screen countdown overlay communicates state; a deliberate, hard-to-trigger emergency abort and a release-on-terminate failsafe guarantee the user is never trapped.
+- **Privacy posture:** the tap reads input only to suppress it during an explicit, user-started session. No input is logged, stored, or transmitted — consistent with the local-only, no-telemetry rule.
+- Some hardware events (power button, force-restart) are never suppressible by macOS and remain as last-resort escape valves; this is acceptable and intentional.
+
+Alternatives Considered:
+
+- IOKit / `hidutil` to disable HID devices: rejected as heavier, riskier, harder to guarantee clean restore, and worse for testability.
+- Block clicks but allow pointer movement: rejected for V1 because the overlay is opaque and the goal is to suppress all accidental input while cleaning.
+- Password/biometric unlock before timer end: rejected because the timer (plus emergency abort) is the contract; adding auth complicates the escape path during a lock.
+- Not building it: deferred to a product decision — the feature is a deliberate departure from the pure "metrics viewer" identity and is only justified if accepted here first.

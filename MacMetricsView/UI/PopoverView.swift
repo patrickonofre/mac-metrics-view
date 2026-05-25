@@ -1,11 +1,17 @@
+import AppKit
+import ApplicationServices
 import SwiftUI
 
 struct PopoverView: View {
     @ObservedObject var state: CPUState
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
+    let dismissPopover: () -> Void
     let quit: () -> Void
+
+    @State private var isAccessibilityGranted: Bool = AXIsProcessTrusted()
+
     private let popoverWidth: CGFloat = 380
-    private let popoverHeight: CGFloat = 445
+    private let popoverHeight: CGFloat = 520
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -97,6 +103,21 @@ struct PopoverView: View {
 
             Divider()
 
+            CleaningLockSection(
+                state: state,
+                isAccessibilityGranted: isAccessibilityGranted,
+                onStart: {
+                    state.startCleaningLock()
+                    dismissPopover()
+                },
+                onOpenSettings: {
+                    let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
+                    NSWorkspace.shared.open(url)
+                }
+            )
+
+            Divider()
+
             Button(Strings.quit(), action: quit)
                 .font(.caption)
                 .buttonStyle(.borderless)
@@ -106,6 +127,9 @@ struct PopoverView: View {
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
         .frame(width: popoverWidth, height: popoverHeight, alignment: .topLeading)
+        .onAppear {
+            isAccessibilityGranted = AXIsProcessTrusted()
+        }
     }
 
     private var appInfoHeader: some View {
@@ -419,6 +443,76 @@ private struct EmptyMetricsState: View {
         .accessibilityElement(children: .combine)
     }
 }
+
+// MARK: - Cleaning lock section
+
+private struct CleaningLockSection: View {
+    @ObservedObject var state: CPUState
+    let isAccessibilityGranted: Bool
+    let onStart: () -> Void
+    let onOpenSettings: () -> Void
+
+    private static let presetLabels: [(TimeInterval, String)] = [
+        (15,  "15s"),
+        (30,  "30s"),
+        (60,  "1min"),
+        (120, "2min"),
+        (300, "5min")
+    ]
+
+    private var durationBinding: Binding<TimeInterval> {
+        Binding<TimeInterval>(
+            get: { state.cleaningLockSettings.selectedDuration },
+            set: { state.selectLockDuration($0) }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Modo limpeza")
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.primary)
+
+            if isAccessibilityGranted {
+                HStack(spacing: 8) {
+                    Picker("Duração", selection: durationBinding) {
+                        ForEach(Self.presetLabels, id: \.0) { duration, label in
+                            Text(label).tag(duration)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .frame(maxWidth: .infinity)
+
+                    Button("Iniciar") {
+                        onStart()
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.small)
+                    .disabled(state.lockPhase == .locked)
+                }
+            } else {
+                HStack(spacing: 8) {
+                    Image(systemName: "lock.trianglebadge.exclamationmark")
+                        .foregroundStyle(.orange)
+                    Text("Permissão de Acessibilidade necessária")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Abrir Ajustes") {
+                        onOpenSettings()
+                    }
+                    .buttonStyle(.borderless)
+                    .foregroundStyle(Color.accentColor)
+                }
+                .font(.caption)
+            }
+        }
+        .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Network helper
 
 private extension NetworkSample {
     var totalBytesPerSecond: Double {

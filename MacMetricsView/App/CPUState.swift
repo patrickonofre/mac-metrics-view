@@ -14,8 +14,15 @@ final class CPUState: ObservableObject {
     @Published private(set) var networkHistory = NetworkHistory()
     @Published private(set) var temperatureHistory = TemperatureHistory()
 
+    // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
+    @Published private(set) var lockPhase: LockPhase = .idle
+    @Published private(set) var lockRemaining: TimeInterval = 0
+    @Published private(set) var cleaningLockSettings: CleaningLockSettings
+
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
+    /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
+    var onStartLock: ((TimeInterval) -> Void)?
 
     private let userDefaults: UserDefaults
 
@@ -23,6 +30,7 @@ final class CPUState: ObservableObject {
         self.userDefaults = userDefaults
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
+        cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
     }
 
     var menuBarTitle: String {
@@ -174,6 +182,29 @@ final class CPUState: ObservableObject {
         visibility.save(to: userDefaults)
         onVisibilityChange?(metric, isVisible)
     }
+
+    // MARK: - Cleaning lock
+
+    /// Persists the selected duration and updates the in-memory setting.
+    func selectLockDuration(_ duration: TimeInterval) {
+        guard CleaningLockSettings.presets.contains(duration) else { return }
+        cleaningLockSettings.selectedDuration = duration
+        cleaningLockSettings.save(to: userDefaults)
+    }
+
+    /// Fires `onStartLock` with the currently selected duration.
+    /// AppDelegate owns the lock service and responds to this callback.
+    func startCleaningLock() {
+        onStartLock?(cleaningLockSettings.selectedDuration)
+    }
+
+    /// Called by AppDelegate each tick and on session end to keep the UI in sync.
+    func updateLockState(phase: LockPhase, remaining: TimeInterval) {
+        lockPhase = phase
+        lockRemaining = remaining
+    }
+
+    // MARK: - Private
 
     private func currentVisibility(for metric: MetricVisibilitySettings.Metric) -> Bool {
         switch metric {

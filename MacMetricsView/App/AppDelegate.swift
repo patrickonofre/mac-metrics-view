@@ -10,6 +10,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     private let temperatureSampler = TemperatureSampler()
     private var statusItemController: StatusItemController?
 
+    // Cleaning-lock
+    private let lockService = CGEventTapInputLock()
+    private var overlayController: LockOverlayController?
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
 
@@ -20,6 +24,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         state.onDisplayChange = { [weak self] in
             self?.statusItemController?.setNeedsTitleUpdate()
         }
+
+        // Wire cleaning lock: state fires onStartLock → we start the service + overlay.
+        state.onStartLock = { [weak self] duration in
+            self?.beginLockSession(duration: duration)
+        }
+        lockService.onTick = { [weak self] remaining in
+            self?.state.updateLockState(phase: .locked, remaining: remaining)
+        }
+        lockService.onEnd = { [weak self] reason in
+            self?.endLockSession(reason: reason)
+        }
+
         statusItemController = StatusItemController(
             state: state,
             launchAtLoginSettings: launchAtLoginSettings
@@ -32,10 +48,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     }
 
     func applicationWillTerminate(_ notification: Notification) {
+        // Failsafe: always release input before the process exits.
+        if lockService.phase == .locked {
+            lockService.stop(reason: .terminated)
+        }
         cpuSampler.stop()
         ramSampler.stop()
         networkSampler.stop()
         temperatureSampler.stop()
+    }
+
+    // MARK: - Lock session
+
+    private func beginLockSession(duration: TimeInterval) {
+        state.updateLockState(phase: .locked, remaining: duration)
+        lockService.start(duration: duration)
+        let controller = LockOverlayController()
+        overlayController = controller
+        controller.show(state: state)
+    }
+
+    private func endLockSession(reason: LockEndReason) {
+        overlayController?.hide()
+        overlayController = nil
+        state.updateLockState(phase: .idle, remaining: 0)
     }
 
     func cpuSampler(_ sampler: CPUSampler, didProduce sample: CPUSample) {

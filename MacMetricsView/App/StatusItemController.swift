@@ -199,14 +199,18 @@ final class StatusItemController {
 
     private func configurePopover() {
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 380, height: 445)
+        popover.contentSize = NSSize(width: 380, height: 520)
         popover.contentViewController = NSHostingController(
             rootView: PopoverView(
                 state: state,
-                launchAtLoginSettings: launchAtLoginSettings
-            ) {
-                NSApplication.shared.terminate(nil)
-            }
+                launchAtLoginSettings: launchAtLoginSettings,
+                dismissPopover: { [weak self] in
+                    self?.popover.performClose(nil)
+                },
+                quit: {
+                    NSApplication.shared.terminate(nil)
+                }
+            )
         )
     }
 
