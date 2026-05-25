@@ -8,6 +8,7 @@
       "nav.news": "Novidades",
       "nav.features": "Recursos",
       "nav.privacy": "Privacidade",
+      "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
       "hero.eyebrow": "Beta 0.2 para macOS",
@@ -56,12 +57,24 @@
       "download.body": "Esta versão é um beta local para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado.",
       "download.cta": "Baixar MacMetricsView-beta-0.2.zip",
 
-      "footer.tagline": "Beta 0.2 para macOS"
+      "firstrun.eyebrow": "Primeira abertura",
+      "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
+      "firstrun.body": "Como este beta ainda não é notarizado pela Apple, o macOS bloqueia a primeira execução por precaução — não é um erro nem sinal de malware. Libere o app uma única vez assim:",
+      "firstrun.s1Title": "Clique em “OK”",
+      "firstrun.s1Body": "No aviso, escolha “OK” — nunca “Mover para o Lixo”. Isso apenas fecha o alerta sem apagar o app.",
+      "firstrun.s2Title": "Abra Privacidade e Segurança",
+      "firstrun.s2Body": "Em Ajustes do Sistema → Privacidade e Segurança, role até “MacMetricsView foi bloqueado” e clique em “Abrir Mesmo Assim”.",
+      “firstrun.s3Title”: “Confirme e abra”,
+      “firstrun.s3Body”: “Autentique com Touch ID ou senha e clique em “Abrir”. Só é preciso fazer isso uma vez.”,
+      “firstrun.alt”: “No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.”,
+
+      “footer.tagline”: “Beta 0.2 para macOS”
     },
     en: {
       "nav.news": "What's new",
       "nav.features": "Features",
       "nav.privacy": "Privacy",
+      "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
       "hero.eyebrow": "Beta 0.2 for macOS",
@@ -110,7 +123,18 @@
       "download.body": "This release is a local beta for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized.",
       "download.cta": "Download MacMetricsView-beta-0.2.zip",
 
-      "footer.tagline": "Beta 0.2 for macOS"
+      "firstrun.eyebrow": "First launch",
+      "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
+      "firstrun.body": "Because this beta isn't notarized by Apple yet, macOS blocks the first launch as a precaution — it's not an error or a sign of malware. Allow the app once like this:",
+      "firstrun.s1Title": "Click “OK”",
+      "firstrun.s1Body": "In the alert, choose “OK” — never “Move to Trash”. This just dismisses the warning without deleting the app.",
+      "firstrun.s2Title": "Open Privacy & Security",
+      "firstrun.s2Body": "In System Settings → Privacy & Security, scroll to “MacMetricsView was blocked” and click “Open Anyway”.",
+      “firstrun.s3Title”: “Confirm and open”,
+      “firstrun.s3Body”: “Authenticate with Touch ID or your password and click “Open”. You only need to do this once.”,
+      “firstrun.alt”: “On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.”,
+
+      “footer.tagline”: “Beta 0.2 for macOS”
     }
   };
 
