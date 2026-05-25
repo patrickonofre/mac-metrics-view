@@ -4,6 +4,7 @@ DerivedData/
 *.xcuserstate
 xcuserdata/
 .DS_Store
+.claude/scheduled_tasks.lock
 
 # Build/packaging artifacts (produced by the README build steps)
 /MacMetricsView.app/
