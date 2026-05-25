@@ -65,6 +65,9 @@
 		100000000000000000000038 /* LaunchAtLoginSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000128 /* LaunchAtLoginSettings.swift */; };
 		100000000000000000000039 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000129 /* LaunchAtLoginManager.swift */; };
 		10000000000000000000003A /* LaunchAtLoginSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012A /* LaunchAtLoginSettingsTests.swift */; };
+		10000000000000000000003B /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012B /* Localization.swift */; };
+		10000000000000000000003C /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012B /* Localization.swift */; };
+		10000000000000000000003D /* MainRunLoopTimer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012C /* MainRunLoopTimer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -115,6 +118,8 @@
 		100000000000000000000124 /* TemperatureHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemperatureHistory.swift; sourceTree = "<group>"; };
 		100000000000000000000125 /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureFormatter.swift; sourceTree = "<group>"; };
 		100000000000000000000126 /* TemperatureSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureSampler.swift; sourceTree = "<group>"; };
+		10000000000000000000012B /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Localization.swift; sourceTree = "<group>"; };
+		10000000000000000000012C /* MainRunLoopTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MainRunLoopTimer.swift; sourceTree = "<group>"; };
 		100000000000000000000127 /* TemperatureFormattingAndHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormattingAndHistoryTests.swift; sourceTree = "<group>"; };
 		100000000000000000000128 /* LaunchAtLoginSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LaunchAtLoginSettings.swift; sourceTree = "<group>"; };
 		100000000000000000000129 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LaunchAtLoginManager.swift; sourceTree = "<group>"; };
@@ -180,6 +185,8 @@
 				100000000000000000000126 /* TemperatureSampler.swift */,
 				10000000000000000000011B /* DarwinNetworkReader.swift */,
 				10000000000000000000011D /* NetworkSampleCalculator.swift */,
+				10000000000000000000012B /* Localization.swift */,
+				10000000000000000000012C /* MainRunLoopTimer.swift */,
 				10000000000000000000010B /* SparklineView.swift */,
 				10000000000000000000010C /* PopoverView.swift */,
 				10000000000000000000010F /* Info.plist */,
@@ -338,6 +345,8 @@
 				100000000000000000000031 /* TemperatureSampler.swift in Sources */,
 				10000000000000000000001E /* DarwinNetworkReader.swift in Sources */,
 				100000000000000000000020 /* NetworkSampleCalculator.swift in Sources */,
+				10000000000000000000003B /* Localization.swift in Sources */,
+				10000000000000000000003D /* MainRunLoopTimer.swift in Sources */,
 				10000000000000000000000B /* SparklineView.swift in Sources */,
 				10000000000000000000000C /* PopoverView.swift in Sources */,
 			);
@@ -367,6 +376,7 @@
 				100000000000000000000034 /* TemperatureFormatter.swift in Sources */,
 				100000000000000000000039 /* LaunchAtLoginManager.swift in Sources */,
 				100000000000000000000026 /* NetworkSampleCalculator.swift in Sources */,
+				10000000000000000000003C /* Localization.swift in Sources */,
 				10000000000000000000000D /* CPUSampleCalculatorTests.swift in Sources */,
 				10000000000000000000000E /* CPUFormattingAndHistoryTests.swift in Sources */,
 				100000000000000000000021 /* NetworkCalculationFormattingAndHistoryTests.swift in Sources */,
