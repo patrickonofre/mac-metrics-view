@@ -34,6 +34,23 @@ enum TemperatureState: Equatable {
             return .highCPU
         }
     }
+
+    /// Normalized 0–100 level for the popover trend, so the thermal state has an
+    /// always-available signal to plot (Celsius is optional and not wired yet).
+    var trendLevel: Double {
+        switch self {
+        case .unavailable:
+            return 0
+        case .normal:
+            return 25
+        case .warm:
+            return 50
+        case .hot:
+            return 75
+        case .critical:
+            return 100
+        }
+    }
 }
 
 struct TemperatureSample: Equatable {
@@ -53,5 +70,15 @@ struct TemperatureSample: Equatable {
         self.timestamp = timestamp
         self.celsius = celsius
         self.state = state
+    }
+
+    /// Value plotted in the popover trend. Prefers a numeric Celsius reading
+    /// (normalized over the plausible range) when available, otherwise falls back to
+    /// the thermal state level. Always present, so the trend is never a dead series.
+    var trendValue: Double {
+        if let celsius {
+            return celsius / Self.plausibleCelsiusRange.upperBound * 100
+        }
+        return state.trendLevel
     }
 }

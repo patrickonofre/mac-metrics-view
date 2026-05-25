@@ -74,7 +74,7 @@ struct PopoverView: View {
                         MetricSection(
                             title: Strings.temperature(),
                             value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
-                            values: state.temperatureHistory.samples.compactMap(\.celsius),
+                            values: state.temperatureHistory.samples.map(\.trendValue),
                             severity: state.temperatureMenuBarTextStyle,
                             details: temperatureDetails
                         )

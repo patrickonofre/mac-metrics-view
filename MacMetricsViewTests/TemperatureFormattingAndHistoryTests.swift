@@ -55,11 +55,25 @@ final class TemperatureFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(history.samples.map(\.celsius), [42, 43])
     }
 
-    func testTemperatureHistoryIgnoresSamplesWithoutCelsius() throws {
+    func testTemperatureHistoryKeepsStateOnlySamples() throws {
         var history = TemperatureHistory()
 
         history.append(try XCTUnwrap(TemperatureSample(celsius: nil, state: .normal)))
+        history.append(try XCTUnwrap(TemperatureSample(celsius: nil, state: .hot)))
 
-        XCTAssertTrue(history.samples.isEmpty)
+        XCTAssertEqual(history.samples.map(\.state), [.normal, .hot])
+    }
+
+    func testTrendValueUsesStateLevelWhenCelsiusIsUnavailable() throws {
+        XCTAssertEqual(try XCTUnwrap(TemperatureSample(celsius: nil, state: .unavailable)).trendValue, 0)
+        XCTAssertEqual(try XCTUnwrap(TemperatureSample(celsius: nil, state: .normal)).trendValue, 25)
+        XCTAssertEqual(try XCTUnwrap(TemperatureSample(celsius: nil, state: .warm)).trendValue, 50)
+        XCTAssertEqual(try XCTUnwrap(TemperatureSample(celsius: nil, state: .hot)).trendValue, 75)
+        XCTAssertEqual(try XCTUnwrap(TemperatureSample(celsius: nil, state: .critical)).trendValue, 100)
+    }
+
+    func testTrendValuePrefersCelsiusWhenAvailable() throws {
+        let sample = try XCTUnwrap(TemperatureSample(celsius: 75, state: .normal))
+        XCTAssertEqual(sample.trendValue, 50, accuracy: 0.0001)
     }
 }

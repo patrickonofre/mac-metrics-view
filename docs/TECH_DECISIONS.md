@@ -106,7 +106,7 @@ Alternatives Considered:
 
 ## TD-005: Prefer Official Thermal State Before Numeric Temperature
 
-Status: Proposed
+Status: Accepted
 
 Decision: For the planned temperature feature, use `ProcessInfo.processInfo.thermalState` as the primary source for thermal condition and treat numeric Celsius readings as optional. A lower-level SMC/IOKit reader may be added behind a protocol only if it fails gracefully, does not require elevated privileges, and preserves a fallback to the official thermal state.
 
@@ -122,7 +122,8 @@ Implications:
 - The first implementation can ship with thermal state even when Celsius is unavailable.
 - The UI must support both numeric temperature and state-only fallback.
 - Tests should validate formatting, severity, persistence, history, and sampler lifecycle before production code is added.
-- The temperature sampler should run less frequently than CPU/RAM/network, with an initial target around 5 seconds.
+- The temperature sampler is **event-driven**: it observes `ProcessInfo.thermalStateDidChangeNotification` and samples once at start, instead of polling on a timer. Thermal state only changes by event, so polling (the earlier ~5 s target) is unnecessary wakeups.
+- The popover trend plots a normalized thermal-state level (`TemperatureState.trendLevel`) so the state-only fallback still shows a real, always-present trend. `TemperatureHistory` therefore keeps every sample, not only Celsius ones. When a numeric source exists, `TemperatureSample.trendValue` prefers the Celsius reading.
 
 Alternatives Considered:
 
