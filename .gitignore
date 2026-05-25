@@ -8,3 +8,8 @@ xcuserdata/
 # Build/packaging artifacts (produced by the README build steps)
 /MacMetricsView.app/
 /MacMetricsView-beta.zip
+
+# Markdown docs stay local and are not version-controlled, except the
+# project README at the repo root.
+*.md
+!/README.md
