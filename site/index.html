@@ -10,143 +10,149 @@
     <title>Mac Metrics View</title>
     <link rel="icon" href="assets/app-icon.png">
     <link rel="stylesheet" href="styles.css">
+    <script src="i18n.js" defer></script>
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="Mac Metrics View">
-        <img src="assets/app-icon.png" alt="" width="32" height="32">
-        <span>Mac Metrics View</span>
-      </a>
-      <nav class="nav" aria-label="Navegacao principal">
-        <a href="#novidades">Novidades</a>
-        <a href="#features">Recursos</a>
-        <a href="#privacy">Privacidade</a>
-        <a href="#download">Download</a>
-      </nav>
+      <div class="topbar-inner">
+        <a class="brand" href="#top" aria-label="Mac Metrics View">
+          <img src="assets/app-icon.png" alt="" width="28" height="28">
+          <span>Mac Metrics View</span>
+        </a>
+        <nav class="nav" aria-label="Navegacao principal">
+          <a href="#news" data-i18n="nav.news">Novidades</a>
+          <a href="#features" data-i18n="nav.features">Recursos</a>
+          <a href="#privacy" data-i18n="nav.privacy">Privacidade</a>
+          <a href="#download" data-i18n="nav.download">Download</a>
+        </nav>
+        <div class="lang-switch" role="group" aria-label="Idioma / Language">
+          <button type="button" data-lang-option="pt" aria-pressed="true">PT</button>
+          <button type="button" data-lang-option="en" aria-pressed="false">EN</button>
+        </div>
+      </div>
     </header>
 
     <main id="top">
       <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Beta 0.2 para macOS</p>
-          <h1>CPU, RAM e rede direto na menu bar.</h1>
-          <p class="lede">
-            Um app nativo e compacto para entender a pressao do seu Mac sem abrir o Activity Monitor.
-          </p>
-          <div class="actions" aria-label="Acoes principais">
-            <a class="button primary" href="downloads/MacMetricsView-beta-0.2.zip" download>Baixar beta 0.2</a>
-            <a class="button secondary" href="#novidades">Novidades</a>
-          </div>
-          <p class="note">Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow">Beta 0.2 para macOS</p>
+        <h1 data-i18n="hero.title">CPU, RAM e rede direto na barra de menus.</h1>
+        <p class="lede" data-i18n="hero.lede">
+          Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.
+        </p>
+        <div class="actions" aria-label="Acoes principais">
+          <a class="button primary" href="downloads/MacMetricsView-beta-0.2.zip" download data-i18n="hero.cta">Baixar beta 0.2</a>
+          <a class="link-cta" href="#news"><span data-i18n="hero.secondary">Ver novidades</span> <span aria-hidden="true">&rsaquo;</span></a>
         </div>
+        <p class="note" data-i18n="hero.note">Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.</p>
+
         <div class="hero-visual" aria-label="Previa do Mac Metrics View">
           <div class="menu-bar-shot">
-            <img src="assets/menu-bar-preview.png" alt="Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS">
+            <img src="assets/menu-bar-preview.png" data-i18n-alt="hero.altMenu" alt="Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS">
           </div>
-          <img class="product-shot" src="assets/app-popover-preview.png" alt="Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibicao">
+          <img class="product-shot" src="assets/app-popover-preview.png" data-i18n-alt="hero.altPopover" alt="Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibicao">
         </div>
       </section>
 
       <section class="metrics-strip" aria-label="Metricas exibidas">
         <div>
           <span class="metric-label">CPU</span>
-          <strong>uso atual</strong>
+          <strong data-i18n="metric.cpu">uso atual</strong>
         </div>
         <div>
           <span class="metric-label">RAM</span>
-          <strong>memoria em GB</strong>
+          <strong data-i18n="metric.ram">memória em GB</strong>
         </div>
         <div>
           <span class="metric-label">NET</span>
-          <strong>download e upload</strong>
+          <strong data-i18n="metric.net">download e upload</strong>
         </div>
         <div>
           <span class="metric-label">TEMP</span>
-          <strong>estado termico</strong>
+          <strong data-i18n="metric.temp">estado térmico</strong>
         </div>
       </section>
 
-      <section class="section" id="novidades">
+      <section class="section" id="news">
         <div class="section-heading">
-          <p class="eyebrow">Novidades na versao 0.2</p>
-          <h2>Tres recursos novos desde o primeiro beta.</h2>
+          <p class="eyebrow" data-i18n="news.eyebrow">Novidades na versão 0.2</p>
+          <h2 data-i18n="news.title">Três recursos novos desde o primeiro beta.</h2>
         </div>
-        <div class="feature-grid">
-          <article>
-            <h3>Modo limpeza</h3>
-            <p>Trave teclado e trackpad por 15s a 5min para limpar a tela sem disparar cliques ou teclas. Requer permissao de Acessibilidade do macOS.</p>
+        <div class="feature-grid three">
+          <article class="card">
+            <h3 data-i18n="news.cleanTitle">Modo limpeza</h3>
+            <p data-i18n="news.cleanBody">Trave teclado e trackpad por 15s a 5min para limpar a tela sem disparar cliques ou teclas. Requer permissão de Acessibilidade do macOS.</p>
           </article>
-          <article>
-            <h3>Abrir ao inicializar</h3>
-            <p>Ative no popover para o Mac Metrics View abrir sozinho ao iniciar a sessao no macOS. Reversivel a qualquer momento.</p>
+          <article class="card">
+            <h3 data-i18n="news.loginTitle">Abrir ao inicializar</h3>
+            <p data-i18n="news.loginBody">Ative no popover para o Mac Metrics View abrir sozinho ao iniciar a sessão no macOS. Reversível a qualquer momento.</p>
           </article>
-          <article>
-            <h3>Portugues e ingles</h3>
-            <p>A interface acompanha o idioma do sistema, em portugues ou ingles, sem configuracao manual.</p>
+          <article class="card">
+            <h3 data-i18n="news.langTitle">Português e inglês</h3>
+            <p data-i18n="news.langBody">A interface acompanha o idioma do sistema, em português ou inglês, sem configuração manual.</p>
           </article>
         </div>
       </section>
 
       <section class="section" id="features">
         <div class="section-heading">
-          <p class="eyebrow">Feito para ficar quieto</p>
-          <h2>Monitoramento de sistema sem interromper seu fluxo.</h2>
+          <p class="eyebrow" data-i18n="features.eyebrow">Feito para ficar quieto</p>
+          <h2 data-i18n="features.title">Monitoramento de sistema sem interromper seu fluxo.</h2>
         </div>
         <div class="feature-grid">
-          <article>
-            <h3>Menu bar compacta</h3>
-            <p>Veja CPU, RAM e rede perto do relogio do macOS, com indicadores curtos e faceis de escanear.</p>
+          <article class="card">
+            <h3 data-i18n="features.f1Title">Barra de menus compacta</h3>
+            <p data-i18n="features.f1Body">Veja CPU, RAM e rede perto do relógio do macOS, com indicadores curtos e fáceis de escanear.</p>
           </article>
-          <article>
-            <h3>Popover nativo</h3>
-            <p>Clique no indicador para abrir detalhes recentes, alternar metricas e ajustar a exibicao.</p>
+          <article class="card">
+            <h3 data-i18n="features.f2Title">Popover nativo</h3>
+            <p data-i18n="features.f2Body">Clique no indicador para abrir detalhes recentes, alternar métricas e ajustar a exibição.</p>
           </article>
-          <article>
-            <h3>Controle por metrica</h3>
-            <p>Mostre apenas o que importa. Metricas ocultas param de coletar novos dados.</p>
+          <article class="card">
+            <h3 data-i18n="features.f3Title">Controle por métrica</h3>
+            <p data-i18n="features.f3Body">Mostre apenas o que importa. Métricas ocultas param de coletar novos dados.</p>
           </article>
-          <article>
-            <h3>Visual do macOS</h3>
-            <p>Interface discreta, responsiva a claro e escuro, pensada para parecer parte do sistema.</p>
+          <article class="card">
+            <h3 data-i18n="features.f4Title">Visual do macOS</h3>
+            <p data-i18n="features.f4Body">Interface discreta, responsiva a claro e escuro, pensada para parecer parte do sistema.</p>
           </article>
         </div>
       </section>
 
       <section class="section split" id="privacy">
         <div>
-          <p class="eyebrow">Privacidade primeiro</p>
-          <h2>Os dados nao saem do seu Mac.</h2>
+          <p class="eyebrow" data-i18n="privacy.eyebrow">Privacidade primeiro</p>
+          <h2 data-i18n="privacy.title">Os dados não saem do seu Mac.</h2>
         </div>
         <div class="copy-block">
-          <p>
-            O Mac Metrics View le CPU, memoria e contadores locais de rede. Ele nao exige login,
-            nao envia telemetria e nao depende de servicos externos para funcionar.
+          <p data-i18n="privacy.body">
+            O Mac Metrics View lê CPU, memória e contadores locais de rede. Ele não exige login,
+            não envia telemetria e não depende de serviços externos para funcionar.
           </p>
           <ul>
-            <li>Sem conta de usuario</li>
-            <li>Sem analytics dentro do app</li>
-            <li>Sem chamadas externas para monitorar rede</li>
+            <li data-i18n="privacy.li1">Sem conta de usuário</li>
+            <li data-i18n="privacy.li2">Sem analytics dentro do app</li>
+            <li data-i18n="privacy.li3">Sem chamadas externas para monitorar a rede</li>
           </ul>
         </div>
       </section>
 
       <section class="download-panel" id="download">
         <div>
-          <p class="eyebrow">Download</p>
-          <h2>Teste a versao beta 0.2.</h2>
-          <p>
-            Esta versao e um beta local para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir
-            confirmacao por ser um app ainda nao notarizado.
+          <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
+          <h2 data-i18n="download.title">Teste a versão beta 0.2.</h2>
+          <p data-i18n="download.body">
+            Esta versão é um beta local para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir
+            confirmação por ser um app ainda não notarizado.
           </p>
         </div>
-        <a class="button primary large" href="downloads/MacMetricsView-beta-0.2.zip" download>Baixar MacMetricsView-beta-0.2.zip</a>
+        <a class="button primary large" href="downloads/MacMetricsView-beta-0.2.zip" download data-i18n="download.cta">Baixar MacMetricsView-beta-0.2.zip</a>
       </section>
 
     </main>
 
     <footer class="footer">
       <span>Mac Metrics View</span>
-      <span>Beta 0.2 para macOS</span>
+      <span data-i18n="footer.tagline">Beta 0.2 para macOS</span>
     </footer>
   </body>
 </html>
