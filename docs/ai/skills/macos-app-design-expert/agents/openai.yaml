@@ -1,4 +1,0 @@
-interface:
-  display_name: "macOS App Design Expert"
-  short_description: "Design polished native macOS app UI"
-  default_prompt: "Use $macos-app-design-expert to critique or redesign a native macOS app surface with expert-level polish."

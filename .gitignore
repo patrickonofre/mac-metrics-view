@@ -18,3 +18,8 @@ xcuserdata/
 .claude/
 .codex/
 .opencode/
+
+# Internal docs and AI agent configs — kept local only
+docs/product/
+docs/ai/skills/*/agents/
+skills
