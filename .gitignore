@@ -14,3 +14,7 @@ xcuserdata/
 # project README at the repo root.
 *.md
 !/README.md
+.agents/
+.claude/
+.codex/
+.opencode/
