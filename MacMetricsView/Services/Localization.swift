@@ -74,7 +74,7 @@ enum Strings {
     )
 
     // Severity labels (CPU/RAM/temperature share these in the popover)
-    static let severityElevated = LocalizedText(en: "Elevated", pt: "Aquecido")
+    static let severityElevated = LocalizedText(en: "Elevated", pt: "Elevado")
     static let severityHigh = LocalizedText(en: "High", pt: "Alto")
 
     // Temperature
