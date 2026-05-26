@@ -1,6 +1,21 @@
 import XCTest
 @testable import MacMetricsView
 
+/// Fake authorization so tests never touch real macOS permission state.
+/// `isTrusted` is mutable to simulate the user granting access mid-session.
+final class FakeAccessibilityAuthorization: AccessibilityAuthorizationProtocol {
+    var isTrusted: Bool
+    private(set) var openSettingsCallCount = 0
+
+    init(isTrusted: Bool = false) {
+        self.isTrusted = isTrusted
+    }
+
+    func openSettings() {
+        openSettingsCallCount += 1
+    }
+}
+
 @MainActor
 final class CleaningLockStateTests: XCTestCase {
 
@@ -157,5 +172,40 @@ final class CleaningLockStateTests: XCTestCase {
         }
 
         XCTAssertFalse(fired)
+    }
+
+    // MARK: - Accessibility authorization gate
+
+    func testInitialAccessibilityGateReflectsAuthorization() {
+        let granted = CPUState(userDefaults: makeUserDefaults(),
+                               accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true))
+        let denied = CPUState(userDefaults: makeUserDefaults(),
+                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false))
+        XCTAssertTrue(granted.isAccessibilityGranted)
+        XCTAssertFalse(denied.isAccessibilityGranted)
+    }
+
+    func testRefreshPicksUpGrantMadeAfterLaunch() {
+        // Reproduces the bug: app launches without permission, user grants it
+        // in System Settings, then reopens the popover. The gate must flip.
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
+        XCTAssertFalse(state.isAccessibilityGranted)
+
+        auth.isTrusted = true
+        state.refreshAccessibilityAuthorization()
+
+        XCTAssertTrue(state.isAccessibilityGranted)
+    }
+
+    func testRefreshPicksUpRevokedPermission() {
+        let auth = FakeAccessibilityAuthorization(isTrusted: true)
+        let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
+        XCTAssertTrue(state.isAccessibilityGranted)
+
+        auth.isTrusted = false
+        state.refreshAccessibilityAuthorization()
+
+        XCTAssertFalse(state.isAccessibilityGranted)
     }
 }

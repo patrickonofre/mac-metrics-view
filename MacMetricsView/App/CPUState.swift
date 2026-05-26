@@ -19,18 +19,29 @@ final class CPUState: ObservableObject {
     @Published private(set) var lockRemaining: TimeInterval = 0
     @Published private(set) var cleaningLockSettings: CleaningLockSettings
 
+    /// Live Accessibility (AX) permission gate for the cleaning lock.
+    /// Refreshed on each popover show so a grant made in System Settings is
+    /// reflected without relaunching the app.
+    @Published private(set) var isAccessibilityGranted: Bool = false
+
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
     /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
     var onStartLock: ((TimeInterval) -> Void)?
 
     private let userDefaults: UserDefaults
+    private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
 
-    init(userDefaults: UserDefaults = .standard) {
+    init(
+        userDefaults: UserDefaults = .standard,
+        accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization()
+    ) {
         self.userDefaults = userDefaults
+        self.accessibilityAuthorization = accessibilityAuthorization
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
+        isAccessibilityGranted = accessibilityAuthorization.isTrusted
     }
 
     var menuBarTitle: String {
@@ -196,6 +207,13 @@ final class CPUState: ObservableObject {
     /// AppDelegate owns the lock service and responds to this callback.
     func startCleaningLock() {
         onStartLock?(cleaningLockSettings.selectedDuration)
+    }
+
+    /// Re-reads the live Accessibility permission and republishes it so the
+    /// cleaning-lock UI reflects a grant made in System Settings without an
+    /// app relaunch. Called whenever the popover is shown.
+    func refreshAccessibilityAuthorization() {
+        isAccessibilityGranted = accessibilityAuthorization.isTrusted
     }
 
     /// Called by AppDelegate each tick and on session end to keep the UI in sync.

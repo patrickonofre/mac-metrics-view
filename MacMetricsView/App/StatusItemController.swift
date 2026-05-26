@@ -219,6 +219,7 @@ final class StatusItemController {
             popover.performClose(sender)
         } else {
             launchAtLoginSettings.refresh()
+            state.refreshAccessibilityAuthorization()
             popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
             popover.contentViewController?.view.window?.makeKey()
         }

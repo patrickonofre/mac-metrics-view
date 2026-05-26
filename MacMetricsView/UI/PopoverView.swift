@@ -1,5 +1,4 @@
 import AppKit
-import ApplicationServices
 import SwiftUI
 
 struct PopoverView: View {
@@ -7,8 +6,6 @@ struct PopoverView: View {
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
     let dismissPopover: () -> Void
     let quit: () -> Void
-
-    @State private var isAccessibilityGranted: Bool = AXIsProcessTrusted()
 
     private let popoverWidth: CGFloat = 380
     private let popoverHeight: CGFloat = 520
@@ -105,7 +102,7 @@ struct PopoverView: View {
 
             CleaningLockSection(
                 state: state,
-                isAccessibilityGranted: isAccessibilityGranted,
+                isAccessibilityGranted: state.isAccessibilityGranted,
                 onStart: {
                     state.startCleaningLock()
                     dismissPopover()
@@ -128,7 +125,7 @@ struct PopoverView: View {
         .padding(.vertical, 12)
         .frame(width: popoverWidth, height: popoverHeight, alignment: .topLeading)
         .onAppear {
-            isAccessibilityGranted = AXIsProcessTrusted()
+            state.refreshAccessibilityAuthorization()
         }
     }
 
