@@ -48,3 +48,73 @@ For testers close to you, this unsigned/local beta may require right-clicking th
 ```sh
 swift test
 ```
+
+## Auto-update (Sparkle)
+
+The app checks a static `appcast.xml` (served by GitHub Pages alongside the
+release zip) and installs EdDSA-signed updates in place — no backend, no
+telemetry, Sparkle's system profiling disabled. The popover exposes a
+"Check for updates…" action and an automatic-check toggle (default on).
+
+Sparkle is embedded **only in the Xcode `.app`**. The SPM build (`swift run` /
+`swift test`) links a `NoOpUpdateService`, so tests stay Sparkle-free.
+
+### One-time setup
+
+1. **Generate the EdDSA key pair** with Sparkle's tool (the private key is stored
+   in the Keychain — never commit it):
+
+   ```sh
+   ./bin/generate_keys   # from the Sparkle distribution
+   ```
+
+   Copy the printed **public** key into `MacMetricsView/Info.plist` →
+   `SUPublicEDKey`, replacing `REPLACE_WITH_EDDSA_PUBLIC_KEY`.
+
+   > Key custody: losing the private key means future builds can no longer be
+   > signed for existing installs. Back up the Keychain item securely.
+
+2. **Add Sparkle to the Xcode target** (Sparkle 2.x via Swift Package Manager in
+   `MacMetricsView.xcodeproj`, or the binary framework). Ensure
+   `Sparkle.framework` **and its XPC services are embedded** in the `.app`
+   (Embed & Sign). Do **not** add Sparkle to `Package.swift`.
+
+### Per-release runbook (manual, no CI)
+
+1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (monotonically) in
+   `MacMetricsView.xcodeproj`. Sparkle compares `CFBundleVersion`
+   (`CURRENT_PROJECT_VERSION`) and displays `CFBundleShortVersionString`
+   (`MARKETING_VERSION`).
+2. Build the release app. The extra flags strip debug info and disable code
+   coverage so the shipped binary does **not** embed absolute build paths (which
+   would leak your macOS username / source layout into the public zip):
+
+   ```sh
+   xcodebuild -project MacMetricsView.xcodeproj -scheme MacMetricsView -configuration Release -destination platform=macOS -derivedDataPath .build/DerivedData clean build \
+     ENABLE_CODE_COVERAGE=NO COPY_PHASE_STRIP=YES DEPLOYMENT_POSTPROCESSING=YES STRIP_INSTALLED_PRODUCT=YES STRIP_STYLE=debugging
+   ```
+
+   (The Release config also pins `ENABLE_CODE_COVERAGE = NO`.) After building, you
+   can confirm the bundle is clean: `grep -rla "/Users/$(whoami)" .build/DerivedData/Build/Products/Release/MacMetricsView.app` should print nothing.
+
+3. Zip it preserving bundle metadata:
+
+   ```sh
+   ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app docs/downloads/MacMetricsView-beta-<version>.zip
+   ```
+
+4. Sign the zip and capture the signature + byte length:
+
+   ```sh
+   ./bin/sign_update docs/downloads/MacMetricsView-beta-<version>.zip
+   ```
+
+5. Add a new `<item>` to the **top** of `docs/appcast.xml` with the new
+   `sparkle:version`, `sparkle:shortVersionString`, `pubDate`, the `enclosure`
+   `url`, and the `sparkle:edSignature` / `length` from step 4.
+6. Update the site download link, commit, and push — GitHub Pages publishes the
+   new zip and appcast.
+
+Updates delivered by Sparkle replace the running bundle without re-applying the
+quarantine flag, so they do **not** re-trigger Gatekeeper. The Gatekeeper
+right-click-Open step only applies to the initial manual install.

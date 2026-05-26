@@ -84,6 +84,10 @@
 		10000000000000000000004B /* CleaningLockCountdownFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */; };
 		10000000000000000000004C /* InputLockServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000137 /* InputLockServiceTests.swift */; };
 		10000000000000000000004D /* CleaningLockStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000138 /* CleaningLockStateTests.swift */; };
+		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
+		100000000000000000000B21 /* UpdateSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B11 /* UpdateSettings.swift */; };
+		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
+		100000000000000000000B23 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B13 /* SparkleUpdateService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -152,6 +156,9 @@
 		100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockCountdownFormatterTests.swift; sourceTree = "<group>"; };
 		100000000000000000000137 /* InputLockServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputLockServiceTests.swift; sourceTree = "<group>"; };
 		100000000000000000000138 /* CleaningLockStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockStateTests.swift; sourceTree = "<group>"; };
+		100000000000000000000B11 /* UpdateSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/UpdateSettings.swift; sourceTree = "<group>"; };
+		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
+		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -159,6 +166,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				100000000000000000000B03 /* Sparkle in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -200,11 +208,14 @@
 				10000000000000000000011F /* MetricVisibilitySettings.swift */,
 				100000000000000000000121 /* MetricDisplaySettings.swift */,
 				100000000000000000000128 /* LaunchAtLoginSettings.swift */,
+				100000000000000000000B11 /* UpdateSettings.swift */,
 				100000000000000000000107 /* CPUFormatter.swift */,
 				100000000000000000000115 /* RAMFormatter.swift */,
 				10000000000000000000011C /* NetworkFormatter.swift */,
 				100000000000000000000125 /* TemperatureFormatter.swift */,
 				100000000000000000000129 /* LaunchAtLoginManager.swift */,
+				100000000000000000000B12 /* AppUpdateService.swift */,
+				100000000000000000000B13 /* SparkleUpdateService.swift */,
 				100000000000000000000108 /* CPUSnapshot.swift */,
 				100000000000000000000109 /* MachCPUReader.swift */,
 				10000000000000000000010A /* CPUSampler.swift */,
@@ -273,6 +284,9 @@
 			dependencies = (
 			);
 			name = MacMetricsView;
+			packageProductDependencies = (
+				100000000000000000000B02 /* Sparkle */,
+			);
 			productName = MacMetricsView;
 			productReference = 100000000000000000000111 /* MacMetricsView.app */;
 			productType = "com.apple.product-type.application";
@@ -323,6 +337,9 @@
 				Base,
 			);
 			mainGroup = 100000000000000000000601;
+			packageReferences = (
+				100000000000000000000B01 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			productRefGroup = 100000000000000000000604 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -372,6 +389,9 @@
 				100000000000000000000027 /* MetricVisibilitySettings.swift in Sources */,
 				10000000000000000000002B /* MetricDisplaySettings.swift in Sources */,
 				100000000000000000000036 /* LaunchAtLoginSettings.swift in Sources */,
+				100000000000000000000B21 /* UpdateSettings.swift in Sources */,
+				100000000000000000000B22 /* AppUpdateService.swift in Sources */,
+				100000000000000000000B23 /* SparkleUpdateService.swift in Sources */,
 				100000000000000000000007 /* CPUFormatter.swift in Sources */,
 				100000000000000000000015 /* RAMFormatter.swift in Sources */,
 				10000000000000000000001F /* NetworkFormatter.swift in Sources */,
@@ -459,7 +479,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 21;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -468,7 +488,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -482,7 +502,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 21;
+				ENABLE_CODE_COVERAGE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -490,7 +511,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0;
+				MARKETING_VERSION = 0.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -680,6 +701,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		100000000000000000000B01 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.9.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		100000000000000000000B02 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 100000000000000000000B01 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 100000000000000000000301 /* Project object */;
 }

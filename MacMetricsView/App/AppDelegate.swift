@@ -14,6 +14,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     private let lockService = CGEventTapInputLock()
     private var overlayController: LockOverlayController?
 
+    // Auto-update (Sparkle in the Xcode build, no-op under SPM)
+    private let updateService = makeAppUpdateService()
+
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
 
@@ -34,6 +37,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         }
         lockService.onEnd = { [weak self] reason in
             self?.endLockSession(reason: reason)
+        }
+
+        // Wire auto-update: apply the persisted preference, then forward UI actions.
+        updateService.setAutomaticChecks(state.automaticUpdatesEnabled)
+        state.onAutomaticUpdatesChange = { [weak self] enabled in
+            self?.updateService.setAutomaticChecks(enabled)
+        }
+        state.onCheckForUpdates = { [weak self] in
+            self?.updateService.checkForUpdates()
         }
 
         statusItemController = StatusItemController(

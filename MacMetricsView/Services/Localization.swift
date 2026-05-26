@@ -91,6 +91,10 @@ enum Strings {
     static let loginDisabled = LocalizedText(en: "Disabled", pt: "Desativado")
     static let loginError = LocalizedText(en: "Error", pt: "Erro")
 
+    // Auto-update
+    static let autoUpdateCheck = LocalizedText(en: "Check for updates…", pt: "Buscar atualizações…")
+    static let autoUpdateAutomatic = LocalizedText(en: "Check for updates automatically", pt: "Buscar atualizações automaticamente")
+
     // Shared
     static let unavailable = LocalizedText(en: "Unavailable", pt: "Indisponível")
 }

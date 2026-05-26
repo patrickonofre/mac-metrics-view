@@ -19,6 +19,10 @@ final class CPUState: ObservableObject {
     @Published private(set) var lockRemaining: TimeInterval = 0
     @Published private(set) var cleaningLockSettings: CleaningLockSettings
 
+    /// Mirrors `UpdateSettings`; the UI binds to this and AppDelegate owns the
+    /// actual updater behind `onAutomaticUpdatesChange` / `onCheckForUpdates`.
+    @Published private(set) var automaticUpdatesEnabled: Bool
+
     /// Live Accessibility (AX) permission gate for the cleaning lock.
     /// Refreshed on each popover show so a grant made in System Settings is
     /// reflected without relaunching the app.
@@ -28,6 +32,10 @@ final class CPUState: ObservableObject {
     var onDisplayChange: (() -> Void)?
     /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
     var onStartLock: ((TimeInterval) -> Void)?
+    /// Called when the auto-update toggle changes; AppDelegate persists and applies it.
+    var onAutomaticUpdatesChange: ((Bool) -> Void)?
+    /// Called when the user requests a manual update check; AppDelegate forwards to the updater.
+    var onCheckForUpdates: (() -> Void)?
 
     private let userDefaults: UserDefaults
     private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
@@ -41,6 +49,7 @@ final class CPUState: ObservableObject {
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
+        automaticUpdatesEnabled = UpdateSettings.load(from: userDefaults).automaticallyChecksForUpdates
         isAccessibilityGranted = accessibilityAuthorization.isTrusted
     }
 
@@ -220,6 +229,21 @@ final class CPUState: ObservableObject {
     func updateLockState(phase: LockPhase, remaining: TimeInterval) {
         lockPhase = phase
         lockRemaining = remaining
+    }
+
+    // MARK: - Auto-update
+
+    /// Persists the auto-update preference and notifies AppDelegate to apply it.
+    func setAutomaticUpdatesEnabled(_ isEnabled: Bool) {
+        guard automaticUpdatesEnabled != isEnabled else { return }
+        automaticUpdatesEnabled = isEnabled
+        UpdateSettings(automaticallyChecksForUpdates: isEnabled).save(to: userDefaults)
+        onAutomaticUpdatesChange?(isEnabled)
+    }
+
+    /// Fires a user-initiated update check; AppDelegate owns the updater.
+    func checkForUpdates() {
+        onCheckForUpdates?()
     }
 
     // MARK: - Private

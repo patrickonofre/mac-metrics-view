@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+    <channel>
+        <title>Mac Metrics View</title>
+        <link>https://patrickonofre.github.io/mac-metrics-view/appcast.xml</link>
+        <description>Appcast for Mac Metrics View auto-update.</description>
+        <language>en</language>
+        <item>
+            <title>beta 0.2.1</title>
+            <pubDate>Sun, 25 May 2026 00:00:00 +0000</pubDate>
+            <sparkle:version>21</sparkle:version>
+            <sparkle:shortVersionString>0.2.1</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-beta-0.2.1.zip"
+                sparkle:edSignature="6Hd1w78BQDXju6bzSLsJP/o/+9q7PbfMvvlm8chAncwVxZPDoAGx8dNj9L3C378YnlV96Y0KxgwrrUmzEH9lAQ=="
+                length="1788344"
+                type="application/octet-stream" />
+        </item>
+    </channel>
+</rss>

@@ -100,6 +100,10 @@ struct PopoverView: View {
 
             Divider()
 
+            UpdatesControl(state: state)
+
+            Divider()
+
             CleaningLockSection(
                 state: state,
                 isAccessibilityGranted: state.isAccessibilityGranted,
@@ -256,6 +260,36 @@ private struct LaunchAtLoginControl: View {
                 }
             }
             .font(.caption2)
+        }
+        .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct UpdatesControl: View {
+    @ObservedObject var state: CPUState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .center, spacing: 8) {
+                Text(Strings.autoUpdateAutomatic())
+                    .lineLimit(1)
+
+                Spacer()
+
+                Toggle(Strings.autoUpdateAutomatic(), isOn: Binding(
+                    get: { state.automaticUpdatesEnabled },
+                    set: { state.setAutomaticUpdatesEnabled($0) }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+            }
+
+            Button(Strings.autoUpdateCheck()) {
+                state.checkForUpdates()
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(Color.accentColor)
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
