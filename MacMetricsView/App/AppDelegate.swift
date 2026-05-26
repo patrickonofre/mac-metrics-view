@@ -44,6 +44,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         state.onCheckForUpdates = { [weak self] in
             self?.updateService.checkForUpdates()
         }
+        state.onRelaunch = { [weak self] in
+            self?.relaunch()
+        }
         updateService.onAvailableVersionChange = { [weak self] version in
             self?.state.setAvailableUpdateVersion(version)
         }
@@ -69,6 +72,40 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         ramSampler.stop()
         networkSampler.stop()
         temperatureSampler.stop()
+    }
+
+    // MARK: - Relaunch
+
+    /// Restarts the app so a freshly granted Accessibility permission is picked
+    /// up — `AXIsProcessTrusted()` is cached for the process lifetime, so the
+    /// running build cannot observe the grant until it relaunches.
+    ///
+    /// Spawns a detached shell that waits for *this* process to exit before
+    /// reopening the bundle. Reopening while still running could leave two menu
+    /// bar items, so we wait on the PID first. Path is single-quoted (its own
+    /// bundle path, not user input) to stay safe if it contains spaces.
+    private func relaunch() {
+        let bundleURL = Bundle.main.bundleURL
+        let pid = ProcessInfo.processInfo.processIdentifier
+        let quotedPath = "'" + bundleURL.path.replacingOccurrences(of: "'", with: "'\\''") + "'"
+
+        let task = Process()
+        task.executableURL = URL(fileURLWithPath: "/bin/sh")
+        task.arguments = [
+            "-c",
+            "while /bin/kill -0 \(pid) >/dev/null 2>&1; do /bin/sleep 0.1; done; /usr/bin/open \(quotedPath)"
+        ]
+
+        do {
+            try task.run()
+        } catch {
+            // Fallback: ask the workspace to start a fresh instance directly.
+            let configuration = NSWorkspace.OpenConfiguration()
+            configuration.createsNewApplicationInstance = true
+            NSWorkspace.shared.openApplication(at: bundleURL, configuration: configuration)
+        }
+
+        NSApp.terminate(nil)
     }
 
     // MARK: - Lock session

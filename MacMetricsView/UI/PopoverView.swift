@@ -111,10 +111,6 @@ struct PopoverView: View {
                 onStart: {
                     state.startCleaningLock()
                     dismissPopover()
-                },
-                onOpenSettings: {
-                    let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
-                    NSWorkspace.shared.open(url)
                 }
             )
 
@@ -475,7 +471,6 @@ private struct CleaningLockSection: View {
     let isAccessibilityGranted: Bool
     let wasResetByUpdate: Bool
     let onStart: () -> Void
-    let onOpenSettings: () -> Void
 
     private static let presetLabels: [(TimeInterval, String)] = [
         (15,  "15s"),
@@ -524,24 +519,36 @@ private struct CleaningLockSection: View {
                         Text("Permissão de Acessibilidade necessária")
                             .foregroundStyle(.secondary)
                         Spacer()
-                        Button("Abrir Ajustes") {
-                            onOpenSettings()
+                        Button("Conceder acesso") {
+                            state.requestAccessibilityAccess()
                         }
                         .buttonStyle(.borderless)
                         .foregroundStyle(Color.accentColor)
                     }
 
                     if wasResetByUpdate {
-                        Text("A atualização redefiniu a permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas ligar a entrada antiga não funciona. Depois, encerre e reabra o app.")
+                        Text("A atualização redefiniu a permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas ligar a entrada antiga não funciona. Depois, toque em Relançar abaixo.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     } else {
-                        Text("Após conceder em Acessibilidade, encerre e reabra o Mac Metrics View para a permissão valer.")
+                        Text("Conceda o acesso em Acessibilidade e toque em Relançar abaixo. Se o Mac Metrics View já aparece na lista mas continua bloqueado, remova (−) a entrada e adicione novamente — uma entrada de uma versão anterior não vale.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
+
+                    HStack(spacing: 6) {
+                        Text("Já concedeu?")
+                            .foregroundStyle(.secondary)
+                        Button("Relançar app") {
+                            state.relaunchToApplyGrant()
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(Color.accentColor)
+                        Spacer()
+                    }
+                    .font(.caption2)
                 }
                 .font(.caption)
             }

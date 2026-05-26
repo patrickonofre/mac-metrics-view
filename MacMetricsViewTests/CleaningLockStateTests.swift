@@ -6,6 +6,7 @@ import XCTest
 final class FakeAccessibilityAuthorization: AccessibilityAuthorizationProtocol {
     var isTrusted: Bool
     private(set) var openSettingsCallCount = 0
+    private(set) var promptCallCount = 0
 
     init(isTrusted: Bool = false) {
         self.isTrusted = isTrusted
@@ -13,6 +14,12 @@ final class FakeAccessibilityAuthorization: AccessibilityAuthorizationProtocol {
 
     func openSettings() {
         openSettingsCallCount += 1
+    }
+
+    @discardableResult
+    func promptForAccess() -> Bool {
+        promptCallCount += 1
+        return isTrusted
     }
 }
 
@@ -287,6 +294,44 @@ final class CleaningLockStateTests: XCTestCase {
         state.refreshAccessibilityAuthorization()
 
         XCTAssertTrue(state.accessibilityResetByUpdate)
+    }
+
+    // MARK: - Access request + relaunch (free mitigations)
+
+    func testFirstAccessRequestShowsNativePrompt() {
+        // The first tap should fire the native prompt (which registers the entry
+        // under the current code identity), and also open Settings as a fallback.
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
+
+        state.requestAccessibilityAccess()
+
+        XCTAssertEqual(auth.promptCallCount, 1)
+        XCTAssertEqual(auth.openSettingsCallCount, 1)
+    }
+
+    func testRepeatAccessRequestSkipsPromptAndOpensSettings() {
+        // macOS only shows the native prompt once per launch, so later taps must
+        // not re-prompt; they open the Settings pane directly instead.
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
+
+        state.requestAccessibilityAccess()
+        state.requestAccessibilityAccess()
+        state.requestAccessibilityAccess()
+
+        XCTAssertEqual(auth.promptCallCount, 1)
+        XCTAssertEqual(auth.openSettingsCallCount, 3)
+    }
+
+    func testRelaunchToApplyGrantFiresCallback() {
+        let state = makeState()
+        var fired = false
+        state.onRelaunch = { fired = true }
+
+        state.relaunchToApplyGrant()
+
+        XCTAssertTrue(fired)
     }
 
     func testReGrantingAfterUpdateClearsResetFlag() {

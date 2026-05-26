@@ -41,11 +41,17 @@ final class CPUState: ObservableObject {
     var onStartLock: ((TimeInterval) -> Void)?
     /// Called when the user requests a manual update check; AppDelegate forwards to the updater.
     var onCheckForUpdates: (() -> Void)?
+    /// Called when the user asks to relaunch after granting Accessibility; AppDelegate owns the relaunch.
+    var onRelaunch: (() -> Void)?
 
     private let userDefaults: UserDefaults
     private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
     private let currentAppVersion: String
     private var grantTracker: AccessibilityGrantTracker
+    /// True once the native AX prompt has been shown this session. macOS only
+    /// surfaces that prompt once per launch, so later taps fall back to opening
+    /// the Settings pane directly instead of doing nothing.
+    private var hasPromptedForAccess = false
     /// Snapshot of the tracker as it was *before this launch* recorded the
     /// current version. Reset detection is computed against this frozen baseline
     /// so the flag stays stable across in-session refreshes — once the current
@@ -240,6 +246,26 @@ final class CPUState: ObservableObject {
     /// app relaunch. Called whenever the popover is shown.
     func refreshAccessibilityAuthorization() {
         evaluateAccessibility()
+    }
+
+    /// User-initiated request for the Accessibility grant. The first tap shows
+    /// the native macOS prompt (which registers the entry under the running
+    /// build's identity); later taps open the Settings pane directly, since the
+    /// system prompt only appears once per launch.
+    func requestAccessibilityAccess() {
+        if hasPromptedForAccess {
+            accessibilityAuthorization.openSettings()
+        } else {
+            hasPromptedForAccess = true
+            accessibilityAuthorization.promptForAccess()
+            accessibilityAuthorization.openSettings()
+        }
+    }
+
+    /// Fires `onRelaunch`; AppDelegate restarts the app so a freshly granted
+    /// permission takes effect (`AXIsProcessTrusted()` is cached per process).
+    func relaunchToApplyGrant() {
+        onRelaunch?()
     }
 
     /// Reads the live AX permission, publishes the gate, and maintains the

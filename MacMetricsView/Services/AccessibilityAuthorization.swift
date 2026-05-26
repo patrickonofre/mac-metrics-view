@@ -14,6 +14,13 @@ protocol AccessibilityAuthorizationProtocol {
 
     /// Opens System Settings → Privacy & Security → Accessibility.
     func openSettings()
+
+    /// Triggers the native macOS Accessibility prompt and returns the current
+    /// trust state. The prompt registers the app in the Accessibility list under
+    /// the *running build's* code identity, so the entry the user then enables
+    /// matches the current designated requirement (avoids the stale-entry trap).
+    @discardableResult
+    func promptForAccess() -> Bool
 }
 
 // MARK: - System implementation
@@ -28,5 +35,11 @@ final class SystemAccessibilityAuthorization: AccessibilityAuthorizationProtocol
     func openSettings() {
         let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")!
         NSWorkspace.shared.open(url)
+    }
+
+    @discardableResult
+    func promptForAccess() -> Bool {
+        let promptKey = kAXTrustedCheckOptionPrompt.takeUnretainedValue() as NSString
+        return AXIsProcessTrustedWithOptions([promptKey: true] as CFDictionary)
     }
 }
