@@ -208,4 +208,65 @@ final class CleaningLockStateTests: XCTestCase {
 
         XCTAssertFalse(state.isAccessibilityGranted)
     }
+
+    // MARK: - Grant reset by update (ad-hoc signing, TD-010)
+
+    func testNoResetFlagOnFreshInstall() {
+        // Never granted on any version → ordinary first-grant prompt.
+        let state = CPUState(userDefaults: makeUserDefaults(),
+                             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                             currentAppVersion: "1.0.0")
+        XCTAssertFalse(state.accessibilityResetByUpdate)
+    }
+
+    func testGrantedStateNeverFlagsReset() {
+        let state = CPUState(userDefaults: makeUserDefaults(),
+                             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true),
+                             currentAppVersion: "1.0.0")
+        XCTAssertFalse(state.accessibilityResetByUpdate)
+    }
+
+    func testManualRevokeOnSameVersionDoesNotFlagReset() {
+        let ud = makeUserDefaults()
+        let auth = FakeAccessibilityAuthorization(isTrusted: true)
+        let state = CPUState(userDefaults: ud, accessibilityAuthorization: auth, currentAppVersion: "1.0.0")
+
+        auth.isTrusted = false
+        state.refreshAccessibilityAuthorization()
+
+        XCTAssertTrue(state.isAccessibilityGranted == false)
+        XCTAssertFalse(state.accessibilityResetByUpdate)
+    }
+
+    func testGrantLostAfterUpdateFlagsReset() {
+        // Reproduces the reported bug: AX granted on 1.0.0, the app updates to
+        // 1.1.0 (new cdhash), and the relaunched build is no longer trusted.
+        let ud = makeUserDefaults()
+        let granted = FakeAccessibilityAuthorization(isTrusted: true)
+        _ = CPUState(userDefaults: ud, accessibilityAuthorization: granted, currentAppVersion: "1.0.0")
+
+        let afterUpdate = CPUState(userDefaults: ud,
+                                   accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                                   currentAppVersion: "1.1.0")
+
+        XCTAssertFalse(afterUpdate.isAccessibilityGranted)
+        XCTAssertTrue(afterUpdate.accessibilityResetByUpdate)
+    }
+
+    func testReGrantingAfterUpdateClearsResetFlag() {
+        let ud = makeUserDefaults()
+        _ = CPUState(userDefaults: ud,
+                     accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true),
+                     currentAppVersion: "1.0.0")
+
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = CPUState(userDefaults: ud, accessibilityAuthorization: auth, currentAppVersion: "1.1.0")
+        XCTAssertTrue(state.accessibilityResetByUpdate)
+
+        auth.isTrusted = true
+        state.refreshAccessibilityAuthorization()
+
+        XCTAssertTrue(state.isAccessibilityGranted)
+        XCTAssertFalse(state.accessibilityResetByUpdate)
+    }
 }

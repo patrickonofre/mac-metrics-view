@@ -28,6 +28,12 @@ final class CPUState: ObservableObject {
     /// reflected without relaunching the app.
     @Published private(set) var isAccessibilityGranted: Bool = false
 
+    /// True when AX is not currently granted but a *previous* app version had
+    /// it — i.e. an update reset the permission (ad-hoc signing, TD-010). The UI
+    /// uses this to tell the user the stale System Settings entry must be removed
+    /// and re-added, not merely toggled.
+    @Published private(set) var accessibilityResetByUpdate: Bool = false
+
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
     /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
@@ -39,18 +45,23 @@ final class CPUState: ObservableObject {
 
     private let userDefaults: UserDefaults
     private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
+    private let currentAppVersion: String
+    private var grantTracker: AccessibilityGrantTracker
 
     init(
         userDefaults: UserDefaults = .standard,
-        accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization()
+        accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization(),
+        currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
         self.userDefaults = userDefaults
         self.accessibilityAuthorization = accessibilityAuthorization
+        self.currentAppVersion = currentAppVersion
+        grantTracker = AccessibilityGrantTracker.load(from: userDefaults)
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
         automaticUpdatesEnabled = UpdateSettings.load(from: userDefaults).automaticallyChecksForUpdates
-        isAccessibilityGranted = accessibilityAuthorization.isTrusted
+        evaluateAccessibility()
     }
 
     var menuBarTitle: String {
@@ -222,7 +233,29 @@ final class CPUState: ObservableObject {
     /// cleaning-lock UI reflects a grant made in System Settings without an
     /// app relaunch. Called whenever the popover is shown.
     func refreshAccessibilityAuthorization() {
-        isAccessibilityGranted = accessibilityAuthorization.isTrusted
+        evaluateAccessibility()
+    }
+
+    /// Reads the live AX permission, publishes the gate, and maintains the
+    /// grant tracker so an update-reset state can be told apart from a normal
+    /// first-time grant. When trusted, records the current version as the last
+    /// granted one; when not, flags whether an earlier version had been granted.
+    private func evaluateAccessibility() {
+        let trusted = accessibilityAuthorization.isTrusted
+        isAccessibilityGranted = trusted
+
+        if trusted {
+            accessibilityResetByUpdate = false
+            if grantTracker.lastGrantedVersion != currentAppVersion {
+                grantTracker = grantTracker.recordingGrant(version: currentAppVersion)
+                grantTracker.save(to: userDefaults)
+            }
+        } else {
+            accessibilityResetByUpdate = grantTracker.wasResetByUpdate(
+                isTrusted: false,
+                currentVersion: currentAppVersion
+            )
+        }
     }
 
     /// Called by AppDelegate each tick and on session end to keep the UI in sync.

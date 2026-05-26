@@ -84,6 +84,11 @@
 		10000000000000000000004B /* CleaningLockCountdownFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */; };
 		10000000000000000000004C /* InputLockServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000137 /* InputLockServiceTests.swift */; };
 		10000000000000000000004D /* CleaningLockStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000138 /* CleaningLockStateTests.swift */; };
+		100000000000000000000C02 /* AccessibilityGrantTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
+		100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
+		100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */; };
+		100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000130 /* AccessibilityAuthorization.swift */; };
+		100000000000000000000C07 /* UpdateSettings.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B11 /* UpdateSettings.swift */; };
 		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
 		100000000000000000000B21 /* UpdateSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B11 /* UpdateSettings.swift */; };
 		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
@@ -146,6 +151,7 @@
 		10000000000000000000012A /* LaunchAtLoginSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginSettingsTests.swift; sourceTree = "<group>"; };
 		10000000000000000000012D /* LockEndReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LockEndReason.swift; sourceTree = "<group>"; };
 		10000000000000000000012E /* CleaningLockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/CleaningLockSettings.swift; sourceTree = "<group>"; };
+		100000000000000000000C01 /* AccessibilityGrantTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityGrantTracker.swift; sourceTree = "<group>"; };
 		10000000000000000000012F /* CleaningLockCountdownFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CleaningLockCountdownFormatter.swift; sourceTree = "<group>"; };
 		100000000000000000000130 /* AccessibilityAuthorization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityAuthorization.swift; sourceTree = "<group>"; };
 		100000000000000000000131 /* InputLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/InputLockService.swift; sourceTree = "<group>"; };
@@ -156,6 +162,7 @@
 		100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockCountdownFormatterTests.swift; sourceTree = "<group>"; };
 		100000000000000000000137 /* InputLockServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputLockServiceTests.swift; sourceTree = "<group>"; };
 		100000000000000000000138 /* CleaningLockStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockStateTests.swift; sourceTree = "<group>"; };
+		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
 		100000000000000000000B11 /* UpdateSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/UpdateSettings.swift; sourceTree = "<group>"; };
 		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
 		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
@@ -230,6 +237,7 @@
 				10000000000000000000010C /* PopoverView.swift */,
 				10000000000000000000012D /* LockEndReason.swift */,
 				10000000000000000000012E /* CleaningLockSettings.swift */,
+				100000000000000000000C01 /* AccessibilityGrantTracker.swift */,
 				10000000000000000000012F /* CleaningLockCountdownFormatter.swift */,
 				100000000000000000000130 /* AccessibilityAuthorization.swift */,
 				100000000000000000000131 /* InputLockService.swift */,
@@ -255,6 +263,7 @@
 				100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */,
 				100000000000000000000137 /* InputLockServiceTests.swift */,
 				100000000000000000000138 /* CleaningLockStateTests.swift */,
+				100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */,
 			);
 			path = MacMetricsViewTests;
 			sourceTree = "<group>";
@@ -411,6 +420,7 @@
 				10000000000000000000000C /* PopoverView.swift in Sources */,
 				10000000000000000000003E /* LockEndReason.swift in Sources */,
 				10000000000000000000003F /* CleaningLockSettings.swift in Sources */,
+				100000000000000000000C02 /* AccessibilityGrantTracker.swift in Sources */,
 				100000000000000000000040 /* CleaningLockCountdownFormatter.swift in Sources */,
 				100000000000000000000041 /* AccessibilityAuthorization.swift in Sources */,
 				100000000000000000000042 /* InputLockService.swift in Sources */,
@@ -453,12 +463,16 @@
 				10000000000000000000003A /* LaunchAtLoginSettingsTests.swift in Sources */,
 				100000000000000000000046 /* LockEndReason.swift in Sources (Tests) */,
 				100000000000000000000047 /* CleaningLockSettings.swift in Sources (Tests) */,
+				100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */,
+				100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */,
+				100000000000000000000C07 /* UpdateSettings.swift in Sources (Tests) */,
 				100000000000000000000048 /* CleaningLockCountdownFormatter.swift in Sources (Tests) */,
 				100000000000000000000049 /* InputLockService.swift in Sources (Tests) */,
 				10000000000000000000004A /* CleaningLockSettingsTests.swift in Sources */,
 				10000000000000000000004B /* CleaningLockCountdownFormatterTests.swift in Sources */,
 				10000000000000000000004C /* InputLockServiceTests.swift in Sources */,
 				10000000000000000000004D /* CleaningLockStateTests.swift in Sources */,
+				100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -479,7 +493,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -488,7 +502,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -502,7 +516,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 22;
+				CURRENT_PROJECT_VERSION = 23;
 				ENABLE_CODE_COVERAGE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -511,7 +525,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 1.0.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

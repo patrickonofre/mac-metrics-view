@@ -107,6 +107,7 @@ struct PopoverView: View {
             CleaningLockSection(
                 state: state,
                 isAccessibilityGranted: state.isAccessibilityGranted,
+                wasResetByUpdate: state.accessibilityResetByUpdate,
                 onStart: {
                     state.startCleaningLock()
                     dismissPopover()
@@ -480,6 +481,7 @@ private struct EmptyMetricsState: View {
 private struct CleaningLockSection: View {
     @ObservedObject var state: CPUState
     let isAccessibilityGranted: Bool
+    let wasResetByUpdate: Bool
     let onStart: () -> Void
     let onOpenSettings: () -> Void
 
@@ -523,17 +525,26 @@ private struct CleaningLockSection: View {
                     .disabled(state.lockPhase == .locked)
                 }
             } else {
-                HStack(spacing: 8) {
-                    Image(systemName: "lock.trianglebadge.exclamationmark")
-                        .foregroundStyle(.orange)
-                    Text("Permissão de Acessibilidade necessária")
-                        .foregroundStyle(.secondary)
-                    Spacer()
-                    Button("Abrir Ajustes") {
-                        onOpenSettings()
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "lock.trianglebadge.exclamationmark")
+                            .foregroundStyle(.orange)
+                        Text("Permissão de Acessibilidade necessária")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Abrir Ajustes") {
+                            onOpenSettings()
+                        }
+                        .buttonStyle(.borderless)
+                        .foregroundStyle(Color.accentColor)
                     }
-                    .buttonStyle(.borderless)
-                    .foregroundStyle(Color.accentColor)
+
+                    if wasResetByUpdate {
+                        Text("A atualização redefiniu a permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas ligar a entrada antiga não funciona.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 .font(.caption)
             }
