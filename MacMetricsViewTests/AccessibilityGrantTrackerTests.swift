@@ -34,11 +34,35 @@ final class AccessibilityGrantTrackerTests: XCTestCase {
         XCTAssertTrue(tracker.wasResetByUpdate(isTrusted: false, currentVersion: "1.1.0"))
     }
 
-    // MARK: - recordingGrant
+    func testSeenEarlierVersionWithoutGrantIsAReset() {
+        // Updating from a build that ran but was never recorded as granted (e.g.
+        // it predated this tracker) still counts as an update reset.
+        let tracker = AccessibilityGrantTracker(lastGrantedVersion: nil, lastSeenVersion: "1.0.1")
+        XCTAssertTrue(tracker.wasResetByUpdate(isTrusted: false, currentVersion: "1.0.2"))
+    }
+
+    func testSeenSameVersionWithoutGrantIsNotAReset() {
+        let tracker = AccessibilityGrantTracker(lastGrantedVersion: nil, lastSeenVersion: "1.0.2")
+        XCTAssertFalse(tracker.wasResetByUpdate(isTrusted: false, currentVersion: "1.0.2"))
+    }
+
+    // MARK: - recordingGrant / recordingSeen
 
     func testRecordingGrantUpdatesVersion() {
         let tracker = AccessibilityGrantTracker(lastGrantedVersion: "1.0.0")
         XCTAssertEqual(tracker.recordingGrant(version: "1.1.0").lastGrantedVersion, "1.1.0")
+    }
+
+    func testRecordingGrantAlsoMarksSeen() {
+        let tracker = AccessibilityGrantTracker()
+        XCTAssertEqual(tracker.recordingGrant(version: "1.1.0").lastSeenVersion, "1.1.0")
+    }
+
+    func testRecordingSeenPreservesGrantedVersion() {
+        let tracker = AccessibilityGrantTracker(lastGrantedVersion: "1.0.0")
+        let seen = tracker.recordingSeen(version: "1.1.0")
+        XCTAssertEqual(seen.lastGrantedVersion, "1.0.0")
+        XCTAssertEqual(seen.lastSeenVersion, "1.1.0")
     }
 
     // MARK: - Persistence
@@ -58,5 +82,11 @@ final class AccessibilityGrantTrackerTests: XCTestCase {
         AccessibilityGrantTracker(lastGrantedVersion: "1.2.3").save(to: ud)
         AccessibilityGrantTracker(lastGrantedVersion: nil).save(to: ud)
         XCTAssertNil(AccessibilityGrantTracker.load(from: ud).lastGrantedVersion)
+    }
+
+    func testSeenVersionRoundTrips() {
+        let ud = makeUserDefaults()
+        AccessibilityGrantTracker(lastGrantedVersion: nil, lastSeenVersion: "1.0.1").save(to: ud)
+        XCTAssertEqual(AccessibilityGrantTracker.load(from: ud).lastSeenVersion, "1.0.1")
     }
 }

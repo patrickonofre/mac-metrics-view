@@ -253,6 +253,42 @@ final class CleaningLockStateTests: XCTestCase {
         XCTAssertTrue(afterUpdate.accessibilityResetByUpdate)
     }
 
+    func testUpdateFromNeverGrantedVersionFlagsReset() {
+        // User ran a prior version that was never recorded as granted (e.g. it
+        // predated the tracker, or the grant was always stale), then updated.
+        // The reset guidance must still appear.
+        let ud = makeUserDefaults()
+        _ = CPUState(userDefaults: ud,
+                     accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                     currentAppVersion: "1.0.1")
+
+        let afterUpdate = CPUState(userDefaults: ud,
+                                   accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                                   currentAppVersion: "1.0.2")
+
+        XCTAssertFalse(afterUpdate.isAccessibilityGranted)
+        XCTAssertTrue(afterUpdate.accessibilityResetByUpdate)
+    }
+
+    func testResetFlagStaysSetAcrossRefreshesWhileUngranted() {
+        // Once detected, the reset guidance must not disappear when the popover
+        // is reopened (refresh) before the user actually grants.
+        let ud = makeUserDefaults()
+        _ = CPUState(userDefaults: ud,
+                     accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                     currentAppVersion: "1.0.1")
+
+        let state = CPUState(userDefaults: ud,
+                             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                             currentAppVersion: "1.0.2")
+        XCTAssertTrue(state.accessibilityResetByUpdate)
+
+        state.refreshAccessibilityAuthorization()
+        state.refreshAccessibilityAuthorization()
+
+        XCTAssertTrue(state.accessibilityResetByUpdate)
+    }
+
     func testReGrantingAfterUpdateClearsResetFlag() {
         let ud = makeUserDefaults()
         _ = CPUState(userDefaults: ud,

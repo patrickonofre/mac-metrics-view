@@ -47,6 +47,12 @@ final class CPUState: ObservableObject {
     private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
     private let currentAppVersion: String
     private var grantTracker: AccessibilityGrantTracker
+    /// Snapshot of the tracker as it was *before this launch* recorded the
+    /// current version. Reset detection is computed against this frozen baseline
+    /// so the flag stays stable across in-session refreshes — once the current
+    /// version is recorded as "seen", the live tracker would no longer report a
+    /// reset, but the user still needs the recovery guidance until they grant.
+    private let resetBaselineTracker: AccessibilityGrantTracker
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -56,7 +62,9 @@ final class CPUState: ObservableObject {
         self.userDefaults = userDefaults
         self.accessibilityAuthorization = accessibilityAuthorization
         self.currentAppVersion = currentAppVersion
-        grantTracker = AccessibilityGrantTracker.load(from: userDefaults)
+        let loadedTracker = AccessibilityGrantTracker.load(from: userDefaults)
+        grantTracker = loadedTracker
+        resetBaselineTracker = loadedTracker
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
@@ -251,10 +259,18 @@ final class CPUState: ObservableObject {
                 grantTracker.save(to: userDefaults)
             }
         } else {
-            accessibilityResetByUpdate = grantTracker.wasResetByUpdate(
+            // Compare against the pre-launch baseline so the flag does not flip
+            // off once this version is recorded as seen below.
+            accessibilityResetByUpdate = resetBaselineTracker.wasResetByUpdate(
                 isTrusted: false,
                 currentVersion: currentAppVersion
             )
+            // Remember that this build ran (even ungranted), so a *future*
+            // update can be recognised as a reset for never-granted users too.
+            if grantTracker.lastSeenVersion != currentAppVersion {
+                grantTracker = grantTracker.recordingSeen(version: currentAppVersion)
+                grantTracker.save(to: userDefaults)
+            }
         }
     }
 

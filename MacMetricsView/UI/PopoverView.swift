@@ -540,7 +540,12 @@ private struct CleaningLockSection: View {
                     }
 
                     if wasResetByUpdate {
-                        Text("A atualização redefiniu a permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas ligar a entrada antiga não funciona.")
+                        Text("A atualização redefiniu a permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas ligar a entrada antiga não funciona. Depois, encerre e reabra o app.")
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Após conceder em Acessibilidade, encerre e reabra o Mac Metrics View para a permissão valer.")
                             .font(.caption2)
                             .foregroundStyle(.secondary)
                             .fixedSize(horizontal: false, vertical: true)

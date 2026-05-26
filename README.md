@@ -41,7 +41,14 @@ To share it as a zip while preserving macOS bundle metadata:
 ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app MacMetricsView-1.0.0.zip
 ```
 
-This unsigned, non-notarized build may require right-clicking the app and choosing Open on first launch (see the site's first-launch guide). Subsequent updates arrive in-app via Sparkle and do not re-trigger Gatekeeper. For a smoother first install, use an Apple Developer ID certificate and notarize the zip so Gatekeeper accepts it normally (deferred — see `docs/TECH_DECISIONS.md` TD-010).
+This non-notarized build may require right-clicking the app and choosing Open on first launch (see the site's first-launch guide). Subsequent updates arrive in-app via Sparkle and do not re-trigger Gatekeeper. For a smoother first install, use an Apple Developer ID certificate and notarize the zip so Gatekeeper accepts it normally (deferred — see `docs/TECH_DECISIONS.md` TD-010).
+
+> **Sign the app before zipping it for release.** Releases must be signed with a
+> stable self-signed certificate so the macOS Accessibility (TCC) grant survives
+> updates — see the per-release runbook below and `docs/TECH_DECISIONS.md`
+> TD-010. The plain `xcodebuild` output above is ad-hoc signed (cdhash-keyed
+> designated requirement), which is fine for local testing but loses the
+> Accessibility grant on every version bump.
 
 ## Test
 
@@ -79,6 +86,22 @@ Sparkle is embedded **only in the Xcode `.app`**. The SPM build (`swift run` /
    `Sparkle.framework` **and its XPC services are embedded** in the `.app`
    (Embed & Sign). Do **not** add Sparkle to `Package.swift`.
 
+### One-time setup: stable signing certificate
+
+Run **once per machine**, before your first signed release:
+
+```sh
+scripts/create-signing-cert.sh
+```
+
+This creates a self-signed code-signing certificate ("Mac Metrics View
+Self-Signed") in your login keychain. Every release must be signed with **this
+same certificate** so the app's designated requirement stays constant across
+versions and the macOS Accessibility (TCC) grant survives updates (see
+`docs/TECH_DECISIONS.md` TD-010). Back it up securely (Keychain Access →
+right-click the identity → Export); losing it forces all users to re-grant
+Accessibility one more time, exactly like the EdDSA key custody note above.
+
 ### Per-release runbook (manual, no CI)
 
 1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (monotonically) in
@@ -97,22 +120,33 @@ Sparkle is embedded **only in the Xcode `.app`**. The SPM build (`swift run` /
    (The Release config also pins `ENABLE_CODE_COVERAGE = NO`.) After building, you
    can confirm the bundle is clean: `grep -rla "/Users/$(whoami)" .build/DerivedData/Build/Products/Release/MacMetricsView.app` should print nothing.
 
-3. Zip it preserving bundle metadata:
+3. Sign the app with the stable certificate (nested Sparkle code first, main
+   bundle last). This is what keeps the Accessibility grant across updates:
+
+   ```sh
+   scripts/sign-app.sh .build/DerivedData/Build/Products/Release/MacMetricsView.app
+   ```
+
+   The script verifies the signature and prints the designated requirement; it
+   must read `identifier "com.pso.MacMetricsView" and certificate leaf = H"…"`
+   (**not** a bare `cdhash`). The leaf hash must match every prior release.
+
+4. Zip it preserving bundle metadata:
 
    ```sh
    ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app docs/downloads/MacMetricsView-<version>.zip
    ```
 
-4. Sign the zip and capture the signature + byte length:
+5. Sign the zip and capture the signature + byte length:
 
    ```sh
    ./bin/sign_update docs/downloads/MacMetricsView-<version>.zip
    ```
 
-5. Add a new `<item>` to the **top** of `docs/appcast.xml` with the new
+6. Add a new `<item>` to the **top** of `docs/appcast.xml` with the new
    `sparkle:version`, `sparkle:shortVersionString`, `pubDate`, the `enclosure`
-   `url`, and the `sparkle:edSignature` / `length` from step 4.
-6. Update the site download link, commit, and push — GitHub Pages publishes the
+   `url`, and the `sparkle:edSignature` / `length` from step 5.
+7. Update the site download link, commit, and push — GitHub Pages publishes the
    new zip and appcast.
 
 Updates delivered by Sparkle replace the running bundle without re-applying the
