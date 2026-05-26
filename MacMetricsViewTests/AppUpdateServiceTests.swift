@@ -18,9 +18,18 @@ final class AppUpdateServiceTests: XCTestCase {
 
         // No crash, no observable effect.
         service.checkForUpdates()
-        service.setAutomaticChecks(true)
-        service.setAutomaticChecks(false)
+        service.probeForUpdateInformation()
 
         XCTAssertFalse(service.canCheckForUpdates)
+    }
+
+    func testNoOpNeverFiresAvailableVersionChange() {
+        let service = NoOpUpdateService()
+        var fired = false
+        service.onAvailableVersionChange = { _ in fired = true }
+
+        service.probeForUpdateInformation()
+
+        XCTAssertFalse(fired)
     }
 }

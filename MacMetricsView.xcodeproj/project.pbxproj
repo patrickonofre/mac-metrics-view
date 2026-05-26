@@ -88,9 +88,7 @@
 		100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
 		100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */; };
 		100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000130 /* AccessibilityAuthorization.swift */; };
-		100000000000000000000C07 /* UpdateSettings.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B11 /* UpdateSettings.swift */; };
 		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
-		100000000000000000000B21 /* UpdateSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B11 /* UpdateSettings.swift */; };
 		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
 		100000000000000000000B23 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B13 /* SparkleUpdateService.swift */; };
 /* End PBXBuildFile section */
@@ -163,7 +161,6 @@
 		100000000000000000000137 /* InputLockServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputLockServiceTests.swift; sourceTree = "<group>"; };
 		100000000000000000000138 /* CleaningLockStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockStateTests.swift; sourceTree = "<group>"; };
 		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
-		100000000000000000000B11 /* UpdateSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/UpdateSettings.swift; sourceTree = "<group>"; };
 		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
 		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -215,7 +212,6 @@
 				10000000000000000000011F /* MetricVisibilitySettings.swift */,
 				100000000000000000000121 /* MetricDisplaySettings.swift */,
 				100000000000000000000128 /* LaunchAtLoginSettings.swift */,
-				100000000000000000000B11 /* UpdateSettings.swift */,
 				100000000000000000000107 /* CPUFormatter.swift */,
 				100000000000000000000115 /* RAMFormatter.swift */,
 				10000000000000000000011C /* NetworkFormatter.swift */,
@@ -398,7 +394,6 @@
 				100000000000000000000027 /* MetricVisibilitySettings.swift in Sources */,
 				10000000000000000000002B /* MetricDisplaySettings.swift in Sources */,
 				100000000000000000000036 /* LaunchAtLoginSettings.swift in Sources */,
-				100000000000000000000B21 /* UpdateSettings.swift in Sources */,
 				100000000000000000000B22 /* AppUpdateService.swift in Sources */,
 				100000000000000000000B23 /* SparkleUpdateService.swift in Sources */,
 				100000000000000000000007 /* CPUFormatter.swift in Sources */,
@@ -465,7 +460,6 @@
 				100000000000000000000047 /* CleaningLockSettings.swift in Sources (Tests) */,
 				100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */,
 				100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */,
-				100000000000000000000C07 /* UpdateSettings.swift in Sources (Tests) */,
 				100000000000000000000048 /* CleaningLockCountdownFormatter.swift in Sources (Tests) */,
 				100000000000000000000049 /* InputLockService.swift in Sources (Tests) */,
 				10000000000000000000004A /* CleaningLockSettingsTests.swift in Sources */,

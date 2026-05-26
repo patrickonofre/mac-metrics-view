@@ -1,20 +1,28 @@
 import Foundation
 
-/// Contract the app uses to check for and configure updates, with no dependency
-/// on Sparkle. The concrete Sparkle-backed implementation lives in
-/// `SparkleUpdateService` (compiled only when the framework is present); the SPM
-/// build resolves to `NoOpUpdateService` so `swift test`/`swift run` stay
-/// Sparkle-free.
+/// Contract the app uses to check for updates and learn about a newer available
+/// version, with no dependency on Sparkle. The concrete Sparkle-backed
+/// implementation lives in `SparkleUpdateService` (compiled only when the
+/// framework is present); the SPM build resolves to `NoOpUpdateService` so
+/// `swift test`/`swift run` stay Sparkle-free.
+///
+/// Background automatic checks are governed solely by `Info.plist`
+/// (`SUEnableAutomaticChecks=YES`); there is no user-facing toggle.
 @MainActor
 protocol AppUpdateService: AnyObject {
     /// Whether a check can be started right now (false when no updater is linked).
     var canCheckForUpdates: Bool { get }
 
-    /// Triggers a user-initiated update check.
+    /// Notifies with the newest available version string, or `nil` when none is
+    /// available. Invoked on the main actor by a passive probe.
+    var onAvailableVersionChange: ((String?) -> Void)? { get set }
+
+    /// Triggers a user-initiated, interactive update check (shows Sparkle UI).
     func checkForUpdates()
 
-    /// Enables or disables Sparkle's background automatic checks.
-    func setAutomaticChecks(_ enabled: Bool)
+    /// Passive check that consults the appcast without showing any UI and reports
+    /// the result through `onAvailableVersionChange`.
+    func probeForUpdateInformation()
 }
 
 /// Inert implementation used wherever Sparkle is not linked (the SPM executable).
@@ -23,9 +31,11 @@ protocol AppUpdateService: AnyObject {
 final class NoOpUpdateService: AppUpdateService {
     var canCheckForUpdates: Bool { false }
 
+    var onAvailableVersionChange: ((String?) -> Void)?
+
     func checkForUpdates() {}
 
-    func setAutomaticChecks(_ enabled: Bool) {}
+    func probeForUpdateInformation() {}
 }
 
 /// Single decision point for which implementation the app uses. Resolves to the

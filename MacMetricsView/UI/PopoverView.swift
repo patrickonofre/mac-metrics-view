@@ -272,25 +272,17 @@ private struct UpdatesControl: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .center, spacing: 8) {
-                Text(Strings.autoUpdateAutomatic())
-                    .lineLimit(1)
-
-                Spacer()
-
-                Toggle(Strings.autoUpdateAutomatic(), isOn: Binding(
-                    get: { state.automaticUpdatesEnabled },
-                    set: { state.setAutomaticUpdatesEnabled($0) }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-            }
-
             Button(Strings.autoUpdateCheck()) {
                 state.checkForUpdates()
             }
             .buttonStyle(.borderless)
             .foregroundStyle(Color.accentColor)
+
+            if let version = state.availableUpdateVersion {
+                Text(Strings.autoUpdateAvailable(version))
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -99,7 +99,12 @@ enum Strings {
 
     // Auto-update
     static let autoUpdateCheck = LocalizedText(en: "Check for updates…", pt: "Buscar atualizações…")
-    static let autoUpdateAutomatic = LocalizedText(en: "Check for updates automatically", pt: "Buscar atualizações automaticamente")
+    static func autoUpdateAvailable(_ version: String, _ language: AppLanguage = .current) -> String {
+        switch language {
+        case .english: return "New version \(version) available"
+        case .portuguese: return "Nova versão \(version) disponível"
+        }
+    }
 
     // Shared
     static let unavailable = LocalizedText(en: "Unavailable", pt: "Indisponível")

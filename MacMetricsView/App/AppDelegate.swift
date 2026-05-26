@@ -39,14 +39,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             self?.endLockSession(reason: reason)
         }
 
-        // Wire auto-update: apply the persisted preference, then forward UI actions.
-        updateService.setAutomaticChecks(state.automaticUpdatesEnabled)
-        state.onAutomaticUpdatesChange = { [weak self] enabled in
-            self?.updateService.setAutomaticChecks(enabled)
-        }
+        // Wire update controls: forward the manual check and feed the passive
+        // version probe into the published state, then probe once at launch.
         state.onCheckForUpdates = { [weak self] in
             self?.updateService.checkForUpdates()
         }
+        updateService.onAvailableVersionChange = { [weak self] version in
+            self?.state.setAvailableUpdateVersion(version)
+        }
+        updateService.probeForUpdateInformation()
 
         statusItemController = StatusItemController(
             state: state,

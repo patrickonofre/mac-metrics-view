@@ -5,16 +5,26 @@ import Sparkle
 /// the Xcode-built `.app`; the entire body is gated by `#if canImport(Sparkle)`
 /// so the SPM build never references Sparkle. Configuration (feed URL, public
 /// EdDSA key, automatic-check default, profiling off) comes from `Info.plist`.
+///
+/// Subclasses `NSObject` because `SPUUpdaterDelegate` inherits from
+/// `NSObjectProtocol`. The delegate is wired before the updater starts so the
+/// passive probe's callbacks are never missed.
 @MainActor
-final class SparkleUpdateService: AppUpdateService {
-    private let controller: SPUStandardUpdaterController
+final class SparkleUpdateService: NSObject, AppUpdateService, SPUUpdaterDelegate {
+    private var controller: SPUStandardUpdaterController!
 
-    init() {
+    var onAvailableVersionChange: ((String?) -> Void)?
+
+    override init() {
+        super.init()
+        // Build the controller after super.init so `self` can be the delegate,
+        // and start it manually so the delegate is wired before any check runs.
         controller = SPUStandardUpdaterController(
-            startingUpdater: true,
-            updaterDelegate: nil,
+            startingUpdater: false,
+            updaterDelegate: self,
             userDriverDelegate: nil
         )
+        controller.startUpdater()
     }
 
     var canCheckForUpdates: Bool {
@@ -25,8 +35,19 @@ final class SparkleUpdateService: AppUpdateService {
         controller.updater.checkForUpdates()
     }
 
-    func setAutomaticChecks(_ enabled: Bool) {
-        controller.updater.automaticallyChecksForUpdates = enabled
+    func probeForUpdateInformation() {
+        controller.updater.checkForUpdateInformation()
+    }
+
+    // MARK: - SPUUpdaterDelegate
+
+    func updater(_ updater: SPUUpdater, didFindValidUpdate item: SUAppcastItem) {
+        let version = item.displayVersionString ?? item.versionString
+        onAvailableVersionChange?(version.isEmpty ? nil : version)
+    }
+
+    func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
+        onAvailableVersionChange?(nil)
     }
 }
 #endif
