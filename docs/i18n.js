@@ -11,10 +11,10 @@
       "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Beta 0.2 para macOS",
+      "hero.eyebrow": "Beta 0.2.1 para macOS",
       "hero.title": "CPU, RAM e rede direto na barra de menus.",
       "hero.lede": "Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar beta 0.2",
+      "hero.cta": "Baixar beta 0.2.1",
       "hero.secondary": "Ver novidades",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS",
@@ -53,9 +53,9 @@
       "privacy.li3": "Sem chamadas externas para monitorar a rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Teste a versão beta 0.2.",
+      "download.title": "Teste a versão beta 0.2.1.",
       "download.body": "Esta versão é um beta local para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado.",
-      "download.cta": "Baixar MacMetricsView-beta-0.2.zip",
+      "download.cta": "Baixar MacMetricsView-beta-0.2.1.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
@@ -64,11 +64,11 @@
       "firstrun.s1Body": "No aviso, escolha “OK” — nunca “Mover para o Lixo”. Isso apenas fecha o alerta sem apagar o app.",
       "firstrun.s2Title": "Abra Privacidade e Segurança",
       "firstrun.s2Body": "Em Ajustes do Sistema → Privacidade e Segurança, role até “MacMetricsView foi bloqueado” e clique em “Abrir Mesmo Assim”.",
-      “firstrun.s3Title”: “Confirme e abra”,
-      “firstrun.s3Body”: “Autentique com Touch ID ou senha e clique em “Abrir”. Só é preciso fazer isso uma vez.”,
-      “firstrun.alt”: “No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.”,
+      "firstrun.s3Title": "Confirme e abra",
+      "firstrun.s3Body": "Autentique com Touch ID ou senha e clique em “Abrir”. Só é preciso fazer isso uma vez.",
+      "firstrun.alt": "No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.",
 
-      “footer.tagline”: “Beta 0.2 para macOS”
+      "footer.tagline": "Beta 0.2.1 para macOS"
     },
     en: {
       "nav.news": "What's new",
@@ -77,10 +77,10 @@
       "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Beta 0.2 for macOS",
+      "hero.eyebrow": "Beta 0.2.1 for macOS",
       "hero.title": "CPU, RAM, and network right in the menu bar.",
       "hero.lede": "A compact, native app to read your Mac's load at a glance — without opening Activity Monitor.",
-      "hero.cta": "Download beta 0.2",
+      "hero.cta": "Download beta 0.2.1",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View showing CPU, RAM, network, and temperature in the macOS menu bar",
@@ -119,9 +119,9 @@
       "privacy.li3": "No external calls to monitor the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Try beta 0.2.",
+      "download.title": "Try beta 0.2.1.",
       "download.body": "This release is a local beta for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized.",
-      "download.cta": "Download MacMetricsView-beta-0.2.zip",
+      "download.cta": "Download MacMetricsView-beta-0.2.1.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
@@ -130,11 +130,11 @@
       "firstrun.s1Body": "In the alert, choose “OK” — never “Move to Trash”. This just dismisses the warning without deleting the app.",
       "firstrun.s2Title": "Open Privacy & Security",
       "firstrun.s2Body": "In System Settings → Privacy & Security, scroll to “MacMetricsView was blocked” and click “Open Anyway”.",
-      “firstrun.s3Title”: “Confirm and open”,
-      “firstrun.s3Body”: “Authenticate with Touch ID or your password and click “Open”. You only need to do this once.”,
-      “firstrun.alt”: “On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.”,
+      "firstrun.s3Title": "Confirm and open",
+      "firstrun.s3Body": "Authenticate with Touch ID or your password and click “Open”. You only need to do this once.",
+      "firstrun.alt": "On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.",
 
-      “footer.tagline”: “Beta 0.2 for macOS”
+      "footer.tagline": "Beta 0.2.1 for macOS"
     }
   };
 
