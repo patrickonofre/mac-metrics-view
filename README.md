@@ -21,7 +21,7 @@ You can also open `MacMetricsView.xcodeproj` in Xcode and run the `MacMetricsVie
 swift run
 ```
 
-## Build Beta App
+## Build Release App
 
 Build a release `.app` artifact:
 
@@ -38,10 +38,10 @@ The generated app will be here:
 To share it as a zip while preserving macOS bundle metadata:
 
 ```sh
-ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app MacMetricsView-beta.zip
+ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app MacMetricsView-1.0.0.zip
 ```
 
-For testers close to you, this unsigned/local beta may require right-clicking the app and choosing Open on first launch. For broader distribution, use an Apple Developer ID certificate and notarize the zip so Gatekeeper accepts it normally.
+This unsigned, non-notarized build may require right-clicking the app and choosing Open on first launch (see the site's first-launch guide). Subsequent updates arrive in-app via Sparkle and do not re-trigger Gatekeeper. For a smoother first install, use an Apple Developer ID certificate and notarize the zip so Gatekeeper accepts it normally (deferred — see `docs/TECH_DECISIONS.md` TD-010).
 
 ## Test
 
@@ -100,13 +100,13 @@ Sparkle is embedded **only in the Xcode `.app`**. The SPM build (`swift run` /
 3. Zip it preserving bundle metadata:
 
    ```sh
-   ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app docs/downloads/MacMetricsView-beta-<version>.zip
+   ditto -c -k --sequesterRsrc --keepParent .build/DerivedData/Build/Products/Release/MacMetricsView.app docs/downloads/MacMetricsView-<version>.zip
    ```
 
 4. Sign the zip and capture the signature + byte length:
 
    ```sh
-   ./bin/sign_update docs/downloads/MacMetricsView-beta-<version>.zip
+   ./bin/sign_update docs/downloads/MacMetricsView-<version>.zip
    ```
 
 5. Add a new `<item>` to the **top** of `docs/appcast.xml` with the new

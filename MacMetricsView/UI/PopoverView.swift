@@ -139,7 +139,7 @@ struct PopoverView: View {
                 Text("Mac Metrics View")
                     .font(.callout.weight(.semibold))
 
-                Text(Strings.versionBeta())
+                Text(Strings.appVersion())
                     .font(.callout.weight(.semibold))
                     .foregroundStyle(.secondary)
             }

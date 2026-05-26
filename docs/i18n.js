@@ -11,10 +11,10 @@
       "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Beta 0.2.1 para macOS",
+      "hero.eyebrow": "Versão 1.0 para macOS",
       "hero.title": "CPU, RAM e rede direto na barra de menus.",
       "hero.lede": "Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar beta 0.2.1",
+      "hero.cta": "Baixar 1.0",
       "hero.secondary": "Ver novidades",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS",
@@ -25,8 +25,8 @@
       "metric.net": "download e upload",
       "metric.temp": "estado térmico",
 
-      "news.eyebrow": "Novidades na versão 0.2",
-      "news.title": "Três recursos novos desde o primeiro beta.",
+      "news.eyebrow": "Versão 1.0",
+      "news.title": "A primeira versão estável, com tudo no lugar.",
       "news.cleanTitle": "Modo limpeza",
       "news.cleanBody": "Trave teclado e trackpad por 15s a 5min para limpar a tela sem disparar cliques ou teclas. Requer permissão de Acessibilidade do macOS.",
       "news.loginTitle": "Abrir ao inicializar",
@@ -44,6 +44,8 @@
       "features.f3Body": "Mostre apenas o que importa. Métricas ocultas param de coletar novos dados.",
       "features.f4Title": "Visual do macOS",
       "features.f4Body": "Interface discreta, responsiva a claro e escuro, pensada para parecer parte do sistema.",
+      "features.f5Title": "Atualizações automáticas",
+      "features.f5Body": "O app verifica novas versões e instala atualizações assinadas no lugar, sem precisar voltar aqui. Você decide quando instalar, e os updates não disparam o aviso do Gatekeeper de novo.",
 
       "privacy.eyebrow": "Privacidade primeiro",
       "privacy.title": "Os dados não saem do seu Mac.",
@@ -53,13 +55,13 @@
       "privacy.li3": "Sem chamadas externas para monitorar a rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Teste a versão beta 0.2.1.",
-      "download.body": "Esta versão é um beta local para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado.",
-      "download.cta": "Baixar MacMetricsView-beta-0.2.1.zip",
+      "download.title": "Baixe a versão 1.0.",
+      "download.body": "Versão 1.0 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
+      "download.cta": "Baixar MacMetricsView-1.0.0.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
-      "firstrun.body": "Como este beta ainda não é notarizado pela Apple, o macOS bloqueia a primeira execução por precaução — não é um erro nem sinal de malware. Libere o app uma única vez assim:",
+      "firstrun.body": "Como o app ainda não é notarizado pela Apple, o macOS bloqueia a primeira execução por precaução — não é um erro nem sinal de malware. Libere o app uma única vez assim:",
       "firstrun.s1Title": "Clique em “OK”",
       "firstrun.s1Body": "No aviso, escolha “OK” — nunca “Mover para o Lixo”. Isso apenas fecha o alerta sem apagar o app.",
       "firstrun.s2Title": "Abra Privacidade e Segurança",
@@ -67,8 +69,9 @@
       "firstrun.s3Title": "Confirme e abra",
       "firstrun.s3Body": "Autentique com Touch ID ou senha e clique em “Abrir”. Só é preciso fazer isso uma vez.",
       "firstrun.alt": "No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.",
+      "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
-      "footer.tagline": "Beta 0.2.1 para macOS"
+      "footer.tagline": "Versão 1.0 para macOS"
     },
     en: {
       "nav.news": "What's new",
@@ -77,10 +80,10 @@
       "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Beta 0.2.1 for macOS",
+      "hero.eyebrow": "Version 1.0 for macOS",
       "hero.title": "CPU, RAM, and network right in the menu bar.",
       "hero.lede": "A compact, native app to read your Mac's load at a glance — without opening Activity Monitor.",
-      "hero.cta": "Download beta 0.2.1",
+      "hero.cta": "Download 1.0",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View showing CPU, RAM, network, and temperature in the macOS menu bar",
@@ -91,8 +94,8 @@
       "metric.net": "download and upload",
       "metric.temp": "thermal state",
 
-      "news.eyebrow": "New in version 0.2",
-      "news.title": "Three new features since the first beta.",
+      "news.eyebrow": "Version 1.0",
+      "news.title": "The first stable release, with everything in place.",
       "news.cleanTitle": "Cleaning mode",
       "news.cleanBody": "Lock the keyboard and trackpad for 15s to 5min so you can wipe the screen without triggering clicks or keys. Requires macOS Accessibility permission.",
       "news.loginTitle": "Open at login",
@@ -110,6 +113,8 @@
       "features.f3Body": "Show only what matters. Hidden metrics stop collecting new data.",
       "features.f4Title": "macOS look and feel",
       "features.f4Body": "A discreet interface that responds to light and dark, designed to feel part of the system.",
+      "features.f5Title": "Automatic updates",
+      "features.f5Body": "The app checks for new versions and installs signed updates in place — no need to come back here. You decide when to install, and updates don't re-trigger Gatekeeper.",
 
       "privacy.eyebrow": "Privacy first",
       "privacy.title": "Your data never leaves your Mac.",
@@ -119,13 +124,13 @@
       "privacy.li3": "No external calls to monitor the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Try beta 0.2.1.",
-      "download.body": "This release is a local beta for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized.",
-      "download.cta": "Download MacMetricsView-beta-0.2.1.zip",
+      "download.title": "Download version 1.0.",
+      "download.body": "Version 1.0 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
+      "download.cta": "Download MacMetricsView-1.0.0.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
-      "firstrun.body": "Because this beta isn't notarized by Apple yet, macOS blocks the first launch as a precaution — it's not an error or a sign of malware. Allow the app once like this:",
+      "firstrun.body": "Because the app isn't notarized by Apple yet, macOS blocks the first launch as a precaution — it's not an error or a sign of malware. Allow the app once like this:",
       "firstrun.s1Title": "Click “OK”",
       "firstrun.s1Body": "In the alert, choose “OK” — never “Move to Trash”. This just dismisses the warning without deleting the app.",
       "firstrun.s2Title": "Open Privacy & Security",
@@ -133,8 +138,9 @@
       "firstrun.s3Title": "Confirm and open",
       "firstrun.s3Body": "Authenticate with Touch ID or your password and click “Open”. You only need to do this once.",
       "firstrun.alt": "On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.",
+      "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
-      "footer.tagline": "Beta 0.2.1 for macOS"
+      "footer.tagline": "Version 1.0 for macOS"
     }
   };
 

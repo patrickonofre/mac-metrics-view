@@ -43,7 +43,13 @@ enum Strings {
     static let temperature = LocalizedText(en: "Temperature", pt: "Temperatura")
 
     // Popover header / footer
-    static let versionBeta = LocalizedText(en: "version: beta 0.2.1", pt: "versão: beta 0.2.1")
+    /// Reads `CFBundleShortVersionString` so the popover always reflects the shipped
+    /// release instead of a hardcoded literal that goes stale every version.
+    static func appVersion(_ language: AppLanguage = .current) -> String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
+        let prefix = language == .portuguese ? "versão" : "version"
+        return "\(prefix): \(version)"
+    }
     static let developedBy = LocalizedText(en: "Developed by Patrick Onofre", pt: "Desenvolvido por Patrick Onofre")
     static let updated = LocalizedText(en: "Updated", pt: "Atualizado")
     static let quit = LocalizedText(en: "Quit Mac Metrics View", pt: "Sair do Mac Metrics View")
