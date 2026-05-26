@@ -192,5 +192,45 @@
       <span>Mac Metrics View</span>
       <span data-i18n="footer.tagline">Versão 1.0 para macOS</span>
     </footer>
+
+    <script>
+      // Subtle scroll reveal. Bails out entirely under Reduce Motion, and
+      // degrades to fully-visible if IntersectionObserver is unavailable.
+      // The hero is intentionally skipped so it never flashes above the fold.
+      (function () {
+        if (
+          window.matchMedia &&
+          window.matchMedia("(prefers-reduced-motion: reduce)").matches
+        )
+          return;
+        var targets = document.querySelectorAll(
+          ".metrics-strip, .section, .download-panel"
+        );
+        if (!targets.length) return;
+        targets.forEach(function (el) {
+          el.classList.add("reveal-init");
+        });
+        if (!("IntersectionObserver" in window)) {
+          targets.forEach(function (el) {
+            el.classList.add("reveal-in");
+          });
+          return;
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            entries.forEach(function (entry) {
+              if (entry.isIntersecting) {
+                entry.target.classList.add("reveal-in");
+                io.unobserve(entry.target);
+              }
+            });
+          },
+          { threshold: 0.12, rootMargin: "0px 0px -8% 0px" }
+        );
+        targets.forEach(function (el) {
+          io.observe(el);
+        });
+      })();
+    </script>
   </body>
 </html>

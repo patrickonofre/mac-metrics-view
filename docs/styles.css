@@ -207,6 +207,20 @@ p {
   transform: translateX(2px);
 }
 
+/* ---------- Focus ---------- */
+
+/* Keyboard users get a clear accent ring; mouse/touch users don't see it.
+   :focus-visible keeps the focus indicator off for pointer interaction
+   while guaranteeing it for keyboard navigation — an accessibility must. */
+:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 55%, transparent);
+  outline-offset: 3px;
+}
+
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
 /* ---------- Typography helpers ---------- */
 
 .eyebrow {
@@ -219,8 +233,8 @@ p {
 
 h1 {
   font-size: clamp(2.6rem, 6.2vw, 4.5rem);
-  font-weight: 700;
-  letter-spacing: -0.022em;
+  font-weight: 600;
+  letter-spacing: -0.025em;
   line-height: 1.05;
   margin: 0 auto 1.1rem;
   max-width: 16ch;
@@ -228,7 +242,7 @@ h1 {
 
 h2 {
   font-size: clamp(2rem, 4.4vw, 3.3rem);
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: -0.02em;
   line-height: 1.08;
   margin: 0 0 1rem;
@@ -277,7 +291,7 @@ h3 {
 
 .hero-visual {
   background: linear-gradient(180deg, var(--bg-alt), var(--surface));
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
   border-radius: var(--radius);
   box-shadow: var(--shadow);
   display: grid;
@@ -326,7 +340,7 @@ h3 {
 }
 
 .metrics-strip div {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
   display: grid;
   gap: 0.25rem;
   padding: clamp(1.4rem, 3vw, 2.2rem) clamp(0.5rem, 2vw, 1.4rem);
@@ -376,7 +390,7 @@ h3 {
 
 .card {
   background: var(--surface);
-  border: 1px solid var(--line);
+  border: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
   border-radius: var(--radius);
   box-shadow: var(--shadow-soft);
   padding: clamp(1.4rem, 2.5vw, 1.9rem);
@@ -428,7 +442,7 @@ h3 {
 }
 
 .copy-block li {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
   font-size: 1.02rem;
   padding-top: 0.7rem;
 }
@@ -504,7 +518,7 @@ h3 {
 /* ---------- Footer ---------- */
 
 .footer {
-  border-top: 1px solid var(--line);
+  border-top: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
   color: var(--muted);
   display: flex;
   font-size: 0.85rem;
@@ -513,6 +527,25 @@ h3 {
   margin: 0 auto;
   max-width: var(--content-wide);
   padding: 1.6rem clamp(1.1rem, 5vw, 2.5rem);
+}
+
+/* ---------- Scroll reveal ---------- */
+
+/* The hidden start-state lives ONLY inside this media query, so users with
+   Reduce Motion on (or no JS) always see content — it can never get stuck
+   invisible. JS adds .reveal-init up front and .reveal-in when in view. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-init {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.7s cubic-bezier(0.2, 0.6, 0.2, 1),
+      transform 0.7s cubic-bezier(0.2, 0.6, 0.2, 1);
+  }
+
+  .reveal-init.reveal-in {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 /* ---------- Responsive ---------- */
