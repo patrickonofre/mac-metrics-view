@@ -5,8 +5,9 @@ import XCTest
 final class TemperatureSamplerTests: XCTestCase {
     private final class FakeReader: TemperatureReading {
         var state: TemperatureState = .normal
+        var celsius: Double?
         func readSample() -> TemperatureSample? {
-            TemperatureSample(celsius: nil, state: state)
+            TemperatureSample(celsius: celsius, state: state)
         }
     }
 
@@ -17,12 +18,45 @@ final class TemperatureSamplerTests: XCTestCase {
         }
     }
 
+    private final class FakeScheduler: TemperaturePollScheduler {
+        private(set) var scheduleCount = 0
+        private(set) var cancelCount = 0
+        private var action: (@MainActor () -> Void)?
+
+        func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void) {
+            scheduleCount += 1
+            self.action = action
+        }
+
+        func cancel() {
+            cancelCount += 1
+            action = nil
+        }
+
+        func fire() {
+            action?()
+        }
+    }
+
+    private func makeSampler(
+        reader: FakeReader,
+        center: NotificationCenter,
+        scheduler: FakeScheduler
+    ) -> (TemperatureSampler, SpyDelegate) {
+        let delegate = SpyDelegate()
+        let sampler = TemperatureSampler(
+            reader: reader,
+            notificationCenter: center,
+            deliveryQueue: nil,
+            pollScheduler: scheduler
+        )
+        sampler.delegate = delegate
+        return (sampler, delegate)
+    }
+
     func testEmitsInitialSampleOnStart() {
         let reader = FakeReader()
-        let center = NotificationCenter()
-        let delegate = SpyDelegate()
-        let sampler = TemperatureSampler(reader: reader, notificationCenter: center, deliveryQueue: nil)
-        sampler.delegate = delegate
+        let (sampler, delegate) = makeSampler(reader: reader, center: NotificationCenter(), scheduler: FakeScheduler())
 
         sampler.start()
 
@@ -32,9 +66,7 @@ final class TemperatureSamplerTests: XCTestCase {
     func testSamplesAgainOnThermalStateChange() {
         let reader = FakeReader()
         let center = NotificationCenter()
-        let delegate = SpyDelegate()
-        let sampler = TemperatureSampler(reader: reader, notificationCenter: center, deliveryQueue: nil)
-        sampler.delegate = delegate
+        let (sampler, delegate) = makeSampler(reader: reader, center: center, scheduler: FakeScheduler())
 
         sampler.start()
         reader.state = .hot
@@ -43,17 +75,55 @@ final class TemperatureSamplerTests: XCTestCase {
         XCTAssertEqual(delegate.samples.map(\.state), [.normal, .hot])
     }
 
-    func testStopUnsubscribesFromNotifications() {
+    func testPollTimerReamplesNumericCelsius() {
+        let reader = FakeReader()
+        reader.celsius = 48
+        let scheduler = FakeScheduler()
+        let (sampler, delegate) = makeSampler(reader: reader, center: NotificationCenter(), scheduler: scheduler)
+
+        sampler.start()
+        reader.celsius = 55
+        scheduler.fire()
+
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(delegate.samples.map(\.celsius), [48, 55])
+    }
+
+    func testStopUnsubscribesAndCancelsTimer() {
         let reader = FakeReader()
         let center = NotificationCenter()
-        let delegate = SpyDelegate()
-        let sampler = TemperatureSampler(reader: reader, notificationCenter: center, deliveryQueue: nil)
-        sampler.delegate = delegate
+        let scheduler = FakeScheduler()
+        let (sampler, delegate) = makeSampler(reader: reader, center: center, scheduler: scheduler)
 
         sampler.start()
         sampler.stop()
         center.post(name: ProcessInfo.thermalStateDidChangeNotification, object: nil)
+        scheduler.fire()
 
+        XCTAssertEqual(scheduler.cancelCount, 1)
         XCTAssertEqual(delegate.samples.map(\.state), [.normal])
+    }
+
+    func testStartIsIdempotent() {
+        let reader = FakeReader()
+        let center = NotificationCenter()
+        let scheduler = FakeScheduler()
+        let (sampler, delegate) = makeSampler(reader: reader, center: center, scheduler: scheduler)
+
+        sampler.start()
+        sampler.start()
+        center.post(name: ProcessInfo.thermalStateDidChangeNotification, object: nil)
+
+        // One schedule, one initial sample + one notification sample (no duplicate observer).
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(delegate.samples.count, 2)
+    }
+
+    func testFactoryFallbackProducesNilCelsiusOnNonNumericArch() {
+        let reader = ProcessInfoTemperatureReader()
+        let sample = reader.readSample()
+
+        XCTAssertNil(sample?.celsius)
+        XCTAssertNotNil(sample?.state)
     }
 }
