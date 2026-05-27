@@ -33,6 +33,12 @@ final class MachRAMReader: RAMReading {
         guard result == KERN_SUCCESS else { return nil }
 
         let totalBytes = ProcessInfo.processInfo.physicalMemory
+        return MachRAMReader.makeSample(stats: stats, totalBytes: totalBytes, pageSize: pageSize)
+    }
+
+    /// Pure derivation of a `RAMSample` from raw VM stats, isolated from the syscall so the
+    /// metric math is unit-testable with synthesized `vm_statistics64` values.
+    static func makeSample(stats: vm_statistics64, totalBytes: UInt64, pageSize: vm_size_t) -> RAMSample? {
         guard totalBytes > 0 else { return nil }
 
         // Mirror Activity Monitor's "Memory Used" = App Memory + Wired + Compressed,
@@ -41,15 +47,20 @@ final class MachRAMReader: RAMReading {
         let internalPages = UInt64(stats.internal_page_count)
         let purgeablePages = UInt64(stats.purgeable_count)
         let appMemoryPages = internalPages > purgeablePages ? internalPages - purgeablePages : 0
-        let usedPages = appMemoryPages
-            + UInt64(stats.wire_count)
-            + UInt64(stats.compressor_page_count)
+        // Pressure proxy (task-001): wired + compressed against total.
+        let pressurePages = UInt64(stats.wire_count) + UInt64(stats.compressor_page_count)
+        let usedPages = appMemoryPages + pressurePages
         let usedBytes = usedPages * UInt64(pageSize)
+        let appMemoryBytes = appMemoryPages * UInt64(pageSize)
+        let pressureBytes = pressurePages * UInt64(pageSize)
 
         let bytesPerGB = 1024.0 * 1024.0 * 1024.0
         let usedGB = Double(usedBytes) / bytesPerGB
         let totalGB = Double(totalBytes) / bytesPerGB
         let usedPercent = Double(usedBytes) / Double(totalBytes) * 100
+        let appMemoryGB = Double(appMemoryBytes) / bytesPerGB
+        let appMemoryPercent = Double(appMemoryBytes) / Double(totalBytes) * 100
+        let pressurePercent = Double(pressureBytes) / Double(totalBytes) * 100
 
         guard usedGB.isFinite,
               totalGB.isFinite,
@@ -63,7 +74,10 @@ final class MachRAMReader: RAMReading {
         return RAMSample(
             usedGB: usedGB,
             totalGB: totalGB,
-            usedPercent: usedPercent
+            usedPercent: usedPercent,
+            appMemoryGB: appMemoryGB,
+            appMemoryPercent: appMemoryPercent,
+            pressurePercent: pressurePercent
         )
     }
 }

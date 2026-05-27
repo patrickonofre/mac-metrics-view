@@ -62,7 +62,7 @@ final class StatusItemController {
 
             attributedTitle.append(statusSegment(
                 metric: .ram,
-                value: RAMFormatter.fixedWidthUsedGBString(state.latestRAMSample?.usedGB),
+                value: RAMFormatter.valueString(for: state.latestRAMSample, metric: state.ramMenuBarMetric),
                 style: state.ramMenuBarTextStyle
             ))
         }

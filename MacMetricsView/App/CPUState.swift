@@ -91,7 +91,7 @@ final class CPUState: ObservableObject {
         }
 
         if visibility.showRAM {
-            titles.append(RAMFormatter.menuBarTitle(for: latestRAMSample, showLabel: showLabel))
+            titles.append(RAMFormatter.menuBarTitle(for: latestRAMSample, metric: display.ramMenuBarMetric, showLabel: showLabel))
         }
 
         if visibility.showNetwork {
@@ -110,7 +110,11 @@ final class CPUState: ObservableObject {
     }
 
     var ramMenuBarTextStyle: CPUMenuBarTextStyle {
-        RAMFormatter.menuBarTextStyle(for: latestRAMSample)
+        RAMFormatter.menuBarTextStyle(for: latestRAMSample, metric: display.ramMenuBarMetric)
+    }
+
+    var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric {
+        display.ramMenuBarMetric
     }
 
     var temperatureMenuBarTextStyle: CPUMenuBarTextStyle {
@@ -129,7 +133,7 @@ final class CPUState: ObservableObject {
         }
 
         if visibility.showRAM {
-            segments.append("RAM \(RAMFormatter.usedGBString(latestRAMSample?.usedGB))")
+            segments.append("RAM \(RAMFormatter.valueString(for: latestRAMSample, metric: display.ramMenuBarMetric))")
         }
 
         if visibility.showNetwork {
@@ -188,6 +192,14 @@ final class CPUState: ObservableObject {
         guard display.identifierStyle != identifierStyle else { return }
 
         display.identifierStyle = identifierStyle
+        display.save(to: userDefaults)
+        onDisplayChange?()
+    }
+
+    func setRAMMenuBarMetric(_ metric: MetricDisplaySettings.RAMMenuBarMetric) {
+        guard display.ramMenuBarMetric != metric else { return }
+
+        display.ramMenuBarMetric = metric
         display.save(to: userDefaults)
         onDisplayChange?()
     }

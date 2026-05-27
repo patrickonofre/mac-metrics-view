@@ -62,6 +62,23 @@ enum Strings {
     // RAM detail rows
     static let ramTotal = LocalizedText(en: "Total", pt: "Total")
     static let ramUsed = LocalizedText(en: "Used", pt: "Usado")
+    static let ramAppMemory = LocalizedText(en: "App Memory", pt: "Memória de apps")
+    static let ramPressure = LocalizedText(en: "Pressure", pt: "Pressão")
+    static let ramMenuBarMetric = LocalizedText(en: "Menu bar", pt: "Barra")
+    static let ramMetricAppMemoryShort = LocalizedText(en: "App", pt: "Apps")
+    static let ramMetricPressureShort = LocalizedText(en: "Pressure", pt: "Pressão")
+    static let ramMenuBarMetricHelpTitle = LocalizedText(
+        en: "Which RAM value shows in the menu bar",
+        pt: "Qual valor de RAM aparece na barra"
+    )
+    static let ramAppMemoryHelp = LocalizedText(
+        en: "Memory actively used by apps (GB). Rises and falls as you open and close apps.",
+        pt: "Memória usada ativamente pelos apps (GB). Sobe e desce ao abrir e fechar apps."
+    )
+    static let ramPressureHelp = LocalizedText(
+        en: "How stressed memory is overall (%). Stays low under normal use; climbs only when the system runs short on memory.",
+        pt: "O quanto a memória está sob estresse no geral (%). Fica baixa no uso normal; só sobe quando falta memória."
+    )
 
     // Network detail rows (loanwords, identical in both)
     static let download = LocalizedText(en: "Download", pt: "Download")

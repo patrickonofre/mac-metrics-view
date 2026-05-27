@@ -36,6 +36,10 @@ struct PopoverView: View {
                 identifierStyle: Binding(
                     get: { state.display.identifierStyle },
                     set: { state.setMetricIdentifierStyle($0) }
+                ),
+                ramMenuBarMetric: Binding(
+                    get: { state.display.ramMenuBarMetric },
+                    set: { state.setRAMMenuBarMetric($0) }
                 )
             )
 
@@ -56,8 +60,8 @@ struct PopoverView: View {
                     if state.visibility.showRAM {
                         MetricSection(
                             title: "RAM",
-                            value: RAMFormatter.usedGBString(state.latestRAMSample?.usedGB),
-                            values: state.ramHistory.samples.map(\.usedPercent),
+                            value: RAMFormatter.usedGBString(state.latestRAMSample?.appMemoryGB),
+                            values: state.ramHistory.samples.map(\.appMemoryPercent),
                             severity: state.ramMenuBarTextStyle,
                             details: ramDetails
                         )
@@ -157,9 +161,12 @@ struct PopoverView: View {
     }
 
     private var ramDetails: [MetricDetailRow] {
-        [
-            MetricDetailRow(label: Strings.ramTotal(), value: RAMFormatter.usedGBString(state.latestRAMSample?.totalGB)),
-            MetricDetailRow(label: Strings.ramUsed(), value: CPUFormatter.percentageString(state.latestRAMSample?.usedPercent))
+        let sample = state.latestRAMSample
+        let appMemory = "\(RAMFormatter.usedGBString(sample?.appMemoryGB)) (\(CPUFormatter.percentageString(sample?.appMemoryPercent)))"
+        return [
+            MetricDetailRow(label: Strings.ramAppMemory(), value: appMemory),
+            MetricDetailRow(label: Strings.ramPressure(), value: CPUFormatter.percentageString(sample?.pressurePercent)),
+            MetricDetailRow(label: Strings.ramTotal(), value: RAMFormatter.usedGBString(sample?.totalGB))
         ]
     }
 
@@ -291,6 +298,7 @@ private struct MetricVisibilityControls: View {
     @Binding var networkVisible: Bool
     @Binding var temperatureVisible: Bool
     @Binding var identifierStyle: MetricDisplaySettings.IdentifierStyle
+    @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
@@ -309,9 +317,83 @@ private struct MetricVisibilityControls: View {
             HStack(spacing: 8) {
                 MetricIdentifierPicker(identifierStyle: $identifierStyle)
             }
+
+            if ramVisible {
+                HStack(spacing: 8) {
+                    RAMMenuBarMetricPicker(ramMenuBarMetric: $ramMenuBarMetric)
+                }
+            }
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct RAMMenuBarMetricPicker: View {
+    @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
+
+    @State private var showHelp = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                HStack(spacing: 3) {
+                    Text("RAM \(Strings.ramMenuBarMetric())")
+                        .lineLimit(1)
+                        .foregroundStyle(.primary)
+                    Button {
+                        showHelp.toggle()
+                    } label: {
+                        Image(systemName: showHelp ? "info.circle.fill" : "info.circle")
+                            .foregroundStyle(showHelp ? Color.accentColor : .secondary)
+                            .imageScale(.small)
+                    }
+                    .buttonStyle(.plain)
+                    .help(Strings.ramMenuBarMetricHelpTitle())
+                }
+                .frame(width: 88, alignment: .leading)
+
+                Picker("RAM \(Strings.ramMenuBarMetric())", selection: $ramMenuBarMetric) {
+                    Text(Strings.ramMetricAppMemoryShort()).tag(MetricDisplaySettings.RAMMenuBarMetric.appMemory)
+                    Text(Strings.ramMetricPressureShort()).tag(MetricDisplaySettings.RAMMenuBarMetric.pressure)
+                }
+                .labelsHidden()
+                .pickerStyle(.segmented)
+                .frame(width: 150)
+            }
+
+            if showHelp {
+                VStack(alignment: .leading, spacing: 7) {
+                    helpRow(term: Strings.ramAppMemory(), detail: Strings.ramAppMemoryHelp())
+                    helpRow(term: Strings.ramPressure(), detail: Strings.ramPressureHelp())
+                }
+                .padding(9)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(nsColor: .controlBackgroundColor))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.08))
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .animation(.easeInOut(duration: 0.18), value: showHelp)
+    }
+
+    private func helpRow(term: String, detail: String) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(term)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(detail)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 

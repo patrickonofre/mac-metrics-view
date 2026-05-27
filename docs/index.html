@@ -3,14 +3,64 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Mac Metrics View mostra CPU, RAM e rede direto na barra de menus do macOS.">
-    <meta property="og:title" content="Mac Metrics View">
-    <meta property="og:description" content="CPU, RAM e rede direto na barra de menus do macOS.">
-    <meta property="og:image" content="assets/app-popover-preview.png">
-    <title>Mac Metrics View</title>
+    <title>Mac Metrics View — CPU, RAM, rede e temperatura na barra de menus do macOS</title>
+    <meta name="description" content="App nativo e gratuito para macOS que mostra CPU, memória RAM (Memória de apps e Pressão), rede e temperatura direto na barra de menus. Leitura local, sem conta e sem telemetria. Apple Silicon.">
+    <link rel="canonical" href="https://patrickonofre.github.io/mac-metrics-view/">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta name="author" content="Patrick Onofre">
+    <meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mac Metrics View">
+    <meta property="og:url" content="https://patrickonofre.github.io/mac-metrics-view/">
+    <meta property="og:title" content="Mac Metrics View — métricas do Mac na barra de menus">
+    <meta property="og:description" content="CPU, RAM, rede e temperatura direto na barra de menus do macOS. Nativo, local e sem telemetria.">
+    <meta property="og:image" content="https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png">
+    <meta property="og:image:alt" content="Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibição">
+    <meta property="og:image:width" content="904">
+    <meta property="og:image:height" content="1184">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:locale:alternate" content="en_US">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mac Metrics View — métricas do Mac na barra de menus">
+    <meta name="twitter:description" content="CPU, RAM, rede e temperatura direto na barra de menus do macOS. Nativo, local e sem telemetria.">
+    <meta name="twitter:image" content="https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png">
+
     <link rel="icon" href="assets/app-icon.png">
+    <link rel="apple-touch-icon" href="assets/app-icon.png">
     <link rel="stylesheet" href="styles.css">
     <script src="i18n.js" defer></script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Mac Metrics View",
+      "operatingSystem": "macOS 14+",
+      "applicationCategory": "UtilitiesApplication",
+      "processorRequirements": "Apple Silicon",
+      "description": "App nativo para macOS que mostra CPU, memória RAM (Memória de apps e Pressão), rede e temperatura direto na barra de menus. Leitura local, sem conta e sem telemetria.",
+      "url": "https://patrickonofre.github.io/mac-metrics-view/",
+      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-1.1.0.zip",
+      "softwareVersion": "1.1.0",
+      "image": "https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png",
+      "screenshot": "https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png",
+      "inLanguage": ["pt-BR", "en"],
+      "author": {
+        "@type": "Person",
+        "name": "Patrick Onofre"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "BRL"
+      }
+    }
+    </script>
   </head>
   <body>
     <header class="topbar">
@@ -35,13 +85,13 @@
 
     <main id="top">
       <section class="hero">
-        <p class="eyebrow" data-i18n="hero.eyebrow">Versão 1.0 para macOS</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow">Versão 1.1 para macOS</p>
         <h1 data-i18n="hero.title">CPU, RAM e rede direto na barra de menus.</h1>
         <p class="lede" data-i18n="hero.lede">
           Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.
         </p>
         <div class="actions" aria-label="Acoes principais">
-          <a class="button primary" href="downloads/MacMetricsView-1.1.0.zip" download data-i18n="hero.cta">Baixar 1.0</a>
+          <a class="button primary" href="downloads/MacMetricsView-1.1.0.zip" download data-i18n="hero.cta">Baixar 1.1</a>
           <a class="link-cta" href="#news"><span data-i18n="hero.secondary">Ver novidades</span> <span aria-hidden="true">&rsaquo;</span></a>
         </div>
         <p class="note" data-i18n="hero.note">Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.</p>
@@ -144,9 +194,9 @@
       <section class="download-panel" id="download">
         <div>
           <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
-          <h2 data-i18n="download.title">Baixe a versão 1.0.</h2>
+          <h2 data-i18n="download.title">Baixe a versão 1.1.</h2>
           <p data-i18n="download.body">
-            Versão 1.0 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser
+            Versão 1.1 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser
             um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.
           </p>
         </div>
@@ -190,7 +240,7 @@
 
     <footer class="footer">
       <span>Mac Metrics View</span>
-      <span data-i18n="footer.tagline">Versão 1.0 para macOS</span>
+      <span data-i18n="footer.tagline">Versão 1.1 para macOS</span>
     </footer>
 
     <script>
