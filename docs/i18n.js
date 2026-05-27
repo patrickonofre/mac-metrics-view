@@ -21,9 +21,16 @@
       "hero.altPopover": "Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibição",
 
       "metric.cpu": "uso atual",
-      "metric.ram": "memória em GB",
+      "metric.ram": "Apps ou Pressão",
       "metric.net": "download e upload",
-      "metric.temp": "estado térmico",
+      "metric.temp": "temperatura em °C",
+
+      "news11.eyebrow": "Versão 1.1",
+      "news11.title": "Temperatura em °C e RAM do seu jeito.",
+      "news11.tempTitle": "Temperatura numérica",
+      "news11.tempBody": "Em Macs com Apple Silicon, veja a temperatura do chip em °C direto na barra, sem privilégios. Sem sensor compatível, o app mantém o estado térmico.",
+      "news11.ramTitle": "RAM: Apps ou Pressão",
+      "news11.ramBody": "Escolha o que a barra mostra: Memória de apps (GB), que sobe e desce conforme você usa apps, ou Pressão (%), o quanto a memória está sob estresse. O popover mostra os dois, com ajuda explicando a diferença.",
 
       "news.eyebrow": "Versão 1.0",
       "news.title": "A primeira versão estável, com tudo no lugar.",
@@ -90,9 +97,16 @@
       "hero.altPopover": "Mac Metrics View popover with CPU, RAM, network, temperature, and display controls",
 
       "metric.cpu": "current usage",
-      "metric.ram": "memory in GB",
+      "metric.ram": "Apps or Pressure",
       "metric.net": "download and upload",
-      "metric.temp": "thermal state",
+      "metric.temp": "temperature in °C",
+
+      "news11.eyebrow": "Version 1.1",
+      "news11.title": "Temperature in °C and RAM your way.",
+      "news11.tempTitle": "Numeric temperature",
+      "news11.tempBody": "On Apple Silicon Macs, see the chip temperature in °C right in the menu bar, no privileges. With no compatible sensor, the app keeps the thermal state.",
+      "news11.ramTitle": "RAM: Apps or Pressure",
+      "news11.ramBody": "Choose what the menu bar shows: App Memory (GB), which rises and falls as you use apps, or Pressure (%), how stressed memory is. The popover shows both, with help explaining the difference.",
 
       "news.eyebrow": "Version 1.0",
       "news.title": "The first stable release, with everything in place.",
