@@ -333,7 +333,7 @@ h3 {
 .metrics-strip {
   display: grid;
   gap: 1px;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   margin: 0 auto;
   max-width: var(--content-wide);
   padding: 0 clamp(1.1rem, 5vw, 2.5rem);
