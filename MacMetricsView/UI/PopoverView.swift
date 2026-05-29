@@ -8,235 +8,176 @@ struct PopoverView: View {
     let quit: () -> Void
 
     private let popoverWidth: CGFloat = 380
-    private let popoverHeight: CGFloat = 520
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            appInfoHeader
+        // Content-driven height: data and config each take exactly the room their content
+        // needs, top to bottom — no forced split (which left the short data pane with a
+        // void and clipped the taller config pane). The popover resizes to fit; nothing
+        // scrolls. Width is fixed.
+        VStack(alignment: .leading, spacing: 12) {
+            headerBar
+
+            dataPane
 
             Divider()
 
-            MetricVisibilityControls(
-                cpuVisible: Binding(
-                    get: { state.visibility.showCPU },
-                    set: { state.setCPUVisible($0) }
-                ),
-                ramVisible: Binding(
-                    get: { state.visibility.showRAM },
-                    set: { state.setRAMVisible($0) }
-                ),
-                networkVisible: Binding(
-                    get: { state.visibility.showNetwork },
-                    set: { state.setNetworkVisible($0) }
-                ),
-                temperatureVisible: Binding(
-                    get: { state.visibility.showTemperature },
-                    set: { state.setTemperatureVisible($0) }
-                ),
-                diskVisible: Binding(
-                    get: { state.visibility.showDisk },
-                    set: { state.setDiskVisible($0) }
-                ),
-                identifierStyle: Binding(
-                    get: { state.display.identifierStyle },
-                    set: { state.setMetricIdentifierStyle($0) }
-                ),
-                ramMenuBarMetric: Binding(
-                    get: { state.display.ramMenuBarMetric },
-                    set: { state.setRAMMenuBarMetric($0) }
-                ),
-                diskMenuBarMetric: Binding(
-                    get: { state.display.diskMenuBarMetric },
-                    set: { state.setDiskMenuBarMetric($0) }
-                )
-            )
+            configPane
+        }
+        .controlSize(.small)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .frame(width: popoverWidth, alignment: .topLeading)
+        .onAppear {
+            state.refreshAccessibilityAuthorization()
+        }
+    }
 
-            Divider()
+    private var headerBar: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            Text("Mac Metrics View")
+                .font(.callout.weight(.semibold))
 
-            ScrollView(.vertical) {
-                VStack(alignment: .leading, spacing: 10) {
-                    if state.visibility.showCPU {
-                        MetricSection(
-                            title: "CPU",
-                            value: CPUFormatter.percentageString(state.latestSample?.totalUsagePercent),
-                            values: state.history.samples.map(\.totalUsagePercent),
-                            severity: state.menuBarTextStyle,
-                            details: cpuDetails
-                        )
-                    }
+            Text(Strings.appVersion())
+                .font(.caption)
+                .foregroundStyle(.secondary)
 
-                    if state.visibility.showRAM {
-                        MetricSection(
-                            title: "RAM",
-                            value: RAMFormatter.usedGBString(state.latestRAMSample?.appMemoryGB),
-                            values: state.ramHistory.samples.map(\.appMemoryPercent),
-                            severity: state.ramMenuBarTextStyle,
-                            details: ramDetails
-                        )
-                    }
-
-                    if state.visibility.showNetwork {
-                        MetricSection(
-                            title: Strings.network(),
-                            value: networkSummary,
-                            values: normalizedNetworkTrend,
-                            severity: .normal,
-                            details: networkDetails
-                        )
-                    }
-
-                    if state.visibility.showDisk {
-                        MetricSection(
-                            title: Strings.disk(),
-                            value: DiskFormatter.menuBarTitle(
-                                for: state.latestDiskSample,
-                                metric: state.diskMenuBarMetric,
-                                showLabel: false
-                            ),
-                            values: normalizedDiskTrend,
-                            severity: state.diskMenuBarTextStyle,
-                            details: diskDetails
-                        )
-                    }
-
-                    if state.visibility.showTemperature {
-                        MetricSection(
-                            title: Strings.temperature(),
-                            value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
-                            values: state.temperatureHistory.samples.map(\.trendValue),
-                            severity: state.temperatureMenuBarTextStyle,
-                            details: temperatureDetails
-                        )
-                    }
-
-                    if !state.hasVisibleMetric {
-                        EmptyMetricsState()
-                    }
-
-                    lastUpdatedFooter
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.vertical, 1)
-            }
-            .frame(maxWidth: .infinity, maxHeight: 245)
-
-            Divider()
-
-            LaunchAtLoginControl(settings: launchAtLoginSettings)
-
-            Divider()
-
-            UpdatesControl(state: state)
-
-            Divider()
-
-            CleaningLockSection(
-                state: state,
-                isAccessibilityGranted: state.isAccessibilityGranted,
-                wasResetByUpdate: state.accessibilityResetByUpdate,
-                onStart: {
-                    state.startCleaningLock()
-                    dismissPopover()
-                }
-            )
-
-            Divider()
+            Spacer()
 
             Button(Strings.quit(), action: quit)
                 .font(.caption)
                 .buttonStyle(.borderless)
                 .foregroundStyle(.secondary)
         }
-        .controlSize(.small)
-        .padding(.horizontal, 14)
-        .padding(.vertical, 12)
-        .frame(width: popoverWidth, height: popoverHeight, alignment: .topLeading)
-        .onAppear {
-            state.refreshAccessibilityAuthorization()
-        }
+        .frame(maxWidth: .infinity)
     }
 
-    private var appInfoHeader: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("Mac Metrics View")
-                    .font(.callout.weight(.semibold))
+    // MARK: - Data pane (top half)
 
-                Text(Strings.appVersion())
-                    .font(.callout.weight(.semibold))
-                    .foregroundStyle(.secondary)
-            }
+    private var dataPane: some View {
+        // Always shows every metric; the visibility toggles only affect the menu bar.
+        VStack(alignment: .leading, spacing: 8) {
+            MetricRow(
+                symbol: "cpu",
+                title: "CPU",
+                value: CPUFormatter.percentageString(state.latestSample?.totalUsagePercent),
+                values: state.history.samples.map(\.totalUsagePercent),
+                severity: state.menuBarTextStyle
+            )
+
+            MetricRow(
+                symbol: "memorychip",
+                title: "RAM",
+                value: RAMFormatter.valueString(for: state.latestRAMSample, metric: state.ramMenuBarMetric),
+                values: ramTrend,
+                severity: state.ramMenuBarTextStyle
+            )
+
+            MetricRow(
+                symbol: "network",
+                title: Strings.network(),
+                value: networkSummary,
+                values: normalizedNetworkTrend,
+                severity: .normal
+            )
+
+            MetricRow(
+                symbol: "thermometer",
+                title: Strings.temperature(),
+                value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
+                values: state.temperatureHistory.samples.map(\.trendValue),
+                severity: state.temperatureMenuBarTextStyle
+            )
+
+            MetricRow(
+                symbol: "internaldrive",
+                title: Strings.disk(),
+                value: DiskFormatter.menuBarTitle(
+                    for: state.latestDiskSample,
+                    metric: state.diskMenuBarMetric,
+                    showLabel: false
+                ),
+                values: normalizedDiskTrend,
+                severity: state.diskMenuBarTextStyle
+            )
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: - Config pane (bottom half)
+
+    private var configPane: some View {
+        VStack(alignment: .leading, spacing: 14) {
+                MetricVisibilityControls(
+                    cpuVisible: Binding(
+                        get: { state.visibility.showCPU },
+                        set: { state.setCPUVisible($0) }
+                    ),
+                    ramVisible: Binding(
+                        get: { state.visibility.showRAM },
+                        set: { state.setRAMVisible($0) }
+                    ),
+                    networkVisible: Binding(
+                        get: { state.visibility.showNetwork },
+                        set: { state.setNetworkVisible($0) }
+                    ),
+                    temperatureVisible: Binding(
+                        get: { state.visibility.showTemperature },
+                        set: { state.setTemperatureVisible($0) }
+                    ),
+                    diskVisible: Binding(
+                        get: { state.visibility.showDisk },
+                        set: { state.setDiskVisible($0) }
+                    ),
+                    identifierStyle: Binding(
+                        get: { state.display.identifierStyle },
+                        set: { state.setMetricIdentifierStyle($0) }
+                    ),
+                    ramMenuBarMetric: Binding(
+                        get: { state.display.ramMenuBarMetric },
+                        set: { state.setRAMMenuBarMetric($0) }
+                    ),
+                    diskMenuBarMetric: Binding(
+                        get: { state.display.diskMenuBarMetric },
+                        set: { state.setDiskMenuBarMetric($0) }
+                    )
+                )
+
+                Divider()
+
+                LaunchAtLoginControl(settings: launchAtLoginSettings)
+
+                UpdatesControl(state: state)
+
+                Divider()
+
+                CleaningLockSection(
+                    state: state,
+                    isAccessibilityGranted: state.isAccessibilityGranted,
+                    wasResetByUpdate: state.accessibilityResetByUpdate,
+                    onStart: {
+                        state.startCleaningLock()
+                        dismissPopover()
+                    }
+                )
 
             Text(Strings.developedBy())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
         }
-        .accessibilityElement(children: .combine)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var cpuDetails: [MetricDetailRow] {
-        [
-            MetricDetailRow(label: Strings.cpuUser(), value: CPUFormatter.percentageString(state.latestSample?.userUsagePercent)),
-            MetricDetailRow(label: Strings.cpuSystem(), value: CPUFormatter.percentageString(state.latestSample?.systemUsagePercent)),
-            MetricDetailRow(label: Strings.cpuIdle(), value: CPUFormatter.percentageString(state.latestSample?.idlePercent))
-        ]
-    }
+    // MARK: - Derived values
 
-    private var ramDetails: [MetricDetailRow] {
-        let sample = state.latestRAMSample
-        let appMemory = "\(RAMFormatter.usedGBString(sample?.appMemoryGB)) (\(CPUFormatter.percentageString(sample?.appMemoryPercent)))"
-        return [
-            MetricDetailRow(label: Strings.ramAppMemory(), value: appMemory),
-            MetricDetailRow(label: Strings.ramPressure(), value: CPUFormatter.percentageString(sample?.pressurePercent)),
-            MetricDetailRow(label: Strings.ramTotal(), value: RAMFormatter.usedGBString(sample?.totalGB))
-        ]
-    }
-
-    private var networkDetails: [MetricDetailRow] {
-        [
-            MetricDetailRow(
-                label: Strings.download(),
-                value: NetworkFormatter.byteRateString(state.latestNetworkSample?.downloadBytesPerSecond)
-            ),
-            MetricDetailRow(
-                label: Strings.upload(),
-                value: NetworkFormatter.byteRateString(state.latestNetworkSample?.uploadBytesPerSecond)
-            )
-        ]
-    }
-
-    private var lastUpdatedFooter: some View {
-        HStack(alignment: .firstTextBaseline) {
-            Text(Strings.updated())
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(lastUpdatedText)
-                .monospacedDigit()
+    // Sparkline follows the selected RAM value so the row stays consistent with the picker.
+    private var ramTrend: [Double] {
+        switch state.ramMenuBarMetric {
+        case .pressure:
+            return state.ramHistory.samples.map(\.pressurePercent)
+        case .appMemory:
+            return state.ramHistory.samples.map(\.appMemoryPercent)
         }
-        .font(.caption2)
-        .accessibilityElement(children: .combine)
     }
-
-    private var lastUpdatedText: String {
-        guard let date = [
-            state.latestSample?.timestamp,
-            state.latestRAMSample?.timestamp,
-            state.latestNetworkSample?.timestamp,
-            state.latestTemperatureSample?.timestamp,
-            state.latestDiskSample?.timestamp
-        ].compactMap({ $0 }).max() else {
-            return "--"
-        }
-
-        return Self.timeFormatter.string(from: date)
-    }
-
-    private static let timeFormatter: DateFormatter = {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .medium
-        formatter.dateStyle = .none
-        return formatter
-    }()
 
     private var networkSummary: String {
         "↓ \(NetworkFormatter.byteRateString(state.latestNetworkSample?.downloadBytesPerSecond)) ↑ \(NetworkFormatter.byteRateString(state.latestNetworkSample?.uploadBytesPerSecond))"
@@ -249,31 +190,72 @@ struct PopoverView: View {
         return rates.map { $0 / maxRate * 100 }
     }
 
-    private var temperatureDetails: [MetricDetailRow] {
-        [
-            MetricDetailRow(label: Strings.temperatureStateRow(), value: state.latestTemperatureSample?.state.localizedName() ?? Strings.unavailable())
-        ]
-    }
-
     private var normalizedDiskTrend: [Double] {
         let rates = state.diskHistory.samples.map(\.totalBytesPerSecond)
         guard let maxRate = rates.max(), maxRate > 0 else { return rates }
 
         return rates.map { $0 / maxRate * 100 }
     }
+}
 
-    private var diskDetails: [MetricDetailRow] {
-        let totals = DiskWindowStats.recentTotalBytes(in: state.diskHistory, interval: state.diskSampleInterval)
-        let peaks = DiskWindowStats.recentPeakRates(in: state.diskHistory)
+// MARK: - Compact metric row
 
-        return [
-            MetricDetailRow(label: Strings.diskRead(), value: DiskFormatter.combinedRateString(state.latestDiskSample?.readBytesPerSecond)),
-            MetricDetailRow(label: Strings.diskWrite(), value: DiskFormatter.combinedRateString(state.latestDiskSample?.writeBytesPerSecond)),
-            MetricDetailRow(label: Strings.diskRecentTotalRead(), value: DiskFormatter.byteCountString(totals.read)),
-            MetricDetailRow(label: Strings.diskRecentTotalWrite(), value: DiskFormatter.byteCountString(totals.written)),
-            MetricDetailRow(label: Strings.diskRecentPeakRead(), value: DiskFormatter.combinedRateString(peaks.read)),
-            MetricDetailRow(label: Strings.diskRecentPeakWrite(), value: DiskFormatter.combinedRateString(peaks.write))
-        ]
+private struct MetricRow: View {
+    let symbol: String
+    let title: String
+    let value: String
+    let values: [Double]
+    let severity: CPUMenuBarTextStyle
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: symbol)
+                .imageScale(.small)
+                .foregroundStyle(.secondary)
+                .frame(width: 18, alignment: .center)
+
+            Text(title)
+                .font(.callout)
+                .lineLimit(1)
+
+            Spacer(minLength: 8)
+
+            if !values.isEmpty {
+                SparklineView(values: values, height: 16)
+                    .foregroundStyle(.tertiary)
+                    .frame(width: 56)
+            }
+
+            Text(value)
+                .font(.callout.weight(.semibold))
+                .monospacedDigit()
+                .foregroundStyle(severityColor)
+                .lineLimit(1)
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(title), \(value)\(severitySuffix)")
+    }
+
+    private var severityColor: Color {
+        switch severity {
+        case .normal:
+            return .primary
+        case .elevatedCPU:
+            return Color(nsColor: .systemOrange)
+        case .highCPU:
+            return Color(nsColor: .systemRed)
+        }
+    }
+
+    private var severitySuffix: String {
+        switch severity {
+        case .normal:
+            return ""
+        case .elevatedCPU:
+            return ", \(Strings.severityElevated())"
+        case .highCPU:
+            return ", \(Strings.severityHigh())"
+        }
     }
 }
 
@@ -298,16 +280,12 @@ private struct LaunchAtLoginControl: View {
                 .disabled(!settings.isAvailable)
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(settings.status.localizedName())
-                    .foregroundStyle(.secondary)
-
-                if settings.showsError {
-                    Text(Strings.loginChangeFailed())
-                        .foregroundStyle(.red)
-                }
+            // The toggle itself shows on/off; only surface the line when something failed.
+            if settings.showsError {
+                Text(Strings.loginChangeFailed())
+                    .font(.caption2)
+                    .foregroundStyle(.red)
             }
-            .font(.caption2)
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -368,16 +346,15 @@ private struct MetricVisibilityControls: View {
                 MetricIdentifierPicker(identifierStyle: $identifierStyle)
             }
 
-            if ramVisible {
-                HStack(spacing: 8) {
-                    RAMMenuBarMetricPicker(ramMenuBarMetric: $ramMenuBarMetric)
-                }
+            // Always visible: these choose the value shown for RAM and Disk in both the
+            // popover and the menu bar, so they apply even when the metric is hidden from
+            // the menu bar.
+            HStack(spacing: 8) {
+                RAMMenuBarMetricPicker(ramMenuBarMetric: $ramMenuBarMetric)
             }
 
-            if diskVisible {
-                HStack(spacing: 8) {
-                    DiskMenuBarMetricPicker(diskMenuBarMetric: $diskMenuBarMetric)
-                }
+            HStack(spacing: 8) {
+                DiskMenuBarMetricPicker(diskMenuBarMetric: $diskMenuBarMetric)
             }
         }
         .font(.caption)
@@ -390,12 +367,12 @@ private struct DiskMenuBarMetricPicker: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Text("\(Strings.disk()) \(Strings.diskMenuBarMetric())")
+            Text(Strings.diskMenuBarMetric())
                 .lineLimit(1)
                 .foregroundStyle(.primary)
                 .frame(width: 88, alignment: .leading)
 
-            Picker("\(Strings.disk()) \(Strings.diskMenuBarMetric())", selection: $diskMenuBarMetric) {
+            Picker(Strings.diskMenuBarMetric(), selection: $diskMenuBarMetric) {
                 Text(Strings.diskMetricCombinedShort()).tag(MetricDisplaySettings.DiskMenuBarMetric.combined)
                 Text(Strings.diskMetricSplitShort()).tag(MetricDisplaySettings.DiskMenuBarMetric.split)
             }
@@ -416,7 +393,7 @@ private struct RAMMenuBarMetricPicker: View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
                 HStack(spacing: 3) {
-                    Text("RAM \(Strings.ramMenuBarMetric())")
+                    Text(Strings.ramMenuBarMetric())
                         .lineLimit(1)
                         .foregroundStyle(.primary)
                     Button {
@@ -431,7 +408,7 @@ private struct RAMMenuBarMetricPicker: View {
                 }
                 .frame(width: 88, alignment: .leading)
 
-                Picker("RAM \(Strings.ramMenuBarMetric())", selection: $ramMenuBarMetric) {
+                Picker(Strings.ramMenuBarMetric(), selection: $ramMenuBarMetric) {
                     Text(Strings.ramMetricAppMemoryShort()).tag(MetricDisplaySettings.RAMMenuBarMetric.appMemory)
                     Text(Strings.ramMetricPressureShort()).tag(MetricDisplaySettings.RAMMenuBarMetric.pressure)
                 }
@@ -513,114 +490,6 @@ private struct SettingSwitch: View {
                 .toggleStyle(.switch)
         }
         .frame(width: 158, alignment: .leading)
-    }
-}
-
-private struct MetricSection: View {
-    let title: String
-    let value: String
-    let values: [Double]
-    let severity: CPUMenuBarTextStyle
-    let details: [MetricDetailRow]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(title)
-                    .font(.callout.weight(.semibold))
-
-                if let severityLabel {
-                    Text(severityLabel)
-                        .font(.caption2)
-                        .foregroundStyle(severityColor)
-                }
-
-                Spacer()
-
-                Text(value)
-                    .font(.system(.body, design: .default, weight: .semibold))
-                    .monospacedDigit()
-                    .foregroundStyle(severityColor)
-                    .accessibilityLabel("\(title), \(value)\(severityAccessibilitySuffix)")
-            }
-
-            if !values.isEmpty {
-                SparklineView(values: values, height: 18)
-                    .foregroundStyle(.tertiary)
-            }
-
-            MetricDetailGrid(rows: details)
-        }
-        .padding(.vertical, 2)
-        .accessibilityElement(children: .contain)
-
-        Divider()
-    }
-
-    private var severityLabel: String? {
-        switch severity {
-        case .normal:
-            return nil
-        case .elevatedCPU:
-            return Strings.severityElevated()
-        case .highCPU:
-            return Strings.severityHigh()
-        }
-    }
-
-    private var severityAccessibilitySuffix: String {
-        guard let severityLabel else { return "" }
-        return ", \(severityLabel)"
-    }
-
-    private var severityColor: Color {
-        switch severity {
-        case .normal:
-            return .primary
-        case .elevatedCPU:
-            return .orange
-        case .highCPU:
-            return .red
-        }
-    }
-}
-
-private struct MetricDetailGrid: View {
-    let rows: [MetricDetailRow]
-
-    var body: some View {
-        Grid(alignment: .leadingFirstTextBaseline, horizontalSpacing: 16, verticalSpacing: 4) {
-            ForEach(rows) { row in
-                GridRow {
-                    Text(row.label)
-                        .foregroundStyle(.secondary)
-                    Text(row.value)
-                        .monospacedDigit()
-                }
-            }
-        }
-        .font(.caption)
-    }
-}
-
-private struct MetricDetailRow: Identifiable {
-    let label: String
-    let value: String
-
-    var id: String { label }
-}
-
-private struct EmptyMetricsState: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(Strings.noMetricsTitle())
-                .font(.callout.weight(.semibold))
-            Text(Strings.noMetricsHint())
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .padding(.vertical, 14)
-        .accessibilityElement(children: .combine)
     }
 }
 

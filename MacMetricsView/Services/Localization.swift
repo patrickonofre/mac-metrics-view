@@ -65,12 +65,12 @@ enum Strings {
     static let ramUsed = LocalizedText(en: "Used", pt: "Usado")
     static let ramAppMemory = LocalizedText(en: "App Memory", pt: "Memória de apps")
     static let ramPressure = LocalizedText(en: "Pressure", pt: "Pressão")
-    static let ramMenuBarMetric = LocalizedText(en: "Menu bar", pt: "Barra")
+    static let ramMenuBarMetric = LocalizedText(en: "RAM value", pt: "Valor RAM")
     static let ramMetricAppMemoryShort = LocalizedText(en: "App", pt: "Apps")
     static let ramMetricPressureShort = LocalizedText(en: "Pressure", pt: "Pressão")
     static let ramMenuBarMetricHelpTitle = LocalizedText(
-        en: "Which RAM value shows in the menu bar",
-        pt: "Qual valor de RAM aparece na barra"
+        en: "Which RAM value is shown",
+        pt: "Qual valor de RAM é exibido"
     )
     static let ramAppMemoryHelp = LocalizedText(
         en: "Memory actively used by apps (GB). Rises and falls as you open and close apps.",
@@ -93,7 +93,7 @@ enum Strings {
     static let diskRecentTotalWrite = LocalizedText(en: "Recent write (~45s)", pt: "Escrita recente (~45s)")
     static let diskRecentPeakRead = LocalizedText(en: "Peak read (~45s)", pt: "Pico de leitura (~45s)")
     static let diskRecentPeakWrite = LocalizedText(en: "Peak write (~45s)", pt: "Pico de escrita (~45s)")
-    static let diskMenuBarMetric = LocalizedText(en: "Menu bar", pt: "Barra")
+    static let diskMenuBarMetric = LocalizedText(en: "Disk value", pt: "Valor Disco")
     static let diskMetricCombinedShort = LocalizedText(en: "Total", pt: "Total")
     static let diskMetricSplitShort = LocalizedText(en: "R/W", pt: "L/E")
 

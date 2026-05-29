@@ -2,7 +2,9 @@ import AppKit
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate {
-    private let state = CPUState()
+    // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
+    // its visibility (see applyFirstRunMetricPresetIfNeeded()).
+    private lazy var state = CPUState()
     private let launchAtLoginSettings = LaunchAtLoginSettings()
     private let cpuSampler = CPUSampler()
     private let ramSampler = RAMSampler()
@@ -21,8 +23,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
 
-        state.onVisibilityChange = { [weak self] metric, isVisible in
-            self?.setSampler(for: metric, isVisible: isVisible)
+        // Must run before the first `state` access, which constructs CPUState and loads
+        // visibility from UserDefaults.
+        applyFirstRunMetricPresetIfNeeded()
+
+        state.onVisibilityChange = { [weak self] _, _ in
+            // Visibility only curates the menu bar; samplers always run so the popover
+            // keeps showing every metric. Just rebuild the title.
             self?.statusItemController?.setNeedsTitleUpdate()
         }
         state.onDisplayChange = { [weak self] in
@@ -62,7 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.delegate = self
         temperatureSampler.delegate = self
         diskSampler.delegate = self
-        startVisibleSamplers()
+        startAllSamplers()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -75,6 +82,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.stop()
         temperatureSampler.stop()
         diskSampler.stop()
+    }
+
+    /// Seeds the first-run metric preset once, on a genuinely fresh install. The grant
+    /// tracker records a version on every launch, so an empty tracker means the app has
+    /// never run here. Existing installs and any user-chosen visibility are left untouched
+    /// (see `MetricVisibilitySettings.resolved(from:isFreshInstall:)`).
+    private func applyFirstRunMetricPresetIfNeeded() {
+        let tracker = AccessibilityGrantTracker.load()
+        let isFreshInstall = tracker.lastSeenVersion == nil && tracker.lastGrantedVersion == nil
+        _ = MetricVisibilitySettings.resolved(isFreshInstall: isFreshInstall)
     }
 
     // MARK: - Relaunch
@@ -152,40 +169,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
-    private func startVisibleSamplers() {
-        if state.visibility.showCPU {
-            cpuSampler.start()
-        }
-
-        if state.visibility.showRAM {
-            ramSampler.start()
-        }
-
-        if state.visibility.showNetwork {
-            networkSampler.start()
-        }
-
-        if state.visibility.showTemperature {
-            temperatureSampler.start()
-        }
-
-        if state.visibility.showDisk {
-            diskSampler.start()
-        }
-    }
-
-    private func setSampler(for metric: MetricVisibilitySettings.Metric, isVisible: Bool) {
-        switch metric {
-        case .cpu:
-            isVisible ? cpuSampler.start() : cpuSampler.stop()
-        case .ram:
-            isVisible ? ramSampler.start() : ramSampler.stop()
-        case .network:
-            isVisible ? networkSampler.start() : networkSampler.stop()
-        case .temperature:
-            isVisible ? temperatureSampler.start() : temperatureSampler.stop()
-        case .disk:
-            isVisible ? diskSampler.start() : diskSampler.stop()
-        }
+    private func startAllSamplers() {
+        // Every metric is sampled so the popover always shows live data; menu-bar
+        // visibility is applied when the title is built, not at the sampler.
+        cpuSampler.start()
+        ramSampler.start()
+        networkSampler.start()
+        temperatureSampler.start()
+        diskSampler.start()
     }
 }

@@ -170,32 +170,29 @@ final class CPUState: ObservableObject {
         return segments.joined(separator: ", ")
     }
 
+    // Samples are always recorded, independent of menu-bar visibility: the popover shows
+    // every metric, while `visibility` only curates which ones appear in the menu bar.
     func update(with sample: CPUSample) {
-        guard visibility.showCPU else { return }
         latestSample = sample
         history.append(sample)
     }
 
     func update(with sample: RAMSample) {
-        guard visibility.showRAM else { return }
         latestRAMSample = sample
         ramHistory.append(sample)
     }
 
     func update(with sample: NetworkSample) {
-        guard visibility.showNetwork else { return }
         latestNetworkSample = sample
         networkHistory.append(sample)
     }
 
     func update(with sample: TemperatureSample) {
-        guard visibility.showTemperature else { return }
         latestTemperatureSample = sample
         temperatureHistory.append(sample)
     }
 
     func update(with sample: DiskSample) {
-        guard visibility.showDisk else { return }
         latestDiskSample = sample
         diskHistory.append(sample)
     }
@@ -247,37 +244,19 @@ final class CPUState: ObservableObject {
     private func updateVisibility(metric: MetricVisibilitySettings.Metric, isVisible: Bool) {
         guard currentVisibility(for: metric) != isVisible else { return }
 
+        // Toggling only curates the menu bar. Samplers keep running and history keeps
+        // accumulating, so there is no stale data to reset on re-show.
         switch metric {
         case .cpu:
             visibility.showCPU = isVisible
-            if isVisible {
-                latestSample = nil
-                history = CPUHistory()
-            }
         case .ram:
             visibility.showRAM = isVisible
-            if isVisible {
-                latestRAMSample = nil
-                ramHistory = RAMHistory()
-            }
         case .network:
             visibility.showNetwork = isVisible
-            if isVisible {
-                latestNetworkSample = nil
-                networkHistory = NetworkHistory()
-            }
         case .temperature:
             visibility.showTemperature = isVisible
-            if isVisible {
-                latestTemperatureSample = nil
-                temperatureHistory = TemperatureHistory()
-            }
         case .disk:
             visibility.showDisk = isVisible
-            if isVisible {
-                latestDiskSample = nil
-                diskHistory = DiskHistory()
-            }
         }
 
         visibility.save(to: userDefaults)

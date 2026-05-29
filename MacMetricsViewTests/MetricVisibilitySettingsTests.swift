@@ -114,6 +114,66 @@ final class MetricVisibilitySettingsTests: XCTestCase {
         XCTAssertFalse(settings.hasVisibleMetric)
     }
 
+    func testFreshInstallAppliesFirstRunPreset() {
+        let userDefaults = makeUserDefaults()
+
+        let settings = MetricVisibilitySettings.resolved(from: userDefaults, isFreshInstall: true)
+
+        XCTAssertEqual(settings, MetricVisibilitySettings.firstRunPreset)
+        XCTAssertTrue(settings.showCPU)
+        XCTAssertTrue(settings.showRAM)
+        XCTAssertTrue(settings.showTemperature)
+        XCTAssertFalse(settings.showNetwork)
+        XCTAssertFalse(settings.showDisk)
+        // Persisted so later loads return the preset, not the legacy defaults.
+        XCTAssertEqual(MetricVisibilitySettings.load(from: userDefaults), MetricVisibilitySettings.firstRunPreset)
+    }
+
+    func testExistingInstallKeepsLegacyDefaultsInsteadOfPreset() {
+        let userDefaults = makeUserDefaults()
+
+        let settings = MetricVisibilitySettings.resolved(from: userDefaults, isFreshInstall: false)
+
+        // No silent menu-bar change on update: Network stays on, Temperature stays off.
+        XCTAssertTrue(settings.showNetwork)
+        XCTAssertFalse(settings.showTemperature)
+        XCTAssertFalse(settings.showDisk)
+    }
+
+    func testResolvedHonorsStoredVisibilityEvenWhenFresh() {
+        let userDefaults = makeUserDefaults()
+        MetricVisibilitySettings(
+            showCPU: false,
+            showRAM: true,
+            showNetwork: true,
+            showTemperature: false,
+            showDisk: true
+        ).save(to: userDefaults)
+
+        let settings = MetricVisibilitySettings.resolved(from: userDefaults, isFreshInstall: true)
+
+        // User's stored choice wins over the preset.
+        XCTAssertFalse(settings.showCPU)
+        XCTAssertTrue(settings.showNetwork)
+        XCTAssertTrue(settings.showDisk)
+    }
+
+    func testFirstRunPresetAppliedOnlyOnceThenUserSelectionWins() {
+        let userDefaults = makeUserDefaults()
+
+        _ = MetricVisibilitySettings.resolved(from: userDefaults, isFreshInstall: true)
+
+        // User reconfigures: turns Network on.
+        var chosen = MetricVisibilitySettings.load(from: userDefaults)
+        chosen.showNetwork = true
+        chosen.save(to: userDefaults)
+
+        let reResolved = MetricVisibilitySettings.resolved(from: userDefaults, isFreshInstall: true)
+
+        XCTAssertTrue(reResolved.showNetwork, "preset must not be re-applied after the user reconfigures")
+        XCTAssertEqual(reResolved, chosen)
+    }
+
     @MainActor
     func testHidingCPURemovesCPUFromFormattedMenuBarOutput() {
         let state = CPUState(userDefaults: makeUserDefaults())
@@ -195,25 +255,29 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     }
 
     @MainActor
-    func testHidingMetricPreventsNewHistorySamples() {
+    func testHidingMetricFromMenuBarStillRecordsHistory() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
         state.setCPUVisible(false)
         state.update(with: CPUSample(totalUsagePercent: 42))
 
-        XCTAssertTrue(state.history.samples.isEmpty)
+        // Visibility only curates the menu bar; the popover shows every metric, so history
+        // keeps accumulating even when hidden from the menu bar.
+        XCTAssertEqual(state.latestSample?.totalUsagePercent, 42)
+        XCTAssertEqual(state.history.samples.count, 1)
     }
 
     @MainActor
-    func testShowingHiddenMetricResetsToFallbackState() {
+    func testTogglingMenuBarVisibilityKeepsExistingData() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
         state.update(with: CPUSample(totalUsagePercent: 42))
         state.setCPUVisible(false)
         state.setCPUVisible(true)
 
-        XCTAssertEqual(state.menuBarTitle, " --%  -- GB  ↓ --.- MB/s ↑ --.- MB/s")
-        XCTAssertTrue(state.history.samples.isEmpty)
+        // No reset on re-show: the sample and history survive a menu-bar visibility toggle.
+        XCTAssertEqual(state.latestSample?.totalUsagePercent, 42)
+        XCTAssertEqual(state.history.samples.count, 1)
     }
 
     @MainActor
@@ -255,7 +319,7 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     }
 
     @MainActor
-    func testHidingTemperatureRemovesSegmentAndPreventsHistory() throws {
+    func testHidingTemperatureRemovesMenuBarSegmentButKeepsHistory() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
 
         state.setCPUVisible(false)
@@ -266,8 +330,10 @@ final class MetricVisibilitySettingsTests: XCTestCase {
         state.setTemperatureVisible(false)
         state.update(with: try XCTUnwrap(TemperatureSample(celsius: 69, state: .normal)))
 
+        // Menu bar: temperature hidden, and it was the only visible metric → placeholder.
         XCTAssertEqual(state.menuBarTitle, Strings.metricsPlaceholder())
-        XCTAssertEqual(state.temperatureHistory.samples.map(\.celsius), [68])
+        // Popover data: history keeps accumulating regardless of menu-bar visibility.
+        XCTAssertEqual(state.temperatureHistory.samples.map(\.celsius), [68, 69])
     }
 
     @MainActor

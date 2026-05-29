@@ -94,6 +94,34 @@ final class NetworkCalculationFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(NetworkFormatter.stableMenuBarTitle(for: nil, showLabel: false), "↓ --.- MB/s ↑ --.- MB/s")
     }
 
+    func testCompactFixedWidthRateUsesSingleLetterUnitsInReservedWidth() {
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(0), "  0B")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(42), " 42B")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(1_536), "1.5K")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(84 * 1024), " 84K")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(1_572_864), "1.5M")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(1_610_612_736), "1.5G")
+        // Every valid token must fit the reserved 4-character field so neighbors never shift.
+        let values: [Double] = [0, 42, 999, 1_000, 1_536, 84 * 1024, 1_572_864, 1_610_612_736]
+        for value in values {
+            XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(value).count, 4)
+        }
+    }
+
+    func testCompactFixedWidthRateRejectsInvalidValues() {
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(nil), "  --")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(.nan), "  --")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(.infinity), "  --")
+        XCTAssertEqual(NetworkFormatter.compactFixedWidthRate(-1), "  --")
+    }
+
+    func testCompactMenuBarValuePairsDownloadAndUpload() {
+        let sample = NetworkSample(downloadBytesPerSecond: 1_536, uploadBytesPerSecond: 84 * 1024)
+
+        XCTAssertEqual(NetworkFormatter.compactMenuBarValue(for: sample), "↓1.5K ↑ 84K")
+        XCTAssertEqual(NetworkFormatter.compactMenuBarValue(for: nil), "↓  -- ↑  --")
+    }
+
     func testNetworkHistoryKeepsCapacityAndDropsOldestSamples() {
         var history = NetworkHistory(capacity: 3)
 

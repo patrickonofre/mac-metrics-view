@@ -45,7 +45,11 @@ final class StatusItemController {
         guard let button = statusItem.button else { return }
 
         let attributedTitle = NSMutableAttributedString()
-        let separator = NSAttributedString(string: "  ", attributes: baseAttributes(color: .labelColor))
+        // Spacing-only grouping: a kerned gap between metrics, wider than the single
+        // space inside a metric, so each metric reads as one chunk without a divider glyph.
+        var separatorAttributes = baseAttributes(color: .labelColor)
+        separatorAttributes[.kern] = 6.0
+        let separator = NSAttributedString(string: " ", attributes: separatorAttributes)
 
         if state.visibility.showCPU {
             attributedTitle.append(statusSegment(
@@ -74,8 +78,20 @@ final class StatusItemController {
 
             attributedTitle.append(statusSegment(
                 metric: .network,
-                value: "↓ \(NetworkFormatter.fixedWidthByteRateString(state.latestNetworkSample?.downloadBytesPerSecond)) ↑ \(NetworkFormatter.fixedWidthByteRateString(state.latestNetworkSample?.uploadBytesPerSecond))",
+                value: NetworkFormatter.compactMenuBarValue(for: state.latestNetworkSample),
                 style: .normal
+            ))
+        }
+
+        if state.visibility.showTemperature {
+            if attributedTitle.length > 0 {
+                attributedTitle.append(separator)
+            }
+
+            attributedTitle.append(statusSegment(
+                metric: .temperature,
+                value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
+                style: state.temperatureMenuBarTextStyle
             ))
         }
 
@@ -95,18 +111,6 @@ final class StatusItemController {
             ))
         }
 
-        if state.visibility.showTemperature {
-            if attributedTitle.length > 0 {
-                attributedTitle.append(separator)
-            }
-
-            attributedTitle.append(statusSegment(
-                metric: .temperature,
-                value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
-                style: state.temperatureMenuBarTextStyle
-            ))
-        }
-
         if attributedTitle.length == 0 {
             attributedTitle.append(NSAttributedString(
                 string: Strings.metricsPlaceholder(),
@@ -123,26 +127,30 @@ final class StatusItemController {
         value: String,
         style: CPUMenuBarTextStyle
     ) -> NSAttributedString {
-        let color = color(for: style)
+        // Hierarchy: the identifier (icon or label) is always secondary; only the value
+        // carries severity color. This keeps severity an accent on the number the user
+        // reads, not a tint over the whole chunk.
+        let valueColor = color(for: style)
+        let identifierColor = NSColor.secondaryLabelColor
         let segment = NSMutableAttributedString()
 
         switch state.display.identifierStyle {
         case .labels:
             segment.append(NSAttributedString(
                 string: "\(metric.label) ",
-                attributes: baseAttributes(color: color)
+                attributes: baseAttributes(color: identifierColor)
             ))
         case .icons:
-            segment.append(iconAttachment(for: metric, color: color, style: style))
+            segment.append(iconAttachment(for: metric, color: identifierColor))
             segment.append(NSAttributedString(
                 string: " ",
-                attributes: baseAttributes(color: color)
+                attributes: baseAttributes(color: identifierColor)
             ))
         }
 
         segment.append(NSAttributedString(
             string: value,
-            attributes: baseAttributes(color: color)
+            attributes: baseAttributes(color: valueColor)
         ))
 
         return segment
@@ -163,15 +171,17 @@ final class StatusItemController {
         case .normal:
             return .labelColor
         case .elevatedCPU:
-            return .systemYellow
+            // Orange (not yellow) for contrast in light mode, and to match the popover's
+            // severity palette so the same state reads the same in both surfaces.
+            return .systemOrange
         case .highCPU:
             return .systemRed
         }
     }
 
-    private func iconAttachment(for metric: MenuBarMetric, color: NSColor, style: CPUMenuBarTextStyle) -> NSAttributedString {
+    private func iconAttachment(for metric: MenuBarMetric, color: NSColor) -> NSAttributedString {
         let image: NSImage
-        if let cached = iconCache[iconCacheKey(for: metric, style: style)] {
+        if let cached = iconCache[iconCacheKey(for: metric)] {
             image = cached
         } else {
             guard let symbol = NSImage(
@@ -189,7 +199,7 @@ final class StatusItemController {
             }
 
             image = symbol.tinted(with: color)
-            iconCache[iconCacheKey(for: metric, style: style)] = image
+            iconCache[iconCacheKey(for: metric)] = image
         }
 
         let attachment = NSTextAttachment()
@@ -199,11 +209,12 @@ final class StatusItemController {
         return NSAttributedString(attachment: attachment)
     }
 
-    private func iconCacheKey(for metric: MenuBarMetric, style: CPUMenuBarTextStyle) -> String {
-        // Appearance is part of the key so a light/dark switch re-tints once and then
-        // caches again, instead of baking a stale dynamic color forever.
+    private func iconCacheKey(for metric: MenuBarMetric) -> String {
+        // Icons are now severity-independent (always secondary), so the key is just the
+        // symbol and appearance. Appearance keeps a light/dark switch re-tinting once
+        // instead of baking a stale dynamic color forever.
         let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
-        return "\(metric.symbolName)|\(style)|\(appearance)"
+        return "\(metric.symbolName)|\(appearance)"
     }
 
     private func configureStatusItem() {
@@ -215,8 +226,7 @@ final class StatusItemController {
 
     private func configurePopover() {
         popover.behavior = .transient
-        popover.contentSize = NSSize(width: 380, height: 520)
-        popover.contentViewController = NSHostingController(
+        let hostingController = NSHostingController(
             rootView: PopoverView(
                 state: state,
                 launchAtLoginSettings: launchAtLoginSettings,
@@ -228,6 +238,11 @@ final class StatusItemController {
                 }
             )
         )
+        // PopoverView fixes its width and sizes its height to content; propagate that
+        // intrinsic size so the popover grows/shrinks to fit instead of clipping or
+        // leaving a void.
+        hostingController.sizingOptions = .preferredContentSize
+        popover.contentViewController = hostingController
     }
 
     @objc private func togglePopover(_ sender: NSStatusBarButton) {

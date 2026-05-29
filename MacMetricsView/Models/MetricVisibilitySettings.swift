@@ -15,7 +15,19 @@ struct MetricVisibilitySettings: Equatable {
         static let showNetwork = "MetricVisibilitySettings.showNetwork"
         static let showTemperature = "MetricVisibilitySettings.showTemperature"
         static let showDisk = "MetricVisibilitySettings.showDisk"
+        static let firstRunPresetApplied = "MetricVisibilitySettings.firstRunPresetApplied"
     }
+
+    /// What a brand-new install shows in the menu bar before the user configures
+    /// anything: CPU, RAM, and Temperature on; Network and Disk off. After the user
+    /// changes any visibility, their selection is what persists.
+    static let firstRunPreset = MetricVisibilitySettings(
+        showCPU: true,
+        showRAM: true,
+        showNetwork: false,
+        showTemperature: true,
+        showDisk: false
+    )
 
     var showCPU: Bool
     var showRAM: Bool
@@ -59,6 +71,44 @@ struct MetricVisibilitySettings: Equatable {
         userDefaults.set(showNetwork, forKey: Keys.showNetwork)
         userDefaults.set(showTemperature, forKey: Keys.showTemperature)
         userDefaults.set(showDisk, forKey: Keys.showDisk)
+    }
+
+    /// Resolves the visibility to use at launch, applying the first-run preset exactly
+    /// once and only to a genuinely fresh install.
+    ///
+    /// - A brand-new install (`isFreshInstall == true`, no visibility ever stored) gets
+    ///   ``firstRunPreset``.
+    /// - An existing install that never touched visibility keeps the legacy defaults, so
+    ///   an update never silently changes the user's menu bar (opt-in principle, ADR-005).
+    /// - Any install that already has stored visibility (the user chose) is honored as-is.
+    ///
+    /// The resolution is persisted and guarded so it happens once; from then on the user's
+    /// own selection is what loads.
+    static func resolved(
+        from userDefaults: UserDefaults = .standard,
+        isFreshInstall: Bool
+    ) -> MetricVisibilitySettings {
+        if userDefaults.bool(forKey: Keys.firstRunPresetApplied) {
+            return load(from: userDefaults)
+        }
+
+        let resolved: MetricVisibilitySettings
+        if hasStoredVisibility(in: userDefaults) {
+            resolved = load(from: userDefaults)
+        } else if isFreshInstall {
+            resolved = firstRunPreset
+        } else {
+            resolved = load(from: userDefaults)
+        }
+
+        resolved.save(to: userDefaults)
+        userDefaults.set(true, forKey: Keys.firstRunPresetApplied)
+        return resolved
+    }
+
+    private static func hasStoredVisibility(in userDefaults: UserDefaults) -> Bool {
+        [Keys.showCPU, Keys.showRAM, Keys.showNetwork, Keys.showTemperature, Keys.showDisk]
+            .contains { userDefaults.object(forKey: $0) != nil }
     }
 
     private static func bool(forKey key: String, defaultValue: Bool, userDefaults: UserDefaults) -> Bool {

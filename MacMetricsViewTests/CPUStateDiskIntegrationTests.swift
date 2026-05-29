@@ -14,13 +14,14 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         DiskSample(readBytesPerSecond: read, writeBytesPerSecond: write)
     }
 
-    func testUpdateIsIgnoredWhileDiskHidden() {
+    func testUpdateIsRecordedEvenWhileDiskHiddenFromMenuBar() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        // Disk defaults to hidden (ADR-005).
+        // Disk defaults to hidden from the menu bar (ADR-005), but the popover still
+        // shows it, so samples are recorded regardless of visibility.
         state.update(with: makeSample())
 
-        XCTAssertNil(state.latestDiskSample)
-        XCTAssertTrue(state.diskHistory.samples.isEmpty)
+        XCTAssertEqual(state.latestDiskSample?.readBytesPerSecond, 1_000)
+        XCTAssertEqual(state.diskHistory.samples.count, 1)
     }
 
     func testUpdatePublishesAndAppendsWhileVisible() {
@@ -34,15 +35,15 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         XCTAssertEqual(state.diskHistory.samples.count, 1)
     }
 
-    func testEnablingDiskClearsStaleSampleAndHistory() {
+    func testTogglingDiskMenuBarVisibilityKeepsSampleAndHistory() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setDiskVisible(true)
         state.update(with: makeSample())
-        state.setDiskVisible(false)
         state.setDiskVisible(true)
+        state.setDiskVisible(false)
 
-        XCTAssertNil(state.latestDiskSample)
-        XCTAssertTrue(state.diskHistory.samples.isEmpty)
+        // Visibility only curates the menu bar; the popover's data survives the toggle.
+        XCTAssertEqual(state.latestDiskSample?.readBytesPerSecond, 1_000)
+        XCTAssertEqual(state.diskHistory.samples.count, 1)
     }
 
     func testSetDiskMenuBarMetricUpdatesDisplayAndFiresCallbackAndPersists() {
