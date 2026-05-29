@@ -79,6 +79,22 @@ final class StatusItemController {
             ))
         }
 
+        if state.visibility.showDisk {
+            if attributedTitle.length > 0 {
+                attributedTitle.append(separator)
+            }
+
+            attributedTitle.append(statusSegment(
+                metric: .disk,
+                value: DiskFormatter.stableMenuBarTitle(
+                    for: state.latestDiskSample,
+                    metric: state.diskMenuBarMetric,
+                    showLabel: false
+                ),
+                style: state.diskMenuBarTextStyle
+            ))
+        }
+
         if state.visibility.showTemperature {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
@@ -231,6 +247,7 @@ private enum MenuBarMetric {
     case ram
     case network
     case temperature
+    case disk
 
     var label: String {
         switch self {
@@ -242,6 +259,8 @@ private enum MenuBarMetric {
             return "NET"
         case .temperature:
             return "TEMP"
+        case .disk:
+            return "DISK"
         }
     }
 
@@ -255,6 +274,8 @@ private enum MenuBarMetric {
             return "network"
         case .temperature:
             return "thermometer"
+        case .disk:
+            return "circle.fill"
         }
     }
 
@@ -268,6 +289,8 @@ private enum MenuBarMetric {
             return Strings.network()
         case .temperature:
             return Strings.temperature()
+        case .disk:
+            return Strings.disk()
         }
     }
 }

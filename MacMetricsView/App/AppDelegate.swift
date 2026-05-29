@@ -1,13 +1,14 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate {
     private let state = CPUState()
     private let launchAtLoginSettings = LaunchAtLoginSettings()
     private let cpuSampler = CPUSampler()
     private let ramSampler = RAMSampler()
     private let networkSampler = NetworkSampler()
     private let temperatureSampler = TemperatureSampler()
+    private let diskSampler = DiskSampler()
     private var statusItemController: StatusItemController?
 
     // Cleaning-lock
@@ -60,6 +61,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         ramSampler.delegate = self
         networkSampler.delegate = self
         temperatureSampler.delegate = self
+        diskSampler.delegate = self
         startVisibleSamplers()
     }
 
@@ -72,6 +74,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         ramSampler.stop()
         networkSampler.stop()
         temperatureSampler.stop()
+        diskSampler.stop()
     }
 
     // MARK: - Relaunch
@@ -144,6 +147,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
+    func diskSampler(_ sampler: DiskSampler, didProduce sample: DiskSample) {
+        state.update(with: sample)
+        statusItemController?.setNeedsTitleUpdate()
+    }
+
     private func startVisibleSamplers() {
         if state.visibility.showCPU {
             cpuSampler.start()
@@ -160,6 +168,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         if state.visibility.showTemperature {
             temperatureSampler.start()
         }
+
+        if state.visibility.showDisk {
+            diskSampler.start()
+        }
     }
 
     private func setSampler(for metric: MetricVisibilitySettings.Metric, isVisible: Bool) {
@@ -172,6 +184,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             isVisible ? networkSampler.start() : networkSampler.stop()
         case .temperature:
             isVisible ? temperatureSampler.start() : temperatureSampler.stop()
+        case .disk:
+            isVisible ? diskSampler.start() : diskSampler.stop()
         }
     }
 }

@@ -65,15 +65,53 @@ final class MetricVisibilitySettingsTests: XCTestCase {
         XCTAssertTrue(settings.showRAM)
         XCTAssertTrue(settings.showNetwork)
         XCTAssertFalse(settings.showTemperature)
+        XCTAssertFalse(settings.showDisk)
     }
 
     func testVisibilitySettingsPersistChoices() {
         let userDefaults = makeUserDefaults()
-        let settings = MetricVisibilitySettings(showCPU: false, showRAM: true, showNetwork: false, showTemperature: true)
+        let settings = MetricVisibilitySettings(
+            showCPU: false,
+            showRAM: true,
+            showNetwork: false,
+            showTemperature: true,
+            showDisk: true
+        )
 
         settings.save(to: userDefaults)
 
         XCTAssertEqual(MetricVisibilitySettings.load(from: userDefaults), settings)
+    }
+
+    func testDiskVisibilityDefaultsToFalseWhenKeyAbsent() {
+        let userDefaults = makeUserDefaults()
+
+        let settings = MetricVisibilitySettings.load(from: userDefaults)
+
+        XCTAssertFalse(settings.showDisk)
+    }
+
+    func testDiskVisibilityRoundTripsThroughPersistence() {
+        let userDefaults = makeUserDefaults()
+        let settings = MetricVisibilitySettings(showDisk: true)
+
+        settings.save(to: userDefaults)
+
+        XCTAssertTrue(MetricVisibilitySettings.load(from: userDefaults).showDisk)
+    }
+
+    func testHasVisibleMetricRespectsDiskOnly() {
+        var settings = MetricVisibilitySettings(
+            showCPU: false,
+            showRAM: false,
+            showNetwork: false,
+            showTemperature: false,
+            showDisk: true
+        )
+        XCTAssertTrue(settings.hasVisibleMetric)
+
+        settings.showDisk = false
+        XCTAssertFalse(settings.hasVisibleMetric)
     }
 
     @MainActor

@@ -33,6 +33,10 @@ struct PopoverView: View {
                     get: { state.visibility.showTemperature },
                     set: { state.setTemperatureVisible($0) }
                 ),
+                diskVisible: Binding(
+                    get: { state.visibility.showDisk },
+                    set: { state.setDiskVisible($0) }
+                ),
                 identifierStyle: Binding(
                     get: { state.display.identifierStyle },
                     set: { state.setMetricIdentifierStyle($0) }
@@ -40,6 +44,10 @@ struct PopoverView: View {
                 ramMenuBarMetric: Binding(
                     get: { state.display.ramMenuBarMetric },
                     set: { state.setRAMMenuBarMetric($0) }
+                ),
+                diskMenuBarMetric: Binding(
+                    get: { state.display.diskMenuBarMetric },
+                    set: { state.setDiskMenuBarMetric($0) }
                 )
             )
 
@@ -74,6 +82,20 @@ struct PopoverView: View {
                             values: normalizedNetworkTrend,
                             severity: .normal,
                             details: networkDetails
+                        )
+                    }
+
+                    if state.visibility.showDisk {
+                        MetricSection(
+                            title: Strings.disk(),
+                            value: DiskFormatter.menuBarTitle(
+                                for: state.latestDiskSample,
+                                metric: state.diskMenuBarMetric,
+                                showLabel: false
+                            ),
+                            values: normalizedDiskTrend,
+                            severity: state.diskMenuBarTextStyle,
+                            details: diskDetails
                         )
                     }
 
@@ -200,7 +222,8 @@ struct PopoverView: View {
             state.latestSample?.timestamp,
             state.latestRAMSample?.timestamp,
             state.latestNetworkSample?.timestamp,
-            state.latestTemperatureSample?.timestamp
+            state.latestTemperatureSample?.timestamp,
+            state.latestDiskSample?.timestamp
         ].compactMap({ $0 }).max() else {
             return "--"
         }
@@ -229,6 +252,27 @@ struct PopoverView: View {
     private var temperatureDetails: [MetricDetailRow] {
         [
             MetricDetailRow(label: Strings.temperatureStateRow(), value: state.latestTemperatureSample?.state.localizedName() ?? Strings.unavailable())
+        ]
+    }
+
+    private var normalizedDiskTrend: [Double] {
+        let rates = state.diskHistory.samples.map(\.totalBytesPerSecond)
+        guard let maxRate = rates.max(), maxRate > 0 else { return rates }
+
+        return rates.map { $0 / maxRate * 100 }
+    }
+
+    private var diskDetails: [MetricDetailRow] {
+        let totals = DiskWindowStats.recentTotalBytes(in: state.diskHistory, interval: state.diskSampleInterval)
+        let peaks = DiskWindowStats.recentPeakRates(in: state.diskHistory)
+
+        return [
+            MetricDetailRow(label: Strings.diskRead(), value: DiskFormatter.combinedRateString(state.latestDiskSample?.readBytesPerSecond)),
+            MetricDetailRow(label: Strings.diskWrite(), value: DiskFormatter.combinedRateString(state.latestDiskSample?.writeBytesPerSecond)),
+            MetricDetailRow(label: Strings.diskRecentTotalRead(), value: DiskFormatter.byteCountString(totals.read)),
+            MetricDetailRow(label: Strings.diskRecentTotalWrite(), value: DiskFormatter.byteCountString(totals.written)),
+            MetricDetailRow(label: Strings.diskRecentPeakRead(), value: DiskFormatter.combinedRateString(peaks.read)),
+            MetricDetailRow(label: Strings.diskRecentPeakWrite(), value: DiskFormatter.combinedRateString(peaks.write))
         ]
     }
 }
@@ -297,8 +341,10 @@ private struct MetricVisibilityControls: View {
     @Binding var ramVisible: Bool
     @Binding var networkVisible: Bool
     @Binding var temperatureVisible: Bool
+    @Binding var diskVisible: Bool
     @Binding var identifierStyle: MetricDisplaySettings.IdentifierStyle
     @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
+    @Binding var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
@@ -312,6 +358,10 @@ private struct MetricVisibilityControls: View {
                     SettingSwitch(title: Strings.network(), isOn: $networkVisible)
                     SettingSwitch(title: Strings.temperature(), isOn: $temperatureVisible)
                 }
+
+                GridRow {
+                    SettingSwitch(title: Strings.disk(), isOn: $diskVisible)
+                }
             }
 
             HStack(spacing: 8) {
@@ -323,8 +373,36 @@ private struct MetricVisibilityControls: View {
                     RAMMenuBarMetricPicker(ramMenuBarMetric: $ramMenuBarMetric)
                 }
             }
+
+            if diskVisible {
+                HStack(spacing: 8) {
+                    DiskMenuBarMetricPicker(diskMenuBarMetric: $diskMenuBarMetric)
+                }
+            }
         }
         .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+private struct DiskMenuBarMetricPicker: View {
+    @Binding var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text("\(Strings.disk()) \(Strings.diskMenuBarMetric())")
+                .lineLimit(1)
+                .foregroundStyle(.primary)
+                .frame(width: 88, alignment: .leading)
+
+            Picker("\(Strings.disk()) \(Strings.diskMenuBarMetric())", selection: $diskMenuBarMetric) {
+                Text(Strings.diskMetricCombinedShort()).tag(MetricDisplaySettings.DiskMenuBarMetric.combined)
+                Text(Strings.diskMetricSplitShort()).tag(MetricDisplaySettings.DiskMenuBarMetric.split)
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .frame(width: 150)
+        }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

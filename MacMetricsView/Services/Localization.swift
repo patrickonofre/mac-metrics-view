@@ -41,6 +41,7 @@ enum Strings {
     static let metricsPlaceholder = LocalizedText(en: "Metrics", pt: "Métricas")
     static let network = LocalizedText(en: "Network", pt: "Rede")
     static let temperature = LocalizedText(en: "Temperature", pt: "Temperatura")
+    static let disk = LocalizedText(en: "Disk", pt: "Disco")
 
     // Popover header / footer
     /// Reads `CFBundleShortVersionString` so the popover always reflects the shipped
@@ -84,6 +85,18 @@ enum Strings {
     static let download = LocalizedText(en: "Download", pt: "Download")
     static let upload = LocalizedText(en: "Upload", pt: "Upload")
 
+    // Disk detail rows + picker. Recent totals/peaks are a rolling sparkline
+    // window (~45s) per ADR-002 — labels say so to avoid a "since launch" read.
+    static let diskRead = LocalizedText(en: "Read", pt: "Leitura")
+    static let diskWrite = LocalizedText(en: "Write", pt: "Escrita")
+    static let diskRecentTotalRead = LocalizedText(en: "Recent read (~45s)", pt: "Leitura recente (~45s)")
+    static let diskRecentTotalWrite = LocalizedText(en: "Recent write (~45s)", pt: "Escrita recente (~45s)")
+    static let diskRecentPeakRead = LocalizedText(en: "Peak read (~45s)", pt: "Pico de leitura (~45s)")
+    static let diskRecentPeakWrite = LocalizedText(en: "Peak write (~45s)", pt: "Pico de escrita (~45s)")
+    static let diskMenuBarMetric = LocalizedText(en: "Menu bar", pt: "Barra")
+    static let diskMetricCombinedShort = LocalizedText(en: "Total", pt: "Total")
+    static let diskMetricSplitShort = LocalizedText(en: "R/W", pt: "L/E")
+
     // Visibility / display controls
     static let displayLabel = LocalizedText(en: "Display", pt: "Exibição")
     static let displayIcon = LocalizedText(en: "Icon", pt: "Ícone")
@@ -92,8 +105,8 @@ enum Strings {
     // Empty state
     static let noMetricsTitle = LocalizedText(en: "No Metrics Visible", pt: "Nenhuma métrica visível")
     static let noMetricsHint = LocalizedText(
-        en: "Turn on CPU, RAM, Network, or Temperature to show live values.",
-        pt: "Ative CPU, RAM, Rede ou Temperatura para ver valores ao vivo."
+        en: "Turn on CPU, RAM, Network, Disk, or Temperature to show live values.",
+        pt: "Ative CPU, RAM, Rede, Disco ou Temperatura para ver valores ao vivo."
     )
 
     // Severity labels (CPU/RAM/temperature share these in the popover)

@@ -9,10 +9,16 @@ final class CPUState: ObservableObject {
     @Published private(set) var latestRAMSample: RAMSample?
     @Published private(set) var latestNetworkSample: NetworkSample?
     @Published private(set) var latestTemperatureSample: TemperatureSample?
+    @Published private(set) var latestDiskSample: DiskSample?
     @Published private(set) var history = CPUHistory()
     @Published private(set) var ramHistory = RAMHistory()
     @Published private(set) var networkHistory = NetworkHistory()
     @Published private(set) var temperatureHistory = TemperatureHistory()
+    @Published private(set) var diskHistory = DiskHistory()
+
+    /// Interval the disk sampler ticks at, used to convert rolling-window rate
+    /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
+    let diskSampleInterval: TimeInterval = 1
 
     // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
     @Published private(set) var lockPhase: LockPhase = .idle
@@ -98,6 +104,10 @@ final class CPUState: ObservableObject {
             titles.append(NetworkFormatter.stableMenuBarTitle(for: latestNetworkSample, showLabel: showLabel))
         }
 
+        if visibility.showDisk {
+            titles.append(DiskFormatter.stableMenuBarTitle(for: latestDiskSample, metric: display.diskMenuBarMetric, showLabel: showLabel))
+        }
+
         if visibility.showTemperature {
             titles.append(TemperatureFormatter.menuBarTitle(for: latestTemperatureSample, showLabel: showLabel))
         }
@@ -121,6 +131,14 @@ final class CPUState: ObservableObject {
         TemperatureFormatter.menuBarTextStyle(for: latestTemperatureSample)
     }
 
+    var diskMenuBarTextStyle: CPUMenuBarTextStyle {
+        DiskFormatter.menuBarTextStyle(for: latestDiskSample)
+    }
+
+    var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric {
+        display.diskMenuBarMetric
+    }
+
     var hasVisibleMetric: Bool {
         visibility.hasVisibleMetric
     }
@@ -138,6 +156,10 @@ final class CPUState: ObservableObject {
 
         if visibility.showNetwork {
             segments.append(NetworkFormatter.stableMenuBarTitle(for: latestNetworkSample, showLabel: true))
+        }
+
+        if visibility.showDisk {
+            segments.append("\(Strings.disk()) \(DiskFormatter.stableMenuBarTitle(for: latestDiskSample, metric: display.diskMenuBarMetric, showLabel: false))")
         }
 
         if visibility.showTemperature {
@@ -172,6 +194,12 @@ final class CPUState: ObservableObject {
         temperatureHistory.append(sample)
     }
 
+    func update(with sample: DiskSample) {
+        guard visibility.showDisk else { return }
+        latestDiskSample = sample
+        diskHistory.append(sample)
+    }
+
     func setCPUVisible(_ isVisible: Bool) {
         updateVisibility(metric: .cpu, isVisible: isVisible)
     }
@@ -188,6 +216,10 @@ final class CPUState: ObservableObject {
         updateVisibility(metric: .temperature, isVisible: isVisible)
     }
 
+    func setDiskVisible(_ isVisible: Bool) {
+        updateVisibility(metric: .disk, isVisible: isVisible)
+    }
+
     func setMetricIdentifierStyle(_ identifierStyle: MetricDisplaySettings.IdentifierStyle) {
         guard display.identifierStyle != identifierStyle else { return }
 
@@ -200,6 +232,14 @@ final class CPUState: ObservableObject {
         guard display.ramMenuBarMetric != metric else { return }
 
         display.ramMenuBarMetric = metric
+        display.save(to: userDefaults)
+        onDisplayChange?()
+    }
+
+    func setDiskMenuBarMetric(_ metric: MetricDisplaySettings.DiskMenuBarMetric) {
+        guard display.diskMenuBarMetric != metric else { return }
+
+        display.diskMenuBarMetric = metric
         display.save(to: userDefaults)
         onDisplayChange?()
     }
@@ -231,6 +271,12 @@ final class CPUState: ObservableObject {
             if isVisible {
                 latestTemperatureSample = nil
                 temperatureHistory = TemperatureHistory()
+            }
+        case .disk:
+            visibility.showDisk = isVisible
+            if isVisible {
+                latestDiskSample = nil
+                diskHistory = DiskHistory()
             }
         }
 
@@ -341,6 +387,8 @@ final class CPUState: ObservableObject {
             return visibility.showNetwork
         case .temperature:
             return visibility.showTemperature
+        case .disk:
+            return visibility.showDisk
         }
     }
 }
