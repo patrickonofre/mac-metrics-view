@@ -11,10 +11,10 @@
       "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 1.3 para macOS",
+      "hero.eyebrow": "Versão 1.4 para macOS",
       "hero.title": "CPU, RAM e rede direto na barra de menus.",
       "hero.lede": "Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 1.3",
+      "hero.cta": "Baixar 1.4",
       "hero.secondary": "Ver novidades",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS",
@@ -32,6 +32,15 @@
       "news11.diskBody": "Como a luz do HD dos PCs antigos: um LED na barra que muda de cor conforme o SSD trabalha — apagado em repouso, verde, amarelo e vermelho conforme a carga de leitura e escrita.",
       "news11.diskIoTitle": "Leitura e escrita em detalhe",
       "news11.diskIoBody": "No popover, veja as taxas de leitura e escrita ao vivo, com totais e picos recentes. Escolha mostrar o total combinado ou leitura e escrita separadas na barra. Tudo local, só o disco de inicialização.",
+
+      "news14.eyebrow": "Versão 1.4",
+      "news14.title": "Um popover repensado, mais limpo e completo.",
+      "news14.popoverTitle": "Popover redesenhado",
+      "news14.popoverBody": "Layout mais enxuto, com todas as métricas sempre visíveis — cada uma em uma linha, com mini-gráfico e valor. A configuração fica logo abaixo, sem rolagem.",
+      "news14.barTitle": "Barra de menus mais nítida",
+      "news14.barBody": "Rede em formato compacto, métricas agrupadas com respiro e a cor de severidade só no valor — fica mais fácil ler de relance.",
+      "news14.controlTitle": "Você no controle",
+      "news14.controlBody": "Os botões agora só decidem o que vai para a barra; o popover mostra tudo. Escolha o valor de RAM e disco, e a primeira execução já começa com CPU, RAM e temperatura.",
 
       "news.eyebrow": "Versão 1.0",
       "news.title": "A primeira versão estável, com tudo no lugar.",
@@ -67,9 +76,9 @@
       "privacy.li3": "Sem chamadas externas para monitorar a rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 1.3.",
-      "download.body": "Versão 1.3 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-1.3.0.zip",
+      "download.title": "Baixe a versão 1.4.",
+      "download.body": "Versão 1.4 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
+      "download.cta": "Baixar MacMetricsView-1.4.0.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
@@ -83,7 +92,7 @@
       "firstrun.alt": "No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.",
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
-      "footer.tagline": "Versão 1.3 para macOS"
+      "footer.tagline": "Versão 1.4 para macOS"
     },
     en: {
       "nav.news": "What's new",
@@ -92,10 +101,10 @@
       "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 1.3 for macOS",
+      "hero.eyebrow": "Version 1.4 for macOS",
       "hero.title": "CPU, RAM, and network right in the menu bar.",
       "hero.lede": "A compact, native app to read your Mac's load at a glance — without opening Activity Monitor.",
-      "hero.cta": "Download 1.3",
+      "hero.cta": "Download 1.4",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View showing CPU, RAM, network, and temperature in the macOS menu bar",
@@ -113,6 +122,15 @@
       "news11.diskBody": "Like the HD light on old PCs: an LED in the menu bar that changes color as the SSD works — dim at rest, then green, yellow, and red as read and write load climbs.",
       "news11.diskIoTitle": "Read and write in detail",
       "news11.diskIoBody": "In the popover, see live read and write rates with recent totals and peaks. Choose to show the combined total or split read and write in the menu bar. All local, boot disk only.",
+
+      "news14.eyebrow": "Version 1.4",
+      "news14.title": "A rethought popover — cleaner and complete.",
+      "news14.popoverTitle": "Redesigned popover",
+      "news14.popoverBody": "A leaner layout with every metric always visible — one per row, with a sparkline and value. Configuration sits right below, no scrolling.",
+      "news14.barTitle": "A crisper menu bar",
+      "news14.barBody": "Compact network, metrics grouped with breathing room, and severity color on the value only — easier to read at a glance.",
+      "news14.controlTitle": "You're in control",
+      "news14.controlBody": "The toggles now only decide what goes in the menu bar; the popover shows everything. Pick the RAM and disk value, and a fresh install starts with CPU, RAM, and temperature.",
 
       "news.eyebrow": "Version 1.0",
       "news.title": "The first stable release, with everything in place.",
@@ -148,9 +166,9 @@
       "privacy.li3": "No external calls to monitor the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 1.3.",
-      "download.body": "Version 1.3 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-1.3.0.zip",
+      "download.title": "Download version 1.4.",
+      "download.body": "Version 1.4 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
+      "download.cta": "Download MacMetricsView-1.4.0.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
@@ -164,7 +182,7 @@
       "firstrun.alt": "On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.",
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
-      "footer.tagline": "Version 1.3 for macOS"
+      "footer.tagline": "Version 1.4 for macOS"
     }
   };
 
