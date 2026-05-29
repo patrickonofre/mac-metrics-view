@@ -113,6 +113,22 @@ versions and the macOS Accessibility (TCC) grant survives updates (see
 right-click the identity → Export); losing it forces all users to re-grant
 Accessibility one more time, exactly like the EdDSA key custody note above.
 
+> ⚠️ **Certificate custody — read before releasing.**
+> The signing key has already been lost once: releases 1.0–1.3 used one
+> certificate whose private key was not backed up, so **1.4.0 was signed with a
+> new certificate** and those users had to re-grant Accessibility once.
+>
+> - **Canonical certificate (use for every release from 1.4.0 on):**
+>   SHA-1 `6AE72354E235B9EA4D51A5BC9DD9F71553D03D4A`, leaf
+>   `6ae72354e235b9ea4d51a5bc9dd9f71553d03d4a` in the designated requirement.
+> - **Back up the `.p12` now and keep it** (Keychain Access → export). If it is
+>   lost again, the next release breaks the grant for everyone *again*.
+> - `scripts/create-signing-cert.sh` refuses to regenerate while a cert of that
+>   name exists; on macOS 26 / LibreSSL its `openssl pkcs12` export can silently
+>   drop the private key — if `security find-identity -p codesigning` shows the
+>   identity (it is hidden from `-v` because the cert is untrusted, which is
+>   fine) and `codesign` succeeds, you are good.
+
 ### Per-release runbook (manual, no CI)
 
 1. Bump `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (monotonically) in
@@ -140,7 +156,9 @@ Accessibility one more time, exactly like the EdDSA key custody note above.
 
    The script verifies the signature and prints the designated requirement; it
    must read `identifier "com.pso.MacMetricsView" and certificate leaf = H"…"`
-   (**not** a bare `cdhash`). The leaf hash must match every prior release.
+   (**not** a bare `cdhash`). The leaf hash must match the canonical certificate
+   noted above (`6ae72354…`); a different hash means you signed with the wrong
+   cert and would break the Accessibility grant.
 
 4. Zip it preserving bundle metadata:
 
