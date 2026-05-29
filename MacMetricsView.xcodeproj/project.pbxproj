@@ -94,6 +94,16 @@
 		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
 		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
 		100000000000000000000B23 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B13 /* SparkleUpdateService.swift */; };
+		1000000000000000000000DB01 /* DiskCounterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D01 /* DiskCounterSnapshot.swift */; };
+		1000000000000000000000DB02 /* DiskSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D02 /* DiskSample.swift */; };
+		1000000000000000000000DB03 /* DiskHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D03 /* DiskHistory.swift */; };
+		1000000000000000000000DB04 /* DiskWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D04 /* DiskWindowStats.swift */; };
+		1000000000000000000000DB05 /* DiskSampleCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D05 /* DiskSampleCalculator.swift */; };
+		1000000000000000000000DB06 /* DiskSeverityThresholds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D06 /* DiskSeverityThresholds.swift */; };
+		1000000000000000000000DB07 /* DiskFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D07 /* DiskFormatter.swift */; };
+		1000000000000000000000DB08 /* DiskReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D08 /* DiskReading.swift */; };
+		1000000000000000000000DB09 /* IOKitDiskReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D09 /* IOKitDiskReader.swift */; };
+		1000000000000000000000DB0A /* DiskSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D0A /* DiskSampler.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -169,6 +179,16 @@
 		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
 		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
 		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
+		1000000000000000000000D01 /* DiskCounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskCounterSnapshot.swift; sourceTree = "<group>"; };
+		1000000000000000000000D02 /* DiskSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskSample.swift; sourceTree = "<group>"; };
+		1000000000000000000000D03 /* DiskHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskHistory.swift; sourceTree = "<group>"; };
+		1000000000000000000000D04 /* DiskWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskWindowStats.swift; sourceTree = "<group>"; };
+		1000000000000000000000D05 /* DiskSampleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampleCalculator.swift; sourceTree = "<group>"; };
+		1000000000000000000000D06 /* DiskSeverityThresholds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSeverityThresholds.swift; sourceTree = "<group>"; };
+		1000000000000000000000D07 /* DiskFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000D08 /* DiskReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskReading.swift; sourceTree = "<group>"; };
+		1000000000000000000000D09 /* IOKitDiskReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitDiskReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000D0A /* DiskSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampler.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -249,6 +269,16 @@
 				100000000000000000000132 /* CGEventTapInputLock.swift */,
 				100000000000000000000133 /* LockOverlayView.swift */,
 				100000000000000000000134 /* LockOverlayWindow.swift */,
+				1000000000000000000000D01 /* DiskCounterSnapshot.swift */,
+				1000000000000000000000D02 /* DiskSample.swift */,
+				1000000000000000000000D03 /* DiskHistory.swift */,
+				1000000000000000000000D04 /* DiskWindowStats.swift */,
+				1000000000000000000000D05 /* DiskSampleCalculator.swift */,
+				1000000000000000000000D06 /* DiskSeverityThresholds.swift */,
+				1000000000000000000000D07 /* DiskFormatter.swift */,
+				1000000000000000000000D08 /* DiskReading.swift */,
+				1000000000000000000000D09 /* IOKitDiskReader.swift */,
+				1000000000000000000000D0A /* DiskSampler.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -434,6 +464,16 @@
 				100000000000000000000043 /* CGEventTapInputLock.swift in Sources */,
 				100000000000000000000044 /* LockOverlayView.swift in Sources */,
 				100000000000000000000045 /* LockOverlayWindow.swift in Sources */,
+				1000000000000000000000DB01 /* DiskCounterSnapshot.swift in Sources */,
+				1000000000000000000000DB02 /* DiskSample.swift in Sources */,
+				1000000000000000000000DB03 /* DiskHistory.swift in Sources */,
+				1000000000000000000000DB04 /* DiskWindowStats.swift in Sources */,
+				1000000000000000000000DB05 /* DiskSampleCalculator.swift in Sources */,
+				1000000000000000000000DB06 /* DiskSeverityThresholds.swift in Sources */,
+				1000000000000000000000DB07 /* DiskFormatter.swift in Sources */,
+				1000000000000000000000DB08 /* DiskReading.swift in Sources */,
+				1000000000000000000000DB09 /* IOKitDiskReader.swift in Sources */,
+				1000000000000000000000DB0A /* DiskSampler.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -499,7 +539,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -508,7 +548,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -522,7 +562,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 27;
+				CURRENT_PROJECT_VERSION = 28;
 				ENABLE_CODE_COVERAGE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -531,7 +571,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.2.0;
+				MARKETING_VERSION = 1.3.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
