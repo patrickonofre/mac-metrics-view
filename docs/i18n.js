@@ -188,7 +188,12 @@
 
   var STORAGE_KEY = "mmv-lang";
 
+  var SITE_BASE = "https://patrickonofre.github.io/mac-metrics-view/";
+
   function resolveInitial() {
+    var q = null;
+    try { q = new URLSearchParams(location.search).get("lang"); } catch (e) {}
+    if (q === "pt" || q === "en") return q;
     var stored = null;
     try { stored = localStorage.getItem(STORAGE_KEY); } catch (e) {}
     if (stored === "pt" || stored === "en") return stored;
@@ -196,7 +201,24 @@
     return nav.indexOf("pt") === 0 ? "pt" : "en";
   }
 
-  function apply(lang) {
+  // Keep canonical / og:url / og:locale in sync with the rendered language so
+  // JS-rendering crawlers see a self-consistent hreflang cluster.
+  function syncLangMeta(lang, updateUrl) {
+    var url = SITE_BASE + "?lang=" + lang;
+    var canon = document.querySelector('link[rel="canonical"]');
+    if (canon) canon.setAttribute("href", url);
+    var ogUrl = document.querySelector('meta[property="og:url"]');
+    if (ogUrl) ogUrl.setAttribute("content", url);
+    var ogLocale = document.querySelector('meta[property="og:locale"]');
+    if (ogLocale) ogLocale.setAttribute("content", lang === "pt" ? "pt_BR" : "en_US");
+    var ogLocaleAlt = document.querySelector('meta[property="og:locale:alternate"]');
+    if (ogLocaleAlt) ogLocaleAlt.setAttribute("content", lang === "pt" ? "en_US" : "pt_BR");
+    if (updateUrl) {
+      try { history.replaceState(null, "", url); } catch (e) {}
+    }
+  }
+
+  function apply(lang, updateUrl) {
     var dict = STRINGS[lang] || STRINGS.en;
 
     document.querySelectorAll("[data-i18n]").forEach(function (el) {
@@ -209,6 +231,7 @@
     });
 
     document.documentElement.lang = lang === "pt" ? "pt-BR" : "en";
+    syncLangMeta(lang, updateUrl);
 
     document.querySelectorAll("[data-lang-option]").forEach(function (btn) {
       var active = btn.getAttribute("data-lang-option") === lang;
@@ -220,10 +243,10 @@
   }
 
   function init() {
-    apply(resolveInitial());
+    apply(resolveInitial(), false);
     document.querySelectorAll("[data-lang-option]").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        apply(btn.getAttribute("data-lang-option"));
+        apply(btn.getAttribute("data-lang-option"), true);
       });
     });
   }
