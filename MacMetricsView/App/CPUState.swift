@@ -337,12 +337,6 @@ final class CPUState: ObservableObject {
         }
     }
 
-    /// Fires `onRelaunch`; AppDelegate restarts the app so a freshly granted
-    /// permission takes effect (`AXIsProcessTrusted()` is cached per process).
-    func relaunchToApplyGrant() {
-        onRelaunch?()
-    }
-
     // MARK: - Self-healing recovery
 
     /// Starts active recovery: opens the Accessibility pane and begins polling a

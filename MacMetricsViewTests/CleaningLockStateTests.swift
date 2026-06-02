@@ -333,16 +333,6 @@ final class CleaningLockStateTests: XCTestCase {
         XCTAssertEqual(auth.openSettingsCallCount, 3)
     }
 
-    func testRelaunchToApplyGrantFiresCallback() {
-        let state = makeState()
-        var fired = false
-        state.onRelaunch = { fired = true }
-
-        state.relaunchToApplyGrant()
-
-        XCTAssertTrue(fired)
-    }
-
     func testReGrantingAfterUpdateClearsResetFlag() {
         let ud = makeUserDefaults()
         _ = CPUState(userDefaults: ud,
