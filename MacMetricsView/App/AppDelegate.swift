@@ -64,6 +64,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             state: state,
             launchAtLoginSettings: launchAtLoginSettings
         )
+
+        // Proactive recovery nudge: let CPUState open the popover programmatically
+        // for the one-time post-update auto-open. Wired after the status item exists
+        // so there is a host to open into; reuses the existing relaunch handshake
+        // (state.onRelaunch → relaunch()) to apply a detected grant.
+        state.onRequestOpenPopover = { [weak self] in
+            self?.statusItemController?.openPopover()
+        }
+        // Defer to the next run-loop turn so the status-bar button is laid out and
+        // has a window before an auto-open tries to anchor a popover to it.
+        DispatchQueue.main.async { [weak self] in
+            self?.state.evaluateAccessibilityLaunchNudge()
+        }
+
         cpuSampler.delegate = self
         ramSampler.delegate = self
         networkSampler.delegate = self

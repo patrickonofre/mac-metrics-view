@@ -1,4 +1,5 @@
 import AppKit
+import Combine
 import SwiftUI
 
 @MainActor
@@ -11,6 +12,7 @@ final class StatusItemController {
     // Caching them keeps the per-tick title rebuild from re-rendering images.
     private var iconCache: [String: NSImage] = [:]
     private var titleUpdateScheduled = false
+    private var cancellables: Set<AnyCancellable> = []
 
     init(
         state: CPUState,
@@ -24,6 +26,13 @@ final class StatusItemController {
         configureStatusItem()
         configurePopover()
         updateTitle()
+
+        // The grant state can change without a metric tick (during recovery), so
+        // refresh the title — which carries the warning badge — when it flips.
+        state.$isAccessibilityGranted
+            .removeDuplicates()
+            .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
+            .store(in: &cancellables)
     }
 
     /// Coalesces title rebuilds: several samplers can deliver in the same run-loop
@@ -118,6 +127,13 @@ final class StatusItemController {
             ))
         }
 
+        // Additive, secondary warning glyph while the cleaning permission is
+        // missing — never recolors the metric segments (ADR-003).
+        if MenuBarTitleComposer.showsAccessibilityWarning(isAccessibilityGranted: state.isAccessibilityGranted) {
+            attributedTitle.append(separator)
+            attributedTitle.append(warningGlyphAttachment(color: .secondaryLabelColor))
+        }
+
         button.attributedTitle = attributedTitle
         button.setAccessibilityLabel(state.accessibilityMenuBarTitle)
     }
@@ -209,6 +225,38 @@ final class StatusItemController {
         return NSAttributedString(attachment: attachment)
     }
 
+    /// The secondary warning glyph appended to the title while the cleaning
+    /// permission is missing. Cached per appearance like the metric icons, so the
+    /// per-tick title rebuild does not re-render it.
+    private func warningGlyphAttachment(color: NSColor) -> NSAttributedString {
+        let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
+        let cacheKey = "ax-warning|\(appearance)"
+        let image: NSImage
+        if let cached = iconCache[cacheKey] {
+            image = cached
+        } else {
+            guard let symbol = NSImage(
+                systemSymbolName: MenuBarTitleComposer.accessibilityWarningSymbolName,
+                accessibilityDescription: Strings.accessibilityWarningBadge()
+            )?.withSymbolConfiguration(NSImage.SymbolConfiguration(
+                pointSize: max(NSFont.smallSystemFontSize, NSFont.systemFontSize - 2),
+                weight: .regular,
+                scale: .small
+            )) else {
+                return NSAttributedString(string: "!", attributes: baseAttributes(color: color))
+            }
+
+            image = symbol.tinted(with: color)
+            iconCache[cacheKey] = image
+        }
+
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = CGRect(x: 0, y: -2, width: image.size.width, height: image.size.height)
+
+        return NSAttributedString(attachment: attachment)
+    }
+
     private func iconCacheKey(for metric: MenuBarMetric) -> String {
         // Icons are now severity-independent (always secondary), so the key is just the
         // symbol and appearance. Appearance keeps a light/dark switch re-tinting once
@@ -249,11 +297,19 @@ final class StatusItemController {
         if popover.isShown {
             popover.performClose(sender)
         } else {
-            launchAtLoginSettings.refresh()
-            state.refreshAccessibilityAuthorization()
-            popover.show(relativeTo: sender.bounds, of: sender, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            openPopover()
         }
+    }
+
+    /// Opens the popover programmatically (used by the one-time post-update nudge),
+    /// running the same pre-show refresh the manual toggle does. A no-op if the
+    /// popover is already shown, so the nudge can never toggle an open popover closed.
+    func openPopover() {
+        guard let button = statusItem.button, !popover.isShown else { return }
+        launchAtLoginSettings.refresh()
+        state.refreshAccessibilityAuthorization()
+        popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
+        popover.contentViewController?.view.window?.makeKey()
     }
 }
 

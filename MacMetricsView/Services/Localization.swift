@@ -42,6 +42,12 @@ enum Strings {
     static let network = LocalizedText(en: "Network", pt: "Rede")
     static let temperature = LocalizedText(en: "Temperature", pt: "Temperatura")
     static let disk = LocalizedText(en: "Disk", pt: "Disco")
+    /// VoiceOver description for the menu-bar warning glyph shown while the cleaning
+    /// permission is missing.
+    static let accessibilityWarningBadge = LocalizedText(
+        en: "Cleaning permission needs attention",
+        pt: "Permissão de limpeza precisa de atenção"
+    )
 
     // Popover header / footer
     /// Reads `CFBundleShortVersionString` so the popover always reflects the shipped
@@ -135,6 +141,56 @@ enum Strings {
         case .portuguese: return "Nova versão \(version) disponível"
         }
     }
+
+    // Cleaning-lock Accessibility recovery (self-healing flow). Tone matches the
+    // existing Portuguese cleaning-section copy; the dead-end "reload" wording is
+    // gone — the app now applies a restored grant on its own.
+    static let cleaningPermissionRequired = LocalizedText(
+        en: "Accessibility permission required",
+        pt: "Permissão de Acessibilidade necessária"
+    )
+    static let cleaningOpenAccessibility = LocalizedText(
+        en: "Open Accessibility",
+        pt: "Abrir Acessibilidade"
+    )
+    /// Update-reset case: stresses remove (−) + re-add, since re-toggling the stale
+    /// entry never works.
+    static let cleaningRecoveryResetGuidance = LocalizedText(
+        en: "The update reset this permission. In Accessibility, remove (−) Mac Metrics View and add it again — just re-enabling the old entry won't work. The app applies it and reopens on its own.",
+        pt: "A atualização redefiniu esta permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas reativar a entrada antiga não funciona. O app aplica e reabre sozinho."
+    )
+    /// First-time grant case.
+    static let cleaningRecoveryFirstGrantGuidance = LocalizedText(
+        en: "Grant access under Accessibility. If Mac Metrics View is already listed but still blocked, remove (−) the entry and add it again — an entry from an earlier version won't work. The app applies it and reopens on its own.",
+        pt: "Conceda o acesso em Acessibilidade. Se o Mac Metrics View já aparece na lista mas continua bloqueado, remova (−) a entrada e adicione novamente — uma entrada de uma versão anterior não vale. O app aplica e reabre sozinho."
+    )
+    /// Shown while the probe loop is running and the user is acting in Settings.
+    static let cleaningRecoveryChecking = LocalizedText(
+        en: "Checking automatically — no need to come back here.",
+        pt: "Verificando automaticamente — não precisa voltar aqui."
+    )
+    /// Transient state while the detected grant is applied via relaunch.
+    static let cleaningApplyingPermission = LocalizedText(
+        en: "Applying permission… reopening",
+        pt: "Aplicando permissão… reabrindo"
+    )
+    // Popover header recovery banner.
+    static let recoveryBannerResetTitle = LocalizedText(
+        en: "Cleaning is paused",
+        pt: "A limpeza está pausada"
+    )
+    static let recoveryBannerResetMessage = LocalizedText(
+        en: "An update reset the Accessibility permission. Re-apply it below.",
+        pt: "Uma atualização redefiniu a permissão de Acessibilidade. Reaplique abaixo."
+    )
+    static let recoveryBannerNeedsGrantTitle = LocalizedText(
+        en: "Cleaning needs Accessibility",
+        pt: "A limpeza precisa de Acessibilidade"
+    )
+    static let recoveryBannerNeedsGrantMessage = LocalizedText(
+        en: "Grant Accessibility permission to use the cleaning feature.",
+        pt: "Conceda a permissão de Acessibilidade para usar o modo limpeza."
+    )
 
     // Shared
     static let unavailable = LocalizedText(en: "Unavailable", pt: "Indisponível")

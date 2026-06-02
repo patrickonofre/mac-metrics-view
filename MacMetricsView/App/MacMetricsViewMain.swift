@@ -1,10 +1,20 @@
 import AppKit
+import ApplicationServices
 import Darwin
 
 @main
 enum MacMetricsViewMain {
     @MainActor
     static func main() {
+        // Probe mode: a parent process spawned us only to read the *current* code
+        // identity's live Accessibility grant (which it cannot see in-process due to
+        // the cached `AXIsProcessTrusted()`). Evaluate trust and exit immediately,
+        // before any NSApplication / AppDelegate / status item / popover is built —
+        // probe mode must never render UI or reopen the bundle (ADR-002).
+        if AccessibilityProbeFlag.isProbeMode(arguments: CommandLine.arguments) {
+            exit(AccessibilityProbeFlag.exitCode(isTrusted: AXIsProcessTrusted()))
+        }
+
         guard Bundle.main.bundleIdentifier != nil else {
             let message = """
             MacMetricsView must be launched from an app bundle.

@@ -104,6 +104,10 @@
 		1000000000000000000000DB08 /* DiskReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D08 /* DiskReading.swift */; };
 		1000000000000000000000DB09 /* IOKitDiskReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D09 /* IOKitDiskReader.swift */; };
 		1000000000000000000000DB0A /* DiskSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D0A /* DiskSampler.swift */; };
+		1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E01 /* AccessibilityProbe.swift */; };
+		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
+		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
+		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -189,6 +193,10 @@
 		1000000000000000000000D08 /* DiskReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskReading.swift; sourceTree = "<group>"; };
 		1000000000000000000000D09 /* IOKitDiskReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitDiskReader.swift; sourceTree = "<group>"; };
 		1000000000000000000000D0A /* DiskSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampler.swift; sourceTree = "<group>"; };
+		1000000000000000000000E01 /* AccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityProbe.swift; sourceTree = "<group>"; };
+		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
+		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
+		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -279,6 +287,10 @@
 				1000000000000000000000D08 /* DiskReading.swift */,
 				1000000000000000000000D09 /* IOKitDiskReader.swift */,
 				1000000000000000000000D0A /* DiskSampler.swift */,
+				1000000000000000000000E01 /* AccessibilityProbe.swift */,
+				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
+				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
+				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -474,6 +486,10 @@
 				1000000000000000000000DB08 /* DiskReading.swift in Sources */,
 				1000000000000000000000DB09 /* IOKitDiskReader.swift in Sources */,
 				1000000000000000000000DB0A /* DiskSampler.swift in Sources */,
+				1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */,
+				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
+				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
+				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

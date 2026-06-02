@@ -23,6 +23,15 @@ final class FakeAccessibilityAuthorization: AccessibilityAuthorizationProtocol {
     }
 }
 
+/// Stands in for `StatusItemController.openPopover()` so the AppDelegate wiring
+/// (`onRequestOpenPopover` → controller open) can be asserted without an AppKit
+/// status item.
+@MainActor
+final class PopoverOpenSpy {
+    private(set) var openCount = 0
+    func openPopover() { openCount += 1 }
+}
+
 @MainActor
 final class CleaningLockStateTests: XCTestCase {
 
@@ -349,5 +358,251 @@ final class CleaningLockStateTests: XCTestCase {
 
         XCTAssertTrue(state.isAccessibilityGranted)
         XCTAssertFalse(state.accessibilityResetByUpdate)
+    }
+
+    // MARK: - Recovery state machine (probe poll loop)
+
+    private func makeRecoveryState(
+        probe: FakeAccessibilityProbe,
+        auth: FakeAccessibilityAuthorization = FakeAccessibilityAuthorization(isTrusted: false)
+    ) -> CPUState {
+        CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth, accessibilityProbe: probe)
+    }
+
+    func testBeginRecoveryEntersAwaitingOpensSettingsAndStartsPolling() {
+        let probe = FakeAccessibilityProbe(result: false)
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = makeRecoveryState(probe: probe, auth: auth)
+
+        state.beginAccessibilityRecovery()
+
+        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(auth.openSettingsCallCount, 1)
+
+        // Polling started: a tick spawns the probe.
+        state.pollAccessibilityRecovery()
+        XCTAssertEqual(probe.probeCallCount, 1)
+    }
+
+    func testProbeTrueTransitionsToApplyingAndRelaunchesExactlyOnce() {
+        let probe = FakeAccessibilityProbe(result: true)
+        let state = makeRecoveryState(probe: probe)
+        var relaunchCount = 0
+        state.onRelaunch = { relaunchCount += 1 }
+
+        state.beginAccessibilityRecovery()
+        state.pollAccessibilityRecovery()
+
+        XCTAssertEqual(state.recoveryPhase, .applying)
+        XCTAssertEqual(relaunchCount, 1)
+
+        // A further tick is a no-op (not awaitingGrant) — relaunch fires only once.
+        state.pollAccessibilityRecovery()
+        XCTAssertEqual(relaunchCount, 1)
+    }
+
+    func testProbeFalseStaysAwaitingAndNeverRelaunches() {
+        let probe = FakeAccessibilityProbe(result: false)
+        let state = makeRecoveryState(probe: probe)
+        var relaunchCount = 0
+        state.onRelaunch = { relaunchCount += 1 }
+
+        state.beginAccessibilityRecovery()
+        state.pollAccessibilityRecovery()
+        state.pollAccessibilityRecovery()
+
+        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(relaunchCount, 0)
+    }
+
+    func testCancelStopsLoopNoFurtherProbeOrRelaunch() {
+        let probe = FakeAccessibilityProbe(result: false)
+        let state = makeRecoveryState(probe: probe)
+        var relaunchCount = 0
+        state.onRelaunch = { relaunchCount += 1 }
+
+        state.beginAccessibilityRecovery()
+        state.pollAccessibilityRecovery()
+        XCTAssertEqual(probe.probeCallCount, 1)
+
+        state.cancelAccessibilityRecovery()
+        XCTAssertEqual(state.recoveryPhase, .idle)
+
+        // Even if the grant arrives now, a tick after cancel must not probe or relaunch.
+        probe.result = true
+        state.pollAccessibilityRecovery()
+        XCTAssertEqual(probe.probeCallCount, 1)
+        XCTAssertEqual(relaunchCount, 0)
+    }
+
+    func testNoProbeCallWhileIdle() {
+        let probe = FakeAccessibilityProbe(result: true)
+        let state = makeRecoveryState(probe: probe)
+
+        XCTAssertEqual(state.recoveryPhase, .idle)
+        state.pollAccessibilityRecovery()
+
+        XCTAssertEqual(probe.probeCallCount, 0)
+    }
+
+    func testBeginIsIgnoredWhileAlreadyRecovering() {
+        let probe = FakeAccessibilityProbe(result: false)
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = makeRecoveryState(probe: probe, auth: auth)
+
+        state.beginAccessibilityRecovery()
+        state.beginAccessibilityRecovery()
+
+        // Second begin is a no-op: Settings opened once, still a single recovery.
+        XCTAssertEqual(auth.openSettingsCallCount, 1)
+        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+    }
+
+    func testLateProbeResultAfterCancelDoesNotRelaunch() {
+        // A probe spawned before cancel can complete after cancel; the result must
+        // be ignored so no stray relaunch fires.
+        let probe = FakeAccessibilityProbe(result: true)
+        probe.defersCompletion = true
+        let state = makeRecoveryState(probe: probe)
+        var relaunchCount = 0
+        state.onRelaunch = { relaunchCount += 1 }
+
+        state.beginAccessibilityRecovery()
+        state.pollAccessibilityRecovery()       // probe in flight, completion held
+        state.cancelAccessibilityRecovery()      // user dismissed
+        probe.flush()                             // probe result lands late
+
+        XCTAssertEqual(state.recoveryPhase, .idle)
+        XCTAssertEqual(relaunchCount, 0)
+    }
+
+    // MARK: - Recovery: end-to-end with fakes (mirrors AppDelegate wiring)
+
+    func testEndToEndRecoveryFlipsToTrustedThenRelaunchesAndEndsApplying() {
+        let probe = FakeAccessibilityProbe(result: false)
+        let state = makeRecoveryState(probe: probe)
+        var relaunchCount = 0
+        state.onRelaunch = { relaunchCount += 1 }
+
+        state.beginAccessibilityRecovery()
+        state.pollAccessibilityRecovery()         // not granted yet
+        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(relaunchCount, 0)
+
+        probe.result = true                         // user removed + re-added the entry
+        state.pollAccessibilityRecovery()
+
+        XCTAssertEqual(relaunchCount, 1)
+        XCTAssertEqual(state.recoveryPhase, .applying)
+    }
+
+    // MARK: - One-time launch nudge
+
+    /// Builds a state where an update reset the grant (granted on `1.0.0`, now on
+    /// `1.1.0` and untrusted), sharing one UserDefaults suite so the grant tracker
+    /// carries over.
+    private func makeResetState(userDefaults ud: UserDefaults) -> CPUState {
+        _ = CPUState(userDefaults: ud,
+                     accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true),
+                     currentAppVersion: "1.0.0")
+        return CPUState(userDefaults: ud,
+                        accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                        currentAppVersion: "1.1.0")
+    }
+
+    func testLaunchNudgeFiresOnceWhenResetAndFlagUnset() {
+        let ud = makeUserDefaults()
+        let state = makeResetState(userDefaults: ud)
+        XCTAssertTrue(state.accessibilityResetByUpdate)
+
+        var openCount = 0
+        state.onRequestOpenPopover = { openCount += 1 }
+
+        state.evaluateAccessibilityLaunchNudge()
+        XCTAssertEqual(openCount, 1)
+
+        // Same version, second evaluation: the flag is recorded, so it never repeats.
+        state.evaluateAccessibilityLaunchNudge()
+        XCTAssertEqual(openCount, 1)
+    }
+
+    func testLaunchNudgeRecordsFlagForCurrentVersion() {
+        let ud = makeUserDefaults()
+        let state = makeResetState(userDefaults: ud)
+        state.onRequestOpenPopover = {}
+
+        state.evaluateAccessibilityLaunchNudge()
+
+        XCTAssertFalse(AccessibilityNudgeTracker.load(from: ud).shouldNudge(forVersion: "1.1.0"))
+    }
+
+    func testLaunchNudgeDoesNotFireWhenGranted() {
+        let state = CPUState(userDefaults: makeUserDefaults(),
+                             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true),
+                             currentAppVersion: "1.1.0")
+        var openCount = 0
+        state.onRequestOpenPopover = { openCount += 1 }
+
+        state.evaluateAccessibilityLaunchNudge()
+
+        XCTAssertEqual(openCount, 0)
+    }
+
+    func testLaunchNudgeDoesNotFireWhenNoResetDetected() {
+        // Fresh install, never granted → first-grant, not a reset.
+        let state = CPUState(userDefaults: makeUserDefaults(),
+                             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
+                             currentAppVersion: "1.0.0")
+        XCTAssertFalse(state.accessibilityResetByUpdate)
+
+        var openCount = 0
+        state.onRequestOpenPopover = { openCount += 1 }
+
+        state.evaluateAccessibilityLaunchNudge()
+
+        XCTAssertEqual(openCount, 0)
+    }
+
+    func testLaunchNudgeDoesNotFireWhenFlagAlreadySetForVersion() {
+        let ud = makeUserDefaults()
+        AccessibilityNudgeTracker(lastNudgedVersion: "1.1.0").save(to: ud)
+        let state = makeResetState(userDefaults: ud)
+        XCTAssertTrue(state.accessibilityResetByUpdate)
+
+        var openCount = 0
+        state.onRequestOpenPopover = { openCount += 1 }
+
+        state.evaluateAccessibilityLaunchNudge()
+
+        XCTAssertEqual(openCount, 0)
+    }
+
+    // MARK: - AppDelegate wiring mirror (onRequestOpenPopover → openPopover)
+
+    func testLaunchNudgeInvokesWiredControllerOpenPopover() {
+        // Mirrors AppDelegate: onRequestOpenPopover is wired to the controller's
+        // openPopover(); a reset-triggered launch nudge must reach it once.
+        let ud = makeUserDefaults()
+        let state = makeResetState(userDefaults: ud)
+        let controller = PopoverOpenSpy()
+        state.onRequestOpenPopover = { controller.openPopover() }
+
+        state.evaluateAccessibilityLaunchNudge()
+
+        XCTAssertEqual(controller.openCount, 1)
+    }
+
+    func testRelaunchHandshakeRemainsTheApplyMechanism() {
+        // Task 6: applying a detected grant reuses the existing onRelaunch path.
+        let probe = FakeAccessibilityProbe(result: true)
+        let state = makeRecoveryState(probe: probe)
+        var relaunchCount = 0
+        state.onRelaunch = { relaunchCount += 1 }
+
+        state.beginAccessibilityRecovery()
+        state.pollAccessibilityRecovery()
+
+        XCTAssertEqual(relaunchCount, 1)
+        XCTAssertEqual(state.recoveryPhase, .applying)
     }
 }

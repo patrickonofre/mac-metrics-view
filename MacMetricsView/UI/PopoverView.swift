@@ -17,6 +17,10 @@ struct PopoverView: View {
         VStack(alignment: .leading, spacing: 12) {
             headerBar
 
+            if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: state.isAccessibilityGranted) {
+                RecoveryBanner(wasResetByUpdate: state.accessibilityResetByUpdate)
+            }
+
             dataPane
 
             Divider()
@@ -29,6 +33,11 @@ struct PopoverView: View {
         .frame(width: popoverWidth, alignment: .topLeading)
         .onAppear {
             state.refreshAccessibilityAuthorization()
+        }
+        .onDisappear {
+            // If the popover is dismissed mid-recovery, stop the probe poll loop.
+            // No-op unless we were awaiting a grant.
+            state.cancelAccessibilityRecovery()
         }
     }
 
@@ -522,68 +531,124 @@ private struct CleaningLockSection: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(.primary)
 
-            if isAccessibilityGranted {
-                HStack(spacing: 8) {
-                    Picker("Duração", selection: durationBinding) {
-                        ForEach(Self.presetLabels, id: \.0) { duration, label in
-                            Text(label).tag(duration)
-                        }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.segmented)
-                    .frame(maxWidth: .infinity)
-
-                    Button("Iniciar") {
-                        onStart()
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .disabled(state.lockPhase == .locked)
-                }
-            } else {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Image(systemName: "lock.trianglebadge.exclamationmark")
-                            .foregroundStyle(.orange)
-                        Text("Permissão de Acessibilidade necessária")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Button("Conceder acesso") {
-                            state.requestAccessibilityAccess()
-                        }
-                        .buttonStyle(.borderless)
-                        .foregroundStyle(Color.accentColor)
-                    }
-
-                    if wasResetByUpdate {
-                        Text("A atualização redefiniu a permissão. Em Acessibilidade, remova (−) o Mac Metrics View e adicione novamente — apenas ligar a entrada antiga não funciona. Depois, toque em Relançar abaixo.")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    } else {
-                        Text("Conceda o acesso em Acessibilidade e toque em Relançar abaixo. Se o Mac Metrics View já aparece na lista mas continua bloqueado, remova (−) a entrada e adicione novamente — uma entrada de uma versão anterior não vale.")
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    HStack(spacing: 6) {
-                        Text("Já concedeu?")
-                            .foregroundStyle(.secondary)
-                        Button("Relançar app") {
-                            state.relaunchToApplyGrant()
-                        }
-                        .buttonStyle(.borderless)
-                        .foregroundStyle(Color.accentColor)
-                        Spacer()
-                    }
-                    .font(.caption2)
-                }
-                .font(.caption)
+            switch CleaningRecoveryPresentation.cardState(
+                isAccessibilityGranted: isAccessibilityGranted,
+                recoveryPhase: state.recoveryPhase
+            ) {
+            case .granted:
+                grantedControls
+            case .applying:
+                applyingIndicator
+            case .awaitingGuidance:
+                recoveryGuidance
             }
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // Preserved unchanged: duration picker + Iniciar.
+    private var grantedControls: some View {
+        HStack(spacing: 8) {
+            Picker("Duração", selection: durationBinding) {
+                ForEach(Self.presetLabels, id: \.0) { duration, label in
+                    Text(label).tag(duration)
+                }
+            }
+            .labelsHidden()
+            .pickerStyle(.segmented)
+            .frame(maxWidth: .infinity)
+
+            Button("Iniciar") {
+                onStart()
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .disabled(state.lockPhase == .locked)
+        }
+    }
+
+    // Transient: the detected grant is being applied via relaunch.
+    private var applyingIndicator: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+                .controlSize(.small)
+            Text(Strings.cleaningApplyingPermission())
+                .foregroundStyle(.secondary)
+            Spacer()
+        }
+    }
+
+    // Self-healing recovery: open Settings + begin probing; the app detects the
+    // re-added grant and relaunches on its own (no manual "reload" button).
+    private var recoveryGuidance: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Image(systemName: "lock.trianglebadge.exclamationmark")
+                    .foregroundStyle(.orange)
+                Text(Strings.cleaningPermissionRequired())
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button(Strings.cleaningOpenAccessibility()) {
+                    state.beginAccessibilityRecovery()
+                }
+                .buttonStyle(.borderless)
+                .foregroundStyle(Color.accentColor)
+            }
+
+            Text(CleaningRecoveryPresentation.guidance(wasResetByUpdate: wasResetByUpdate)())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if state.recoveryPhase == .awaitingGrant {
+                HStack(spacing: 6) {
+                    ProgressView()
+                        .controlSize(.small)
+                    Text(Strings.cleaningRecoveryChecking())
+                        .foregroundStyle(.secondary)
+                }
+                .font(.caption2)
+            }
+        }
+        .font(.caption)
+    }
+}
+
+// MARK: - Recovery header banner
+
+private struct RecoveryBanner: View {
+    let wasResetByUpdate: Bool
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .foregroundStyle(.orange)
+                .imageScale(.medium)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(CleaningRecoveryPresentation.bannerTitle(wasResetByUpdate: wasResetByUpdate)())
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Text(CleaningRecoveryPresentation.bannerMessage(wasResetByUpdate: wasResetByUpdate)())
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color.orange.opacity(0.35))
+        )
+        .accessibilityElement(children: .combine)
     }
 }
 
