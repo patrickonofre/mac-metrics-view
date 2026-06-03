@@ -108,6 +108,16 @@
 		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
 		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
 		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
+		1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F01 /* TokenUsageEvent.swift */; };
+		1000000000000000000000FB02 /* TokenAggregate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F02 /* TokenAggregate.swift */; };
+		1000000000000000000000FB03 /* TokenScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F03 /* TokenScope.swift */; };
+		1000000000000000000000FB04 /* TokenWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F04 /* TokenWindow.swift */; };
+		1000000000000000000000FB05 /* TokenWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F05 /* TokenWindowStats.swift */; };
+		1000000000000000000000FB06 /* TokenUsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F06 /* TokenUsageStore.swift */; };
+		1000000000000000000000FB07 /* TokenFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F07 /* TokenFormatter.swift */; };
+		1000000000000000000000FB08 /* TokenUsageReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F08 /* TokenUsageReading.swift */; };
+		1000000000000000000000FB09 /* TokenUsageSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F09 /* TokenUsageSampler.swift */; };
+		1000000000000000000000FB0A /* ClaudeCodeLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0A /* ClaudeCodeLogReader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -197,6 +207,16 @@
 		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
 		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
 		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
+		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
+		1000000000000000000000F02 /* TokenAggregate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenAggregate.swift; sourceTree = "<group>"; };
+		1000000000000000000000F03 /* TokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenScope.swift; sourceTree = "<group>"; };
+		1000000000000000000000F04 /* TokenWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindow.swift; sourceTree = "<group>"; };
+		1000000000000000000000F05 /* TokenWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindowStats.swift; sourceTree = "<group>"; };
+		1000000000000000000000F06 /* TokenUsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageStore.swift; sourceTree = "<group>"; };
+		1000000000000000000000F07 /* TokenFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000F08 /* TokenUsageReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageReading.swift; sourceTree = "<group>"; };
+		1000000000000000000000F09 /* TokenUsageSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageSampler.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0A /* ClaudeCodeLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeCodeLogReader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -291,6 +311,16 @@
 				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
 				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
+				1000000000000000000000F01 /* TokenUsageEvent.swift */,
+				1000000000000000000000F02 /* TokenAggregate.swift */,
+				1000000000000000000000F03 /* TokenScope.swift */,
+				1000000000000000000000F04 /* TokenWindow.swift */,
+				1000000000000000000000F05 /* TokenWindowStats.swift */,
+				1000000000000000000000F06 /* TokenUsageStore.swift */,
+				1000000000000000000000F07 /* TokenFormatter.swift */,
+				1000000000000000000000F08 /* TokenUsageReading.swift */,
+				1000000000000000000000F09 /* TokenUsageSampler.swift */,
+				1000000000000000000000F0A /* ClaudeCodeLogReader.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -490,6 +520,16 @@
 				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
 				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
+				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,
+				1000000000000000000000FB02 /* TokenAggregate.swift in Sources */,
+				1000000000000000000000FB03 /* TokenScope.swift in Sources */,
+				1000000000000000000000FB04 /* TokenWindow.swift in Sources */,
+				1000000000000000000000FB05 /* TokenWindowStats.swift in Sources */,
+				1000000000000000000000FB06 /* TokenUsageStore.swift in Sources */,
+				1000000000000000000000FB07 /* TokenFormatter.swift in Sources */,
+				1000000000000000000000FB08 /* TokenUsageReading.swift in Sources */,
+				1000000000000000000000FB09 /* TokenUsageSampler.swift in Sources */,
+				1000000000000000000000FB0A /* ClaudeCodeLogReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
