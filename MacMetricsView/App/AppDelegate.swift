@@ -12,7 +12,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     private let networkSampler = NetworkSampler()
     private let temperatureSampler = TemperatureSampler()
     private let diskSampler = DiskSampler()
-    private let tokenSampler = TokenUsageSampler()
+    // Internal (not private) so wiring tests can drive the delegate with the exact sampler
+    // instances and assert provider-tagged routing, mirroring `state`.
+    let tokenSampler = TokenUsageSampler()
+    let codexTokenSampler = TokenUsageSampler(reader: CodexLogReader())
     private var statusItemController: StatusItemController?
 
     // Cleaning-lock
@@ -86,6 +89,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         temperatureSampler.delegate = self
         diskSampler.delegate = self
         tokenSampler.delegate = self
+        codexTokenSampler.delegate = self
         startAllSamplers()
     }
 
@@ -100,6 +104,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         temperatureSampler.stop()
         diskSampler.stop()
         tokenSampler.stop()
+        codexTokenSampler.stop()
     }
 
     /// Seeds the first-run metric preset once, on a genuinely fresh install. The grant
@@ -188,7 +193,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     }
 
     func tokenUsageSampler(_ sampler: TokenUsageSampler, didProduce events: [TokenUsageEvent]) {
-        state.update(with: events)
+        // Route each sampler's batch to its provider store; default to Claude for any other
+        // sampler instance (back-compat with the single-sampler call sites).
+        let provider: TokenProvider = sampler === codexTokenSampler ? .codex : .claude
+        state.update(provider: provider, with: events)
         statusItemController?.setNeedsTitleUpdate()
     }
 
@@ -201,5 +209,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         temperatureSampler.start()
         diskSampler.start()
         tokenSampler.start()
+        codexTokenSampler.start()
     }
 }

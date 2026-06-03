@@ -4,10 +4,10 @@ import XCTest
 @MainActor
 final class AppDelegateTokenWiringTests: XCTestCase {
 
-    private func event(input: Int) -> TokenUsageEvent {
+    private func event(input: Int, model: String = "claude-opus-4-8") -> TokenUsageEvent {
         TokenUsageEvent(
             timestamp: Date(),
-            model: "claude-opus-4-8",
+            model: model,
             inputTokens: input,
             outputTokens: 0,
             cacheReadTokens: 0,
@@ -68,5 +68,40 @@ final class AppDelegateTokenWiringTests: XCTestCase {
 
         XCTAssertEqual(appDelegate.state.tokenAggregate.input, 1_200)
         XCTAssertTrue(appDelegate.state.visibleMenuBarTitles.contains("1.2k"))
+    }
+
+    // MARK: - Provider-tagged routing (task_07)
+
+    func testCodexSamplerBatchRoutesToCodexStore() {
+        let appDelegate = AppDelegate()
+
+        appDelegate.tokenUsageSampler(appDelegate.codexTokenSampler, didProduce: [event(input: 70, model: "gpt-5-codex")])
+
+        XCTAssertEqual(appDelegate.state.tokenStores[.codex]?.events.count, 1)
+        XCTAssertEqual(appDelegate.state.tokenStores[.claude]?.events.count, 0)
+    }
+
+    func testClaudeSamplerBatchRoutesToClaudeStore() {
+        let appDelegate = AppDelegate()
+
+        appDelegate.tokenUsageSampler(appDelegate.tokenSampler, didProduce: [event(input: 100)])
+
+        XCTAssertEqual(appDelegate.state.tokenStores[.claude]?.events.count, 1)
+        XCTAssertEqual(appDelegate.state.tokenStores[.codex]?.events.count, 0)
+    }
+
+    func testBothBatchesReachTheirStoresAndCombinedReflectsBoth() {
+        let appDelegate = AppDelegate()   // default selection: combined
+
+        appDelegate.tokenUsageSampler(appDelegate.tokenSampler, didProduce: [event(input: 100)])
+        appDelegate.tokenUsageSampler(appDelegate.codexTokenSampler, didProduce: [event(input: 40, model: "gpt-5-codex")])
+
+        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 140)   // combined sum
+
+        // Switching provider re-renders from the already-ingested batches, no restart.
+        appDelegate.state.setTokenProvider(.codex)
+        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 40)
+        appDelegate.state.setTokenProvider(.claude)
+        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 100)
     }
 }
