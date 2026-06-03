@@ -103,6 +103,42 @@ enum Strings {
     static let diskMetricCombinedShort = LocalizedText(en: "Total", pt: "Total")
     static let diskMetricSplitShort = LocalizedText(en: "R/W", pt: "L/E")
 
+    // Token usage meter (Claude Code). "Tokens" is a loanword, identical in both.
+    static let tokens = LocalizedText(en: "Tokens", pt: "Tokens")
+    static let tokenInput = LocalizedText(en: "Input", pt: "Entrada")
+    static let tokenOutput = LocalizedText(en: "Output", pt: "Saída")
+    static let tokenCache = LocalizedText(en: "Cache", pt: "Cache")
+    static let tokenReset = LocalizedText(en: "Reset counter", pt: "Zerar contador")
+    static let tokenEmptyState = LocalizedText(en: "No token usage yet", pt: "Sem uso de tokens ainda")
+    // Scope picker (which Claude Code activity is counted)
+    static let tokenScopeLabel = LocalizedText(en: "Scope", pt: "Escopo")
+    static let tokenScopeGlobal = LocalizedText(en: "Global", pt: "Global")
+    static let tokenScopeProject = LocalizedText(en: "Project", pt: "Projeto")
+    static let tokenScopeSession = LocalizedText(en: "Session", pt: "Sessão")
+    // Window picker (rolling range shown)
+    static let tokenWindowLabel = LocalizedText(en: "Token window", pt: "Janela de tokens")
+    static let tokenWindowToday = LocalizedText(en: "Today", pt: "Hoje")
+    static let tokenWindowLastHour = LocalizedText(en: "Last hour", pt: "Última hora")
+    static let tokenWindowLast24h = LocalizedText(en: "Last 24h", pt: "Últimas 24h")
+    static let tokenWindowSinceReset = LocalizedText(en: "Since reset", pt: "Desde o reset")
+
+    static func tokenScopeName(_ scope: TokenScope) -> LocalizedText {
+        switch scope {
+        case .global: return tokenScopeGlobal
+        case .project: return tokenScopeProject
+        case .session: return tokenScopeSession
+        }
+    }
+
+    static func tokenWindowName(_ window: TokenWindow) -> LocalizedText {
+        switch window {
+        case .today: return tokenWindowToday
+        case .lastHour: return tokenWindowLastHour
+        case .last24h: return tokenWindowLast24h
+        case .sinceReset: return tokenWindowSinceReset
+        }
+    }
+
     // Visibility / display controls
     static let displayLabel = LocalizedText(en: "Display", pt: "Exibição")
     static let displayIcon = LocalizedText(en: "Icon", pt: "Ícone")
