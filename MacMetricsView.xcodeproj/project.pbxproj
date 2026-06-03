@@ -119,6 +119,7 @@
 		1000000000000000000000FB09 /* TokenUsageSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F09 /* TokenUsageSampler.swift */; };
 		1000000000000000000000FB0A /* ClaudeCodeLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0A /* ClaudeCodeLogReader.swift */; };
 		1000000000000000000000FB0B /* TokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0B /* TokenProvider.swift */; };
+		1000000000000000000000FB0C /* CodexLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0C /* CodexLogReader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -219,6 +220,7 @@
 		1000000000000000000000F09 /* TokenUsageSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageSampler.swift; sourceTree = "<group>"; };
 		1000000000000000000000F0A /* ClaudeCodeLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeCodeLogReader.swift; sourceTree = "<group>"; };
 		1000000000000000000000F0B /* TokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenProvider.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0C /* CodexLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CodexLogReader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -324,6 +326,7 @@
 				1000000000000000000000F09 /* TokenUsageSampler.swift */,
 				1000000000000000000000F0A /* ClaudeCodeLogReader.swift */,
 				1000000000000000000000F0B /* TokenProvider.swift */,
+				1000000000000000000000F0C /* CodexLogReader.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -534,6 +537,7 @@
 				1000000000000000000000FB09 /* TokenUsageSampler.swift in Sources */,
 				1000000000000000000000FB0A /* ClaudeCodeLogReader.swift in Sources */,
 				1000000000000000000000FB0B /* TokenProvider.swift in Sources */,
+				1000000000000000000000FB0C /* CodexLogReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
