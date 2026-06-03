@@ -27,9 +27,20 @@ final class CPUState: ObservableObject {
     @Published private(set) var temperatureHistory = TemperatureHistory()
     @Published private(set) var diskHistory = DiskHistory()
 
+    /// Bounded token event store + since-reset accumulator (ADR-003). Ingested via
+    /// `update(with:[TokenUsageEvent])`; the popover reads it for the sparkline.
+    @Published private(set) var tokenStore: TokenUsageStore
+    /// Token breakdown for the currently selected scope + window, recomputed whenever
+    /// events arrive or the scope/window changes. Drives the menu bar and popover.
+    @Published private(set) var tokenAggregate: TokenAggregate = .zero
+
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
     /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
     let diskSampleInterval: TimeInterval = 1
+
+    private enum TokenKeys {
+        static let resetAt = "CPUState.tokenResetAt"
+    }
 
     // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
     @Published private(set) var lockPhase: LockPhase = .idle
@@ -112,6 +123,8 @@ final class CPUState: ObservableObject {
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
+        let storedResetAt = userDefaults.object(forKey: TokenKeys.resetAt) as? Date
+        tokenStore = TokenUsageStore(resetAt: storedResetAt ?? Date())
         evaluateAccessibility()
     }
 
@@ -150,6 +163,10 @@ final class CPUState: ObservableObject {
             titles.append(TemperatureFormatter.menuBarTitle(for: latestTemperatureSample, showLabel: showLabel))
         }
 
+        if visibility.showTokens {
+            titles.append(TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: showLabel))
+        }
+
         return titles
     }
 
@@ -177,6 +194,19 @@ final class CPUState: ObservableObject {
         display.diskMenuBarMetric
     }
 
+    /// Token volume has no danger threshold in the volume-only MVP — always `.normal`.
+    var tokenMenuBarTextStyle: CPUMenuBarTextStyle {
+        TokenFormatter.menuBarTextStyle(for: tokenAggregate)
+    }
+
+    var tokenScope: TokenScope {
+        display.tokenScope
+    }
+
+    var tokenMenuBarWindow: TokenWindow {
+        display.tokenMenuBarWindow
+    }
+
     var hasVisibleMetric: Bool {
         visibility.hasVisibleMetric
     }
@@ -202,6 +232,10 @@ final class CPUState: ObservableObject {
 
         if visibility.showTemperature {
             segments.append("\(Strings.temperature()) \(TemperatureFormatter.displayString(for: latestTemperatureSample))")
+        }
+
+        if visibility.showTokens {
+            segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false))")
         }
 
         guard !segments.isEmpty else { return Strings.metricsPlaceholder() }
@@ -233,6 +267,57 @@ final class CPUState: ObservableObject {
     func update(with sample: DiskSample) {
         latestDiskSample = sample
         diskHistory.append(sample)
+    }
+
+    /// Ingests a batch of parsed token events into the store and republishes the
+    /// selected aggregate. Ingestion is independent of menu-bar visibility — like the
+    /// other metrics, the popover keeps working when the menu bar segment is hidden.
+    func update(with events: [TokenUsageEvent]) {
+        guard !events.isEmpty else { return }
+        for event in events {
+            tokenStore.append(event)
+        }
+        recomputeTokenAggregate()
+    }
+
+    func setTokenVisible(_ isVisible: Bool) {
+        updateVisibility(metric: .tokens, isVisible: isVisible)
+    }
+
+    func setTokenScope(_ scope: TokenScope) {
+        guard display.tokenScope != scope else { return }
+
+        display.tokenScope = scope
+        display.save(to: userDefaults)
+        recomputeTokenAggregate()
+        onDisplayChange?()
+    }
+
+    func setTokenMenuBarWindow(_ window: TokenWindow) {
+        guard display.tokenMenuBarWindow != window else { return }
+
+        display.tokenMenuBarWindow = window
+        display.save(to: userDefaults)
+        recomputeTokenAggregate()
+        onDisplayChange?()
+    }
+
+    /// Starts a fresh since-reset measurement. The rolling windows (today/1h/24h) are
+    /// unaffected; only the since-reset view zeroes. The new `resetAt` is persisted so it
+    /// survives relaunch and the since-reset figure rebuilds from the backfilled tail.
+    func resetTokenCounter() {
+        tokenStore.reset(now: Date())
+        userDefaults.set(tokenStore.resetAt, forKey: TokenKeys.resetAt)
+        recomputeTokenAggregate()
+    }
+
+    private func recomputeTokenAggregate() {
+        tokenAggregate = TokenWindowStats.aggregate(
+            store: tokenStore,
+            scope: display.tokenScope,
+            window: display.tokenMenuBarWindow,
+            now: Date()
+        )
     }
 
     func setCPUVisible(_ isVisible: Bool) {
