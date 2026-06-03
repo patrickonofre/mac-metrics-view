@@ -36,11 +36,13 @@ final class ClaudeCodeLogReaderTests: XCTestCase {
         input: Int = 0,
         output: Int = 0,
         cacheRead: Int = 0,
-        cacheCreation: Int = 0
+        cacheCreation: Int = 0,
+        messageID: String? = nil
     ) -> String {
         let timestamp = Self.iso.string(from: fixedNow.addingTimeInterval(offset))
+        let idField = messageID.map { "\"id\":\"\($0)\"," } ?? ""
         return """
-        {"timestamp":"\(timestamp)","message":{"model":"\(model)","usage":{"input_tokens":\(input),"output_tokens":\(output),"cache_read_input_tokens":\(cacheRead),"cache_creation_input_tokens":\(cacheCreation)}}}
+        {"timestamp":"\(timestamp)","message":{\(idField)"model":"\(model)","usage":{"input_tokens":\(input),"output_tokens":\(output),"cache_read_input_tokens":\(cacheRead),"cache_creation_input_tokens":\(cacheCreation)}}}
         """
     }
 
@@ -142,6 +144,55 @@ final class ClaudeCodeLogReaderTests: XCTestCase {
 
         XCTAssertEqual(event?.sessionID, "abc-123")
         XCTAssertEqual(event?.projectDir, "proj-encoded")
+    }
+
+    func testRepeatedMessageIDIsCountedOnce() throws {
+        // Claude Code writes one line per content-block, repeating the same message.usage.
+        let file = try projectDir("p1").appendingPathComponent("s1.jsonl")
+        try write([
+            usageLine(at: -60, input: 50, messageID: "msg_A"),
+            usageLine(at: -60, input: 50, messageID: "msg_A"),
+            usageLine(at: -60, input: 50, messageID: "msg_A")
+        ], to: file)
+
+        let events = makeReader().readNewEvents()
+
+        XCTAssertEqual(events.map(\.inputTokens), [50])   // counted once, not 150
+    }
+
+    func testDistinctMessageIDsAreAllCounted() throws {
+        let file = try projectDir("p1").appendingPathComponent("s1.jsonl")
+        try write([
+            usageLine(at: -60, input: 10, messageID: "msg_A"),
+            usageLine(at: -50, input: 20, messageID: "msg_B")
+        ], to: file)
+
+        let events = makeReader().readNewEvents()
+
+        XCTAssertEqual(events.map(\.inputTokens), [10, 20])
+    }
+
+    func testLinesWithoutMessageIDAreNotDeduped() throws {
+        let file = try projectDir("p1").appendingPathComponent("s1.jsonl")
+        try write([
+            usageLine(at: -60, input: 5),   // no message.id
+            usageLine(at: -60, input: 5)    // identical, but no id → both count
+        ], to: file)
+
+        let events = makeReader().readNewEvents()
+
+        XCTAssertEqual(events.map(\.inputTokens), [5, 5])
+    }
+
+    func testDuplicateMessageIDSkippedAcrossPolls() throws {
+        let file = try projectDir("p1").appendingPathComponent("s1.jsonl")
+        try write([usageLine(at: -60, input: 50, messageID: "msg_A")], to: file)
+        let reader = makeReader()
+        XCTAssertEqual(reader.readNewEvents().map(\.inputTokens), [50])
+
+        // A late content-block line for the same message arrives in a later poll.
+        try append([usageLine(at: -60, input: 50, messageID: "msg_A")], to: file)
+        XCTAssertEqual(reader.readNewEvents(), [])   // already counted
     }
 
     func testMissingRootReturnsEmpty() {

@@ -17,6 +17,12 @@ final class ClaudeCodeLogReader: TokenUsageReading {
     /// Byte offset already consumed per file, keyed by path. `nil` means never seen.
     private var offsets: [String: UInt64] = [:]
 
+    /// `message.id`s already counted. Claude Code writes one JSONL line per assistant
+    /// content-block (each `tool_use`), repeating the same `message.usage` on every line,
+    /// so summing all of them double-counts a single message's tokens. We count each
+    /// message once. Lines without a `message.id` (e.g. synthetic) are never deduped.
+    private var seenMessageIDs: Set<String> = []
+
     private static let newline: UInt8 = 0x0A
 
     init(
@@ -114,6 +120,13 @@ final class ClaudeCodeLogReader: TokenUsageReading {
             return nil
         }
 
+        // One usage record per assistant message: skip repeated content-block lines that
+        // carry the same already-counted message id.
+        if let messageID = line.message?.id {
+            guard !seenMessageIDs.contains(messageID) else { return nil }
+            seenMessageIDs.insert(messageID)
+        }
+
         return TokenUsageEvent(
             timestamp: timestamp,
             model: line.message?.model ?? "",
@@ -131,6 +144,7 @@ final class ClaudeCodeLogReader: TokenUsageReading {
         let message: Message?
 
         struct Message: Decodable {
+            let id: String?
             let model: String?
             let usage: Usage?
         }
