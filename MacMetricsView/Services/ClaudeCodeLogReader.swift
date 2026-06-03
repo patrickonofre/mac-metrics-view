@@ -134,6 +134,7 @@ final class ClaudeCodeLogReader: TokenUsageReading {
             outputTokens: usage.outputTokens ?? 0,
             cacheReadTokens: usage.cacheReadInputTokens ?? 0,
             cacheCreationTokens: usage.cacheCreationInputTokens ?? 0,
+            reasoningTokens: 0,   // Claude Code has no reasoning-token category (ADR-002)
             sessionID: file.deletingPathExtension().lastPathComponent,
             projectDir: file.deletingLastPathComponent().lastPathComponent
         )

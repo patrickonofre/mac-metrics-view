@@ -73,7 +73,7 @@ struct TokenUsageStore: Equatable {
 }
 
 extension TokenAggregate {
-    static let zero = TokenAggregate(input: 0, output: 0, cacheRead: 0, cacheCreation: 0)
+    static let zero = TokenAggregate(input: 0, output: 0, cacheRead: 0, cacheCreation: 0, reasoning: 0)
 
     /// Returns a copy with this event's token counts folded in. Pure value math.
     func adding(_ event: TokenUsageEvent) -> TokenAggregate {
@@ -81,7 +81,8 @@ extension TokenAggregate {
             input: input + event.inputTokens,
             output: output + event.outputTokens,
             cacheRead: cacheRead + event.cacheReadTokens,
-            cacheCreation: cacheCreation + event.cacheCreationTokens
+            cacheCreation: cacheCreation + event.cacheCreationTokens,
+            reasoning: reasoning + event.reasoningTokens
         )
     }
 }

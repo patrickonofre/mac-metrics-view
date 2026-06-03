@@ -12,6 +12,11 @@ struct TokenUsageEvent: Equatable {
     let outputTokens: Int
     let cacheReadTokens: Int
     let cacheCreationTokens: Int
+    /// Hidden chain-of-thought tokens reasoning models bill separately from visible
+    /// output (ADR-002/004). Claude has no such category and always passes 0; Codex
+    /// supplies `reasoning_output_tokens`. Defaulted so existing Claude-shaped call
+    /// sites stay source-compatible.
+    let reasoningTokens: Int
     let sessionID: String
     let projectDir: String
 
@@ -22,6 +27,7 @@ struct TokenUsageEvent: Equatable {
         outputTokens: Int,
         cacheReadTokens: Int,
         cacheCreationTokens: Int,
+        reasoningTokens: Int = 0,
         sessionID: String,
         projectDir: String
     ) {
@@ -31,6 +37,7 @@ struct TokenUsageEvent: Equatable {
         self.outputTokens = outputTokens
         self.cacheReadTokens = cacheReadTokens
         self.cacheCreationTokens = cacheCreationTokens
+        self.reasoningTokens = reasoningTokens
         self.sessionID = sessionID
         self.projectDir = projectDir
     }

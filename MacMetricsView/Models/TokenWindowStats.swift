@@ -145,9 +145,10 @@ enum TokenWindowStats {
         }
     }
 
-    /// Sparkline tracks the same figure as the headline total: input + output, excluding
-    /// cache (which lives in the popover breakdown only).
+    /// Sparkline tracks the same figure as the headline total (`TokenAggregate.usageTotal`):
+    /// input + output + reasoning, excluding cache (which lives in the popover breakdown
+    /// only). Reasoning is 0 for Claude, so its sparkline is unchanged.
     private static func usageTokens(_ event: TokenUsageEvent) -> Int {
-        event.inputTokens + event.outputTokens
+        event.inputTokens + event.outputTokens + event.reasoningTokens
     }
 }
