@@ -384,6 +384,15 @@ private struct TokenControls: View {
             }
 
             picker(
+                label: Strings.tokenProviderLabel(),
+                selection: Binding(get: { state.tokenProvider }, set: { state.setTokenProvider($0) })
+            ) {
+                Text(Strings.tokenProviderClaude()).tag(TokenProviderSelection.claude)
+                Text(Strings.tokenProviderCodex()).tag(TokenProviderSelection.codex)
+                Text(Strings.tokenProviderCombined()).tag(TokenProviderSelection.combined)
+            }
+
+            picker(
                 label: Strings.tokenScopeLabel(),
                 selection: Binding(get: { state.tokenScope }, set: { state.setTokenScope($0) })
             ) {

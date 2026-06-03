@@ -4,6 +4,19 @@ import XCTest
 @MainActor
 final class AppDelegateTokenWiringTests: XCTestCase {
 
+    // AppDelegate constructs its CPUState against UserDefaults.standard, which persists on
+    // disk across runs. Clear the provider selection so every test starts at the combined
+    // default rather than inheriting a selection a prior test/run left behind.
+    override func setUp() {
+        super.setUp()
+        UserDefaults.standard.removeObject(forKey: "MetricDisplaySettings.tokenProvider")
+    }
+
+    override func tearDown() {
+        UserDefaults.standard.removeObject(forKey: "MetricDisplaySettings.tokenProvider")
+        super.tearDown()
+    }
+
     private func event(input: Int, model: String = "claude-opus-4-8") -> TokenUsageEvent {
         TokenUsageEvent(
             timestamp: Date(),

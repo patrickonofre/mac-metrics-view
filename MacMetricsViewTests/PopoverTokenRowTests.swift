@@ -27,6 +27,20 @@ final class PopoverTokenRowTests: XCTestCase {
         )
     }
 
+    private func codexEvent(at date: Date = Date(), input: Int = 0, output: Int = 0, reasoning: Int = 0) -> TokenUsageEvent {
+        TokenUsageEvent(
+            timestamp: date,
+            model: "gpt-5-codex",
+            inputTokens: input,
+            outputTokens: output,
+            cacheReadTokens: 0,
+            cacheCreationTokens: 0,
+            reasoningTokens: reasoning,
+            sessionID: "cx1",
+            projectDir: "/cx"
+        )
+    }
+
     // MARK: - Row content
 
     func testBreakdownRowReflectsAggregate() {
@@ -112,6 +126,55 @@ final class PopoverTokenRowTests: XCTestCase {
         state.resetTokenCounter()
 
         XCTAssertEqual(state.tokenAggregate.input, 0)
+    }
+
+    // MARK: - Provider picker (task_09)
+
+    func testProviderPickerSetterChangesStateAndPersists() {
+        let userDefaults = makeUserDefaults()
+        let state = CPUState(userDefaults: userDefaults)
+
+        state.setTokenProvider(.codex)
+
+        XCTAssertEqual(state.tokenProvider, .codex)
+        XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).tokenProvider, .codex)
+    }
+
+    func testBreakdownShowsReasoningRowOnlyForCodexAggregate() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(provider: .claude, with: [event(input: 1_000, output: 500)])
+        state.update(provider: .codex, with: [codexEvent(input: 300, output: 100, reasoning: 200)])
+
+        state.setTokenProvider(.codex)
+        XCTAssertTrue(state.tokenBreakdown.map(\.label).contains(Strings.tokenReasoning()))
+
+        state.setTokenProvider(.claude)
+        XCTAssertFalse(state.tokenBreakdown.map(\.label).contains(Strings.tokenReasoning()))
+    }
+
+    func testRowContentFollowsSelectedProvider() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(provider: .claude, with: [event(input: 1_000)])
+        state.update(provider: .codex, with: [codexEvent(input: 3_000)])
+
+        state.setTokenProvider(.claude)
+        XCTAssertEqual(state.tokenRowValue, "1.0k")
+        XCTAssertEqual(state.tokenActiveModels, "Opus 4.8")
+
+        state.setTokenProvider(.codex)
+        XCTAssertEqual(state.tokenRowValue, "3.0k")
+        XCTAssertEqual(state.tokenActiveModels, "GPT-5 Codex")
+    }
+
+    func testEmptyStateShownForProviderWithNoLogs() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(provider: .claude, with: [event(input: 1_000)])
+
+        // Codex selected but no Codex logs → empty/zero state, not an error or stale Claude data.
+        state.setTokenProvider(.codex)
+        XCTAssertTrue(state.tokenIsEmpty)
+        XCTAssertEqual(state.tokenRowValue, Strings.tokenEmptyState())
+        XCTAssertTrue(state.tokenSparkline.isEmpty)
     }
 
     func testTokenRowDataSurvivesMenuBarVisibilityOff() {
