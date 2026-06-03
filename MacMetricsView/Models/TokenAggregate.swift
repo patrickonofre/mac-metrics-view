@@ -28,4 +28,16 @@ struct TokenAggregate: Equatable {
         self.cacheCreation = cacheCreation
         self.reasoning = reasoning
     }
+
+    /// Field-wise sum of two aggregates. Used to combine per-provider aggregates for the
+    /// `combined` selection (ADR-003).
+    static func + (lhs: TokenAggregate, rhs: TokenAggregate) -> TokenAggregate {
+        TokenAggregate(
+            input: lhs.input + rhs.input,
+            output: lhs.output + rhs.output,
+            cacheRead: lhs.cacheRead + rhs.cacheRead,
+            cacheCreation: lhs.cacheCreation + rhs.cacheCreation,
+            reasoning: lhs.reasoning + rhs.reasoning
+        )
+    }
 }

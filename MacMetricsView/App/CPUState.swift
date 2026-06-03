@@ -27,11 +27,13 @@ final class CPUState: ObservableObject {
     @Published private(set) var temperatureHistory = TemperatureHistory()
     @Published private(set) var diskHistory = DiskHistory()
 
-    /// Bounded token event store + since-reset accumulator (ADR-003). Ingested via
-    /// `update(with:[TokenUsageEvent])`; the popover reads it for the sparkline.
-    @Published private(set) var tokenStore: TokenUsageStore
-    /// Token breakdown for the currently selected scope + window, recomputed whenever
-    /// events arrive or the scope/window changes. Drives the menu bar and popover.
+    /// One bounded token event store + since-reset accumulator per provider (ADR-003).
+    /// Ingested via `update(provider:with:)`; the popover/menu bar read the selected
+    /// provider's store (or both, summed, for `combined`).
+    @Published private(set) var tokenStores: [TokenProvider: TokenUsageStore]
+    /// Token breakdown for the currently selected provider + scope + window, recomputed
+    /// whenever events arrive or the provider/scope/window changes. For `combined` it is the
+    /// sum of each provider's aggregate. Drives the menu bar and popover.
     @Published private(set) var tokenAggregate: TokenAggregate = .zero
 
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
@@ -39,7 +41,11 @@ final class CPUState: ObservableObject {
     let diskSampleInterval: TimeInterval = 1
 
     private enum TokenKeys {
-        static let resetAt = "CPUState.tokenResetAt"
+        /// Legacy single reset key (pre-Codex). Migrated once into the Claude slot.
+        static let legacyResetAt = "CPUState.tokenResetAt"
+        static func resetAt(_ provider: TokenProvider) -> String {
+            "CPUState.tokenResetAt.\(provider.rawValue)"
+        }
     }
 
     // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
@@ -123,8 +129,22 @@ final class CPUState: ObservableObject {
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         display = MetricDisplaySettings.load(from: userDefaults)
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
-        let storedResetAt = userDefaults.object(forKey: TokenKeys.resetAt) as? Date
-        tokenStore = TokenUsageStore(resetAt: storedResetAt ?? Date())
+
+        // Per-provider reset times. Migrate the legacy single key into the Claude slot once
+        // (ADR-003), so an existing install's since-reset measurement carries over.
+        let legacyResetAt = userDefaults.object(forKey: TokenKeys.legacyResetAt) as? Date
+        let storedClaudeResetAt = userDefaults.object(forKey: TokenKeys.resetAt(.claude)) as? Date
+        let claudeResetAt = storedClaudeResetAt ?? legacyResetAt ?? Date()
+        let codexResetAt = (userDefaults.object(forKey: TokenKeys.resetAt(.codex)) as? Date) ?? Date()
+        tokenStores = [
+            .claude: TokenUsageStore(resetAt: claudeResetAt),
+            .codex: TokenUsageStore(resetAt: codexResetAt)
+        ]
+        if storedClaudeResetAt == nil, let legacyResetAt {
+            userDefaults.set(legacyResetAt, forKey: TokenKeys.resetAt(.claude))
+            userDefaults.removeObject(forKey: TokenKeys.legacyResetAt)
+        }
+
         evaluateAccessibility()
     }
 
@@ -164,7 +184,12 @@ final class CPUState: ObservableObject {
         }
 
         if visibility.showTokens {
-            titles.append(TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: showLabel))
+            let value = TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false)
+            if showLabel {
+                titles.append("\(TokenFormatter.menuBarLabel(for: display.tokenProvider)) \(value)")
+            } else {
+                titles.append(value)
+            }
         }
 
         return titles
@@ -207,6 +232,11 @@ final class CPUState: ObservableObject {
         display.tokenMenuBarWindow
     }
 
+    /// The selected provider (Claude / Codex / Combined) the meter currently shows.
+    var tokenProvider: TokenProviderSelection {
+        display.tokenProvider
+    }
+
     /// Whether the token meter has nothing meaningful to show (no logs / all-zero).
     var tokenIsEmpty: Bool {
         TokenFormatter.isEmpty(tokenAggregate)
@@ -223,16 +253,23 @@ final class CPUState: ObservableObject {
         TokenFormatter.breakdown(for: tokenAggregate)
     }
 
-    /// Distinct friendly model names used within the current scope/window, newest first
-    /// (e.g. "Sonnet 4.6, Opus 4.8"). `nil` when there is no usage to attribute.
+    /// Distinct friendly model names used within the current provider/scope/window, newest
+    /// first (e.g. "GPT-5 Codex, Opus 4.8"). For `combined`, events from both providers are
+    /// merged and ordered by recency. `nil` when there is no usage to attribute.
     var tokenActiveModels: String? {
         guard !tokenIsEmpty else { return nil }
-        let events = TokenWindowStats.filteredEvents(
-            store: tokenStore,
-            scope: display.tokenScope,
-            window: display.tokenMenuBarWindow,
-            now: Date()
-        )
+        let now = Date()
+        var events: [TokenUsageEvent] = []
+        for provider in display.tokenProvider.providers {
+            guard let store = tokenStores[provider] else { continue }
+            events += TokenWindowStats.filteredEvents(
+                store: store,
+                scope: display.tokenScope,
+                window: display.tokenMenuBarWindow,
+                now: now
+            )
+        }
+        events.sort { $0.timestamp > $1.timestamp }   // newest first across providers
         var seen = Set<String>()
         let names = events.compactMap { event -> String? in
             guard !seen.contains(event.model) else { return nil }
@@ -243,17 +280,30 @@ final class CPUState: ObservableObject {
     }
 
     /// Sparkline values (0–100 normalized) of recent token volume for the selected
-    /// scope/window, mirroring `normalizedDiskTrend`. Empty when there is no data.
+    /// provider/scope/window, mirroring `normalizedDiskTrend`. For `combined`, per-bucket
+    /// totals are summed across providers before normalizing. Empty when there is no data.
     var tokenSparkline: [Double] {
         guard !tokenIsEmpty else { return [] }
-        let buckets = TokenWindowStats.sparklineBuckets(
-            store: tokenStore,
-            scope: display.tokenScope,
-            window: display.tokenMenuBarWindow,
-            now: Date()
-        )
-        guard let peak = buckets.max(), peak > 0 else { return [] }
-        return buckets.map { Double($0) / Double(peak) * 100 }
+        let now = Date()
+        var summed: [Int] = []
+        for provider in display.tokenProvider.providers {
+            guard let store = tokenStores[provider] else { continue }
+            let buckets = TokenWindowStats.sparklineBuckets(
+                store: store,
+                scope: display.tokenScope,
+                window: display.tokenMenuBarWindow,
+                now: now
+            )
+            if summed.isEmpty {
+                summed = buckets
+            } else {
+                for index in buckets.indices where index < summed.count {
+                    summed[index] += buckets[index]
+                }
+            }
+        }
+        guard let peak = summed.max(), peak > 0 else { return [] }
+        return summed.map { Double($0) / Double(peak) * 100 }
     }
 
     var hasVisibleMetric: Bool {
@@ -318,15 +368,20 @@ final class CPUState: ObservableObject {
         diskHistory.append(sample)
     }
 
-    /// Ingests a batch of parsed token events into the store and republishes the
-    /// selected aggregate. Ingestion is independent of menu-bar visibility — like the
-    /// other metrics, the popover keeps working when the menu bar segment is hidden.
-    func update(with events: [TokenUsageEvent]) {
+    /// Ingests a batch of parsed token events into the given provider's store and
+    /// republishes the selected aggregate. Ingestion is independent of menu-bar visibility —
+    /// like the other metrics, the popover keeps working when the segment is hidden.
+    func update(provider: TokenProvider, with events: [TokenUsageEvent]) {
         guard !events.isEmpty else { return }
         for event in events {
-            tokenStore.append(event)
+            tokenStores[provider]?.append(event)
         }
         recomputeTokenAggregate()
+    }
+
+    /// Claude-provider convenience used by the existing Claude sampler path and tests.
+    func update(with events: [TokenUsageEvent]) {
+        update(provider: .claude, with: events)
     }
 
     func setTokenVisible(_ isVisible: Bool) {
@@ -351,22 +406,43 @@ final class CPUState: ObservableObject {
         onDisplayChange?()
     }
 
-    /// Starts a fresh since-reset measurement. The rolling windows (today/1h/24h) are
-    /// unaffected; only the since-reset view zeroes. The new `resetAt` is persisted so it
-    /// survives relaunch and the since-reset figure rebuilds from the backfilled tail.
+    /// Switches the displayed provider (Claude / Codex / Combined), persists it, and
+    /// republishes every token-derived surface from the already-ingested stores.
+    func setTokenProvider(_ selection: TokenProviderSelection) {
+        guard display.tokenProvider != selection else { return }
+
+        display.tokenProvider = selection
+        display.save(to: userDefaults)
+        recomputeTokenAggregate()
+        onDisplayChange?()
+    }
+
+    /// Starts a fresh since-reset measurement for the selected provider(s) — both when
+    /// `combined` is selected (ADR-003). The rolling windows (today/1h/24h) are unaffected;
+    /// only the since-reset view zeroes. Each provider's `resetAt` is persisted under its own
+    /// key so it survives relaunch and rebuilds from the backfilled tail.
     func resetTokenCounter() {
-        tokenStore.reset(now: Date())
-        userDefaults.set(tokenStore.resetAt, forKey: TokenKeys.resetAt)
+        let now = Date()
+        for provider in display.tokenProvider.providers {
+            tokenStores[provider]?.reset(now: now)
+            userDefaults.set(now, forKey: TokenKeys.resetAt(provider))
+        }
         recomputeTokenAggregate()
     }
 
+    /// The aggregate for the selected provider, or the sum of both providers' aggregates
+    /// for `combined` (each computed independently with its own MRU — ADR-003).
     private func recomputeTokenAggregate() {
-        tokenAggregate = TokenWindowStats.aggregate(
-            store: tokenStore,
-            scope: display.tokenScope,
-            window: display.tokenMenuBarWindow,
-            now: Date()
-        )
+        let now = Date()
+        tokenAggregate = display.tokenProvider.providers.reduce(.zero) { running, provider in
+            guard let store = tokenStores[provider] else { return running }
+            return running + TokenWindowStats.aggregate(
+                store: store,
+                scope: display.tokenScope,
+                window: display.tokenMenuBarWindow,
+                now: now
+            )
+        }
     }
 
     func setCPUVisible(_ isVisible: Bool) {

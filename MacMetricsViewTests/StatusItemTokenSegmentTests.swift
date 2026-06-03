@@ -48,14 +48,16 @@ final class StatusItemTokenSegmentTests: XCTestCase {
         state.setTokenVisible(true)
         state.update(with: [event(input: 12_300)])
 
+        // Default provider is combined → labels mode shows the provider-aware identifier.
+        let providerLabel = TokenFormatter.menuBarLabel(for: .combined)
         state.setMetricIdentifierStyle(.labels)
-        XCTAssertTrue(state.visibleMenuBarTitles.contains("\(TokenFormatter.menuBarLabel) 12.3k"))
+        XCTAssertTrue(state.visibleMenuBarTitles.contains("\(providerLabel) 12.3k"))
 
         state.setMetricIdentifierStyle(.icons)
         // In icons mode the plain title carries only the count; the SF Symbol is rendered
         // separately by StatusItemController, so no text label appears here.
         XCTAssertTrue(state.visibleMenuBarTitles.contains("12.3k"))
-        XCTAssertFalse(state.visibleMenuBarTitles.contains { $0.contains(TokenFormatter.menuBarLabel) })
+        XCTAssertFalse(state.visibleMenuBarTitles.contains { $0.contains(providerLabel) })
     }
 
     func testTokenStyleIsNormalRegardlessOfMagnitude() {
