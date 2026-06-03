@@ -107,6 +107,7 @@ enum Strings {
     static let tokens = LocalizedText(en: "Tokens", pt: "Tokens")
     static let tokenInput = LocalizedText(en: "Input", pt: "Entrada")
     static let tokenOutput = LocalizedText(en: "Output", pt: "Saída")
+    static let tokenReasoning = LocalizedText(en: "Reasoning", pt: "Raciocínio")
     static let tokenCache = LocalizedText(en: "Cache", pt: "Cache")
     static let tokenReset = LocalizedText(en: "Reset counter", pt: "Zerar contador")
     static let tokenEmptyState = LocalizedText(en: "No token usage yet", pt: "Sem uso de tokens ainda")
@@ -115,6 +116,12 @@ enum Strings {
     static let tokenScopeGlobal = LocalizedText(en: "Global", pt: "Global")
     static let tokenScopeProject = LocalizedText(en: "Project", pt: "Projeto")
     static let tokenScopeSession = LocalizedText(en: "Session", pt: "Sessão")
+    // Provider picker (which tool's local logs are counted). "Claude"/"Codex" are product
+    // names, identical in both languages; only "Combined" translates.
+    static let tokenProviderLabel = LocalizedText(en: "Provider", pt: "Provedor")
+    static let tokenProviderClaude = LocalizedText(en: "Claude", pt: "Claude")
+    static let tokenProviderCodex = LocalizedText(en: "Codex", pt: "Codex")
+    static let tokenProviderCombined = LocalizedText(en: "Combined", pt: "Combinado")
     // Window picker (rolling range shown)
     static let tokenWindowLabel = LocalizedText(en: "Token window", pt: "Janela de tokens")
     static let tokenWindowToday = LocalizedText(en: "Today", pt: "Hoje")
@@ -145,6 +152,14 @@ enum Strings {
         case .lastHour: return tokenWindowLastHour
         case .last24h: return tokenWindowLast24h
         case .sinceReset: return tokenWindowSinceReset
+        }
+    }
+
+    static func tokenProviderName(_ selection: TokenProviderSelection) -> LocalizedText {
+        switch selection {
+        case .claude: return tokenProviderClaude
+        case .codex: return tokenProviderCodex
+        case .combined: return tokenProviderCombined
         }
     }
 

@@ -7,7 +7,12 @@ final class LocalizationTokenKeysTests: XCTestCase {
             Strings.tokens,
             Strings.tokenInput,
             Strings.tokenOutput,
+            Strings.tokenReasoning,
             Strings.tokenCache,
+            Strings.tokenProviderLabel,
+            Strings.tokenProviderClaude,
+            Strings.tokenProviderCodex,
+            Strings.tokenProviderCombined,
             Strings.tokenReset,
             Strings.tokenEmptyState,
             Strings.tokenScopeLabel,
@@ -46,5 +51,23 @@ final class LocalizationTokenKeysTests: XCTestCase {
         XCTAssertEqual(Strings.tokenWindowName(.lastHour)(.portuguese), Strings.tokenWindowLastHour(.portuguese))
         XCTAssertEqual(Strings.tokenWindowName(.last24h)(.english), Strings.tokenWindowLast24h(.english))
         XCTAssertEqual(Strings.tokenWindowName(.sinceReset)(.english), Strings.tokenWindowSinceReset(.english))
+    }
+
+    func testReasoningAndProviderNamesResolveInBothLanguages() {
+        XCTAssertEqual(Strings.tokenReasoning(.english), "Reasoning")
+        XCTAssertEqual(Strings.tokenReasoning(.portuguese), "Raciocínio")
+
+        XCTAssertEqual(Strings.tokenProviderClaude(.english), "Claude")
+        XCTAssertEqual(Strings.tokenProviderCodex(.english), "Codex")
+        XCTAssertEqual(Strings.tokenProviderCombined(.english), "Combined")
+        // "Combined" is the only provider name that translates.
+        XCTAssertNotEqual(Strings.tokenProviderCombined(.english), Strings.tokenProviderCombined(.portuguese))
+        XCTAssertEqual(Strings.tokenProviderClaude(.english), Strings.tokenProviderClaude(.portuguese))
+    }
+
+    func testProviderNameHelperMapsEverySelection() {
+        XCTAssertEqual(Strings.tokenProviderName(.claude)(.english), Strings.tokenProviderClaude(.english))
+        XCTAssertEqual(Strings.tokenProviderName(.codex)(.english), Strings.tokenProviderCodex(.english))
+        XCTAssertEqual(Strings.tokenProviderName(.combined)(.portuguese), Strings.tokenProviderCombined(.portuguese))
     }
 }
