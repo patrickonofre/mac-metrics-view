@@ -207,6 +207,36 @@ final class CPUState: ObservableObject {
         display.tokenMenuBarWindow
     }
 
+    /// Whether the token meter has nothing meaningful to show (no logs / all-zero).
+    var tokenIsEmpty: Bool {
+        TokenFormatter.isEmpty(tokenAggregate)
+    }
+
+    /// Headline value for the popover token row: the humanized total, or the localized
+    /// empty/zero state when there is no data.
+    var tokenRowValue: String {
+        tokenIsEmpty ? TokenFormatter.emptyState() : TokenFormatter.humanized(tokenAggregate.total)
+    }
+
+    /// Localized input/output/cache breakdown rows for the popover.
+    var tokenBreakdown: [(label: String, value: String)] {
+        TokenFormatter.breakdown(for: tokenAggregate)
+    }
+
+    /// Sparkline values (0–100 normalized) of recent token volume for the selected
+    /// scope/window, mirroring `normalizedDiskTrend`. Empty when there is no data.
+    var tokenSparkline: [Double] {
+        guard !tokenIsEmpty else { return [] }
+        let buckets = TokenWindowStats.sparklineBuckets(
+            store: tokenStore,
+            scope: display.tokenScope,
+            window: display.tokenMenuBarWindow,
+            now: Date()
+        )
+        guard let peak = buckets.max(), peak > 0 else { return [] }
+        return buckets.map { Double($0) / Double(peak) * 100 }
+    }
+
     var hasVisibleMetric: Bool {
         visibility.hasVisibleMetric
     }

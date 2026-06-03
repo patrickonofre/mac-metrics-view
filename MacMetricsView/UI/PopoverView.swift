@@ -108,6 +108,20 @@ struct PopoverView: View {
                 values: normalizedDiskTrend,
                 severity: state.diskMenuBarTextStyle
             )
+
+            // Always shown (like every metric); the visibility toggle below only curates
+            // the menu bar. Empty/zero state is the localized copy, never an error.
+            MetricRow(
+                symbol: "number",
+                title: Strings.tokens(),
+                value: state.tokenRowValue,
+                values: state.tokenSparkline,
+                severity: .normal
+            )
+
+            if !state.tokenIsEmpty {
+                TokenBreakdownRow(breakdown: state.tokenBreakdown)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -150,6 +164,10 @@ struct PopoverView: View {
                         set: { state.setDiskMenuBarMetric($0) }
                     )
                 )
+
+                Divider()
+
+                TokenControls(state: state)
 
                 Divider()
 
@@ -265,6 +283,99 @@ private struct MetricRow: View {
         case .highCPU:
             return ", \(Strings.severityHigh())"
         }
+    }
+}
+
+// MARK: - Token breakdown + controls
+
+/// Input / output / cache breakdown shown under the token metric row, indented to align
+/// beneath the row title.
+private struct TokenBreakdownRow: View {
+    let breakdown: [(label: String, value: String)]
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Spacer().frame(width: 26)   // icon (18) + row spacing (8)
+
+            ForEach(breakdown, id: \.label) { item in
+                HStack(spacing: 3) {
+                    Text(item.label)
+                        .foregroundStyle(.secondary)
+                    Text(item.value)
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                }
+            }
+
+            Spacer(minLength: 0)
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Token meter configuration: menu-bar visibility toggle, scope picker, window picker,
+/// and the Reset button. All controls bind to `CPUState` setters, mirroring the other
+/// config controls.
+private struct TokenControls: View {
+    @ObservedObject var state: CPUState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            SettingSwitch(
+                title: Strings.tokens(),
+                isOn: Binding(
+                    get: { state.visibility.showTokens },
+                    set: { state.setTokenVisible($0) }
+                )
+            )
+
+            picker(
+                label: Strings.tokenScopeLabel(),
+                selection: Binding(get: { state.tokenScope }, set: { state.setTokenScope($0) })
+            ) {
+                Text(Strings.tokenScopeGlobal()).tag(TokenScope.global)
+                Text(Strings.tokenScopeProject()).tag(TokenScope.project)
+                Text(Strings.tokenScopeSession()).tag(TokenScope.session)
+            }
+
+            picker(
+                label: Strings.tokenWindowLabel(),
+                selection: Binding(get: { state.tokenMenuBarWindow }, set: { state.setTokenMenuBarWindow($0) })
+            ) {
+                Text(Strings.tokenWindowToday()).tag(TokenWindow.today)
+                Text(Strings.tokenWindowLastHour()).tag(TokenWindow.lastHour)
+                Text(Strings.tokenWindowLast24h()).tag(TokenWindow.last24h)
+                Text(Strings.tokenWindowSinceReset()).tag(TokenWindow.sinceReset)
+            }
+
+            Button(Strings.tokenReset()) {
+                state.resetTokenCounter()
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(Color.accentColor)
+        }
+        .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func picker<Value: Hashable, Content: View>(
+        label: String,
+        selection: Binding<Value>,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .lineLimit(1)
+                .foregroundStyle(.primary)
+                .frame(width: 88, alignment: .leading)
+
+            Picker(label, selection: selection, content: content)
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .frame(width: 150, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
