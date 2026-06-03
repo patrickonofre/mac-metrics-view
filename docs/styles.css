@@ -318,7 +318,7 @@ h3 {
 }
 
 .product-shot {
-  aspect-ratio: 814 / 1120;
+  aspect-ratio: 812 / 1410;
   border-radius: 12px;
   display: block;
   height: auto;
@@ -326,6 +326,27 @@ h3 {
   max-height: min(56svh, 36rem);
   max-width: 100%;
   width: auto;
+}
+
+/* Release-showcase popover image (news sections) */
+.release-visual {
+  margin: 0 auto clamp(2.2rem, 5vw, 3.4rem);
+  max-width: 22rem;
+}
+
+.release-visual img {
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.release-visual figcaption {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 0.9rem;
+  text-align: center;
 }
 
 /* ---------- Metrics strip ---------- */

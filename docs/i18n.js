@@ -11,14 +11,14 @@
       "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 1.4 para macOS",
+      "hero.eyebrow": "Versão 1.5 para macOS",
       "hero.title": "CPU, RAM e rede direto na barra de menus.",
       "hero.lede": "Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 1.4",
+      "hero.cta": "Baixar 1.5",
       "hero.secondary": "Ver novidades",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS",
-      "hero.altPopover": "Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibição",
+      "hero.altPopover": "Popover do Mac Metrics View com CPU, RAM, rede, temperatura, disco e uso de tokens do Claude Code",
 
       "metric.cpu": "uso atual",
       "metric.ram": "Apps ou Pressão",
@@ -41,6 +41,17 @@
       "news14.barBody": "Rede em formato compacto, métricas agrupadas com respiro e a cor de severidade só no valor — fica mais fácil ler de relance.",
       "news14.controlTitle": "Você no controle",
       "news14.controlBody": "Os botões agora só decidem o que vai para a barra; o popover mostra tudo. Escolha o valor de RAM e disco, e a primeira execução já começa com CPU, RAM e temperatura.",
+
+      "news15.eyebrow": "Versão 1.5",
+      "news15.title": "Quanto o Claude Code consome em tokens.",
+      "news15.alt": "Popover do Mac Metrics View mostrando uso de tokens — total, entrada, saída e cache — e os modelos Opus 4.8 e Sonnet 4.6 em uso",
+      "news15.caption": "Uso de tokens no popover, com os modelos em uso ao lado do botão.",
+      "news15.meterTitle": "Medidor de tokens",
+      "news15.meterBody": "Acompanhe o consumo de tokens do Claude Code na barra de menus e no popover, com total, entrada, saída e cache, além de um mini-gráfico do uso recente.",
+      "news15.modelTitle": "Modelos em uso",
+      "news15.modelBody": "Veja quais modelos entraram na conta — como Opus 4.8 e Sonnet 4.6 — ao lado do botão de ativação. A leitura vem dos logs locais do Claude Code; nada sai do seu Mac.",
+      "news15.scopeTitle": "Escopo e janela",
+      "news15.scopeBody": "Conte por sessão, projeto ou tudo, e escolha a janela — hoje, última hora, 24h ou desde o último reset. Zere o contador quando quiser.",
 
       "news.eyebrow": "Versão 1.0",
       "news.title": "A primeira versão estável, com tudo no lugar.",
@@ -76,9 +87,9 @@
       "privacy.li3": "Sem chamadas externas para monitorar a rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 1.4.",
-      "download.body": "Versão 1.4 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-1.4.1.zip",
+      "download.title": "Baixe a versão 1.5.",
+      "download.body": "Versão 1.5 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
+      "download.cta": "Baixar MacMetricsView-1.5.0.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
@@ -92,7 +103,7 @@
       "firstrun.alt": "No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.",
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
-      "footer.tagline": "Versão 1.4 para macOS"
+      "footer.tagline": "Versão 1.5 para macOS"
     },
     en: {
       "nav.news": "What's new",
@@ -101,14 +112,14 @@
       "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 1.4 for macOS",
+      "hero.eyebrow": "Version 1.5 for macOS",
       "hero.title": "CPU, RAM, and network right in the menu bar.",
       "hero.lede": "A compact, native app to read your Mac's load at a glance — without opening Activity Monitor.",
-      "hero.cta": "Download 1.4",
+      "hero.cta": "Download 1.5",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View showing CPU, RAM, network, and temperature in the macOS menu bar",
-      "hero.altPopover": "Mac Metrics View popover with CPU, RAM, network, temperature, and display controls",
+      "hero.altPopover": "Mac Metrics View popover with CPU, RAM, network, temperature, disk, and Claude Code token usage",
 
       "metric.cpu": "current usage",
       "metric.ram": "Apps or Pressure",
@@ -131,6 +142,17 @@
       "news14.barBody": "Compact network, metrics grouped with breathing room, and severity color on the value only — easier to read at a glance.",
       "news14.controlTitle": "You're in control",
       "news14.controlBody": "The toggles now only decide what goes in the menu bar; the popover shows everything. Pick the RAM and disk value, and a fresh install starts with CPU, RAM, and temperature.",
+
+      "news15.eyebrow": "Version 1.5",
+      "news15.title": "How many tokens Claude Code is using.",
+      "news15.alt": "Mac Metrics View popover showing token usage — total, input, output, and cache — with the Opus 4.8 and Sonnet 4.6 models in use",
+      "news15.caption": "Token usage in the popover, with the models in use next to the toggle.",
+      "news15.meterTitle": "Token meter",
+      "news15.meterBody": "Track Claude Code's token usage in the menu bar and popover — total, input, output, and cache — plus a sparkline of recent activity.",
+      "news15.modelTitle": "Models in use",
+      "news15.modelBody": "See which models are counted — like Opus 4.8 and Sonnet 4.6 — right next to the toggle. Read from Claude Code's local logs; nothing leaves your Mac.",
+      "news15.scopeTitle": "Scope and window",
+      "news15.scopeBody": "Count by session, project, or everything, and pick the window — today, last hour, 24h, or since the last reset. Reset the counter whenever you want.",
 
       "news.eyebrow": "Version 1.0",
       "news.title": "The first stable release, with everything in place.",
@@ -166,9 +188,9 @@
       "privacy.li3": "No external calls to monitor the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 1.4.",
-      "download.body": "Version 1.4 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-1.4.1.zip",
+      "download.title": "Download version 1.5.",
+      "download.body": "Version 1.5 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
+      "download.cta": "Download MacMetricsView-1.5.0.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
@@ -182,7 +204,7 @@
       "firstrun.alt": "On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.",
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
-      "footer.tagline": "Version 1.4 for macOS"
+      "footer.tagline": "Version 1.5 for macOS"
     }
   };
 

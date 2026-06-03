@@ -21,9 +21,9 @@
     <meta property="og:title" content="Mac Metrics View — métricas do Mac na barra de menus">
     <meta property="og:description" content="CPU, RAM, rede e temperatura direto na barra de menus do macOS. Nativo, local e sem telemetria.">
     <meta property="og:image" content="https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png">
-    <meta property="og:image:alt" content="Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibição">
-    <meta property="og:image:width" content="888">
-    <meta property="og:image:height" content="1304">
+    <meta property="og:image:alt" content="Popover do Mac Metrics View com CPU, RAM, rede, temperatura, disco e uso de tokens do Claude Code">
+    <meta property="og:image:width" content="812">
+    <meta property="og:image:height" content="1410">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:locale:alternate" content="en_US">
 
@@ -48,15 +48,15 @@
       "processorRequirements": "Apple Silicon",
       "description": "App nativo para macOS que mostra CPU, memória RAM (Memória de apps e Pressão), rede e temperatura direto na barra de menus. Leitura local, sem conta e sem telemetria.",
       "url": "https://patrickonofre.github.io/mac-metrics-view/",
-      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-1.4.1.zip",
-      "softwareVersion": "1.4.1",
+      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-1.5.0.zip",
+      "softwareVersion": "1.5.0",
       "image": "https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png",
       "screenshot": "https://patrickonofre.github.io/mac-metrics-view/assets/app-popover-preview.png",
       "inLanguage": ["pt-BR", "en"],
-      "softwareVersion": "1.4.1",
-      "datePublished": "2026-06-02",
+      "softwareVersion": "1.5.0",
+      "datePublished": "2026-06-03",
       "fileSize": "1.8MB",
-      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-1.4.1.zip",
+      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-1.5.0.zip",
       "installUrl": "https://patrickonofre.github.io/mac-metrics-view/#download",
       "releaseNotes": "https://patrickonofre.github.io/mac-metrics-view/#news",
       "sameAs": "https://github.com/patrickonofre/mac-metrics-view",
@@ -147,13 +147,13 @@
 
     <main id="top">
       <section class="hero">
-        <p class="eyebrow" data-i18n="hero.eyebrow">Versão 1.4 para macOS</p>
+        <p class="eyebrow" data-i18n="hero.eyebrow">Versão 1.5 para macOS</p>
         <h1 data-i18n="hero.title">CPU, RAM e rede direto na barra de menus.</h1>
         <p class="lede" data-i18n="hero.lede">
           Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.
         </p>
         <div class="actions" aria-label="Acoes principais">
-          <a class="button primary" href="downloads/MacMetricsView-1.4.1.zip" download data-i18n="hero.cta">Baixar 1.4</a>
+          <a class="button primary" href="downloads/MacMetricsView-1.5.0.zip" download data-i18n="hero.cta">Baixar 1.5</a>
           <a class="link-cta" href="#news"><span data-i18n="hero.secondary">Ver novidades</span> <span aria-hidden="true">&rsaquo;</span></a>
         </div>
         <p class="note" data-i18n="hero.note">Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.</p>
@@ -162,7 +162,7 @@
           <div class="menu-bar-shot">
             <img src="assets/menu-bar-preview.png" width="744" height="64" decoding="async" data-i18n-alt="hero.altMenu" alt="Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS">
           </div>
-          <img class="product-shot" src="assets/app-popover-preview.png" width="888" height="1304" decoding="async" fetchpriority="high" data-i18n-alt="hero.altPopover" alt="Popover do Mac Metrics View com CPU, RAM, rede, temperatura e controles de exibicao">
+          <img class="product-shot" src="assets/app-popover-preview.png" width="812" height="1410" decoding="async" fetchpriority="high" data-i18n-alt="hero.altPopover" alt="Popover do Mac Metrics View com CPU, RAM, rede, temperatura, disco e uso de tokens do Claude Code">
         </div>
       </section>
 
@@ -190,6 +190,31 @@
       </section>
 
       <section class="section" id="news">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="news15.eyebrow">Versão 1.5</p>
+          <h2 data-i18n="news15.title">Quanto o Claude Code consome em tokens.</h2>
+        </div>
+        <figure class="release-visual">
+          <img src="assets/token-usage-preview.png" width="812" height="1061" loading="lazy" decoding="async" data-i18n-alt="news15.alt" alt="Popover do Mac Metrics View mostrando uso de tokens — total, entrada, saída e cache — e os modelos Opus 4.8 e Sonnet 4.6 em uso">
+          <figcaption data-i18n="news15.caption">Uso de tokens no popover, com os modelos em uso ao lado do botão.</figcaption>
+        </figure>
+        <div class="feature-grid three">
+          <article class="card">
+            <h3 data-i18n="news15.meterTitle">Medidor de tokens</h3>
+            <p data-i18n="news15.meterBody">Acompanhe o consumo de tokens do Claude Code na barra de menus e no popover, com total, entrada, saída e cache, além de um mini-gráfico do uso recente.</p>
+          </article>
+          <article class="card">
+            <h3 data-i18n="news15.modelTitle">Modelos em uso</h3>
+            <p data-i18n="news15.modelBody">Veja quais modelos entraram na conta — como Opus 4.8 e Sonnet 4.6 — ao lado do botão de ativação. A leitura vem dos logs locais do Claude Code; nada sai do seu Mac.</p>
+          </article>
+          <article class="card">
+            <h3 data-i18n="news15.scopeTitle">Escopo e janela</h3>
+            <p data-i18n="news15.scopeBody">Conte por sessão, projeto ou tudo, e escolha a janela — hoje, última hora, 24h ou desde o último reset. Zere o contador quando quiser.</p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section" id="release-14">
         <div class="section-heading">
           <p class="eyebrow" data-i18n="news14.eyebrow">Versão 1.4</p>
           <h2 data-i18n="news14.title">Um popover repensado, mais limpo e completo.</h2>
@@ -306,13 +331,13 @@
       <section class="download-panel" id="download">
         <div>
           <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
-          <h2 data-i18n="download.title">Baixe a versão 1.4.</h2>
+          <h2 data-i18n="download.title">Baixe a versão 1.5.</h2>
           <p data-i18n="download.body">
-            Versão 1.4 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser
+            Versão 1.5 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser
             um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.
           </p>
         </div>
-        <a class="button primary large" href="downloads/MacMetricsView-1.4.1.zip" download data-i18n="download.cta">Baixar MacMetricsView-1.4.1.zip</a>
+        <a class="button primary large" href="downloads/MacMetricsView-1.5.0.zip" download data-i18n="download.cta">Baixar MacMetricsView-1.5.0.zip</a>
       </section>
 
       <section class="section" id="firstrun">
@@ -352,7 +377,7 @@
 
     <footer class="footer">
       <span>Mac Metrics View</span>
-      <span data-i18n="footer.tagline">Versão 1.4 para macOS</span>
+      <span data-i18n="footer.tagline">Versão 1.5 para macOS</span>
     </footer>
 
     <script>
