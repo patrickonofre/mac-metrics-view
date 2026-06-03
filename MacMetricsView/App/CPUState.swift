@@ -295,6 +295,8 @@ final class CPUState: ObservableObject {
             visibility.showTemperature = isVisible
         case .disk:
             visibility.showDisk = isVisible
+        case .tokens:
+            visibility.showTokens = isVisible
         }
 
         visibility.save(to: userDefaults)
@@ -469,6 +471,8 @@ final class CPUState: ObservableObject {
             return visibility.showTemperature
         case .disk:
             return visibility.showDisk
+        case .tokens:
+            return visibility.showTokens
         }
     }
 }

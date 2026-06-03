@@ -23,20 +23,30 @@ struct MetricDisplaySettings: Equatable {
         static let identifierStyle = "MetricDisplaySettings.identifierStyle"
         static let ramMenuBarMetric = "MetricDisplaySettings.ramMenuBarMetric"
         static let diskMenuBarMetric = "MetricDisplaySettings.diskMenuBarMetric"
+        static let tokenMenuBarWindow = "MetricDisplaySettings.tokenMenuBarWindow"
+        static let tokenScope = "MetricDisplaySettings.tokenScope"
     }
 
     var identifierStyle: IdentifierStyle
     var ramMenuBarMetric: RAMMenuBarMetric
     var diskMenuBarMetric: DiskMenuBarMetric
+    /// Which rolling window the menu bar token segment shows (reuses `TokenWindow`).
+    var tokenMenuBarWindow: TokenWindow
+    /// The persisted counting scope for the token meter (reuses `TokenScope`).
+    var tokenScope: TokenScope
 
     init(
         identifierStyle: IdentifierStyle = .icons,
         ramMenuBarMetric: RAMMenuBarMetric = .appMemory,
-        diskMenuBarMetric: DiskMenuBarMetric = .combined
+        diskMenuBarMetric: DiskMenuBarMetric = .combined,
+        tokenMenuBarWindow: TokenWindow = .today,
+        tokenScope: TokenScope = .global
     ) {
         self.identifierStyle = identifierStyle
         self.ramMenuBarMetric = ramMenuBarMetric
         self.diskMenuBarMetric = diskMenuBarMetric
+        self.tokenMenuBarWindow = tokenMenuBarWindow
+        self.tokenScope = tokenScope
     }
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricDisplaySettings {
@@ -46,12 +56,20 @@ struct MetricDisplaySettings: Equatable {
         let diskMetric = userDefaults.string(forKey: Keys.diskMenuBarMetric)
             .flatMap(DiskMenuBarMetric.init(rawValue:)) ?? .combined
 
+        let tokenWindow = userDefaults.string(forKey: Keys.tokenMenuBarWindow)
+            .flatMap(TokenWindow.init(rawValue:)) ?? .today
+
+        let tokenScope = userDefaults.string(forKey: Keys.tokenScope)
+            .flatMap(TokenScope.init(rawValue:)) ?? .global
+
         if let rawIdentifierStyle = userDefaults.string(forKey: Keys.identifierStyle),
            let identifierStyle = IdentifierStyle(rawValue: rawIdentifierStyle) {
             return MetricDisplaySettings(
                 identifierStyle: identifierStyle,
                 ramMenuBarMetric: ramMetric,
-                diskMenuBarMetric: diskMetric
+                diskMenuBarMetric: diskMetric,
+                tokenMenuBarWindow: tokenWindow,
+                tokenScope: tokenScope
             )
         }
 
@@ -59,11 +77,18 @@ struct MetricDisplaySettings: Equatable {
             return MetricDisplaySettings(
                 identifierStyle: userDefaults.bool(forKey: Keys.showMetricLabels) ? .labels : .icons,
                 ramMenuBarMetric: ramMetric,
-                diskMenuBarMetric: diskMetric
+                diskMenuBarMetric: diskMetric,
+                tokenMenuBarWindow: tokenWindow,
+                tokenScope: tokenScope
             )
         }
 
-        return MetricDisplaySettings(ramMenuBarMetric: ramMetric, diskMenuBarMetric: diskMetric)
+        return MetricDisplaySettings(
+            ramMenuBarMetric: ramMetric,
+            diskMenuBarMetric: diskMetric,
+            tokenMenuBarWindow: tokenWindow,
+            tokenScope: tokenScope
+        )
     }
 
     func save(to userDefaults: UserDefaults = .standard) {
@@ -71,5 +96,7 @@ struct MetricDisplaySettings: Equatable {
         userDefaults.set(identifierStyle == .labels, forKey: Keys.showMetricLabels)
         userDefaults.set(ramMenuBarMetric.rawValue, forKey: Keys.ramMenuBarMetric)
         userDefaults.set(diskMenuBarMetric.rawValue, forKey: Keys.diskMenuBarMetric)
+        userDefaults.set(tokenMenuBarWindow.rawValue, forKey: Keys.tokenMenuBarWindow)
+        userDefaults.set(tokenScope.rawValue, forKey: Keys.tokenScope)
     }
 }
