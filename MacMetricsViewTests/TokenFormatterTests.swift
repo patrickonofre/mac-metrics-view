@@ -7,9 +7,10 @@ final class TokenFormatterTests: XCTestCase {
         input: Int = 0,
         output: Int = 0,
         cacheRead: Int = 0,
-        cacheCreation: Int = 0
+        cacheCreation: Int = 0,
+        reasoning: Int = 0
     ) -> TokenAggregate {
-        TokenAggregate(input: input, output: output, cacheRead: cacheRead, cacheCreation: cacheCreation)
+        TokenAggregate(input: input, output: output, cacheRead: cacheRead, cacheCreation: cacheCreation, reasoning: reasoning)
     }
 
     // MARK: - Humanization
@@ -55,6 +56,33 @@ final class TokenFormatterTests: XCTestCase {
         XCTAssertEqual(rows.map(\.value), ["1.0k", "2.0k", "3.0k"])   // cache = read + creation
     }
 
+    func testBreakdownAppendsReasoningRowOnlyWhenPresent() {
+        // Codex shape: reasoning > 0 → four rows in input/output/reasoning/cache order.
+        let codex = aggregate(input: 1_000, output: 2_000, cacheRead: 500, reasoning: 120)
+        let rows = TokenFormatter.breakdown(for: codex, language: .english)
+        XCTAssertEqual(rows.map(\.label), ["Input", "Output", "Reasoning", "Cache"])
+        XCTAssertEqual(rows.map(\.value), ["1.0k", "2.0k", "120", "500"])
+
+        // Claude shape: reasoning == 0 → unchanged three rows, no reasoning row.
+        let claude = aggregate(input: 1_000, output: 2_000, cacheRead: 500)
+        XCTAssertEqual(TokenFormatter.breakdown(for: claude, language: .english).map(\.label),
+                       ["Input", "Output", "Cache"])
+    }
+
+    // MARK: - Provider-aware menu bar label
+
+    func testProviderAwareMenuBarLabelDiffersPerSelection() {
+        let claude = TokenFormatter.menuBarLabel(for: .claude, language: .english)
+        let codex = TokenFormatter.menuBarLabel(for: .codex, language: .english)
+        let combined = TokenFormatter.menuBarLabel(for: .combined, language: .english)
+
+        XCTAssertEqual(claude, Strings.tokenProviderClaude(.english))
+        XCTAssertEqual(codex, Strings.tokenProviderCodex(.english))
+        XCTAssertEqual(combined, Strings.tokenProviderCombined(.english))
+        XCTAssertNotEqual(claude, codex)
+        XCTAssertNotEqual(codex, combined)
+    }
+
     // MARK: - Empty state
 
     func testEmptyStateDetectionAndCopy() {
@@ -91,8 +119,20 @@ final class TokenFormatterTests: XCTestCase {
         XCTAssertNil(TokenFormatter.modelDisplayName("<synthetic>"))
     }
 
+    func testModelDisplayNameOpenAIFamilies() {
+        XCTAssertEqual(TokenFormatter.modelDisplayName("gpt-5-codex"), "GPT-5 Codex")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("gpt-5.3-codex"), "GPT-5.3 Codex")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("gpt-5.5"), "GPT-5.5")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("gpt-4o"), "GPT-4o")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("o3"), "o3")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("o4-mini"), "o4 Mini")
+        // Claude families are unaffected by the OpenAI branch.
+        XCTAssertEqual(TokenFormatter.modelDisplayName("claude-opus-4-8"), "Opus 4.8")
+    }
+
     func testModelDisplayNameUnknownFallsBackToStrippedId() {
         XCTAssertEqual(TokenFormatter.modelDisplayName("claude-future-9-0"), "future-9-0")
-        XCTAssertEqual(TokenFormatter.modelDisplayName("gpt-4o"), "gpt-4o")
+        // A genuinely unknown vendor still falls back to the raw id, never blank.
+        XCTAssertEqual(TokenFormatter.modelDisplayName("mistral-large-2"), "mistral-large-2")
     }
 }

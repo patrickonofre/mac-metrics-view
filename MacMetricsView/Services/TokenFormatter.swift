@@ -3,8 +3,20 @@ import Foundation
 /// Formats a `TokenAggregate` into menu bar and popover strings. Token volume has no
 /// danger threshold in the volume-only MVP, so it always renders `.normal` (ADR-003).
 enum TokenFormatter {
-    /// Short, non-localized menu bar identifier, matching the `CPU` / `DISK` style.
+    /// Short, non-localized menu bar identifier, matching the `CPU` / `DISK` style. Used
+    /// when no provider context is available; the provider-aware UI uses
+    /// `menuBarLabel(for:language:)` instead.
     static let menuBarLabel = "TOK"
+
+    /// Provider-aware menu bar identifier, replacing the fixed `TOK` so the single number
+    /// reads as Claude, Codex, or Combined (ADR-001). Sourced from the localized provider
+    /// names (Task 10).
+    static func menuBarLabel(
+        for selection: TokenProviderSelection,
+        language: AppLanguage = .current
+    ) -> String {
+        Strings.tokenProviderName(selection)(language)
+    }
 
     /// Compact humanized count: `950`, `1.5k`, `2.3M`. One decimal for k/M keeps the
     /// width roughly stable across magnitudes.
@@ -54,6 +66,7 @@ enum TokenFormatter {
 
         let families = [("opus", "Opus"), ("sonnet", "Sonnet"), ("haiku", "Haiku")]
         guard let family = families.first(where: { lower.contains($0.0) }) else {
+            if let openAI = openAIDisplayName(lower) { return openAI }
             return lower.hasPrefix("claude-") ? String(id.dropFirst("claude-".count)) : id
         }
 
@@ -65,16 +78,45 @@ enum TokenFormatter {
         return "\(family.1) \(version)"
     }
 
-    /// Input / output / cache breakdown rows for the popover. Cache combines read +
-    /// creation into the single "cache" figure the PRD specifies.
+    /// Friendly display name for an OpenAI model id, or `nil` if it is not one. Maps
+    /// `gpt-*` ids to `GPT-<version> <Suffix…>` (e.g. `gpt-5-codex` → `GPT-5 Codex`,
+    /// `gpt-5.5` → `GPT-5.5`) and `o<digit>*` ids to `o<version> <Suffix…>`
+    /// (e.g. `o4-mini` → `o4 Mini`, `o3` → `o3`). Expects an already-lowercased id.
+    private static func openAIDisplayName(_ lower: String) -> String? {
+        if lower.hasPrefix("gpt-") {
+            return friendlyName(prefix: "GPT-", body: String(lower.dropFirst("gpt-".count)))
+        }
+        // o-series: an "o" immediately followed by a digit (avoids "omni"-style ids).
+        if lower.count >= 2, lower.hasPrefix("o"), lower[lower.index(after: lower.startIndex)].isNumber {
+            return friendlyName(prefix: "", body: lower)
+        }
+        return nil
+    }
+
+    /// `<prefix><version> <Suffix…>` from a hyphen-separated body: the first segment is the
+    /// version (kept as-is), remaining segments are capitalized (e.g. `codex` → `Codex`).
+    private static func friendlyName(prefix: String, body: String) -> String {
+        let parts = body.split(separator: "-").map(String.init)
+        guard let version = parts.first else { return prefix.isEmpty ? body : prefix }
+        let suffixes = parts.dropFirst().map { $0.capitalized }
+        return (["\(prefix)\(version)"] + suffixes).joined(separator: " ")
+    }
+
+    /// Input / output / reasoning / cache breakdown rows for the popover. The reasoning row
+    /// appears only when the aggregate reports it (Codex), so Claude keeps three rows
+    /// (ADR-002). Cache combines read + creation into the single "cache" figure.
     static func breakdown(
         for aggregate: TokenAggregate,
         language: AppLanguage = .current
     ) -> [(label: String, value: String)] {
-        [
+        var rows: [(label: String, value: String)] = [
             (Strings.tokenInput(language), humanized(aggregate.input)),
-            (Strings.tokenOutput(language), humanized(aggregate.output)),
-            (Strings.tokenCache(language), humanized(aggregate.cacheRead + aggregate.cacheCreation))
+            (Strings.tokenOutput(language), humanized(aggregate.output))
         ]
+        if aggregate.reasoning > 0 {
+            rows.append((Strings.tokenReasoning(language), humanized(aggregate.reasoning)))
+        }
+        rows.append((Strings.tokenCache(language), humanized(aggregate.cacheRead + aggregate.cacheCreation)))
+        return rows
     }
 }
