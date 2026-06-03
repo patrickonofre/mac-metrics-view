@@ -23,7 +23,7 @@ enum TokenFormatter {
     /// Menu bar segment for the selected window's aggregate. `nil` data shows a neutral
     /// placeholder rather than a misleading zero.
     static func menuBarTitle(for aggregate: TokenAggregate?, showLabel: Bool = true) -> String {
-        let value = aggregate.map { humanized($0.total) } ?? "--"
+        let value = aggregate.map { humanized($0.usageTotal) } ?? "--"
         return showLabel ? "\(menuBarLabel) \(value)" : value
     }
 

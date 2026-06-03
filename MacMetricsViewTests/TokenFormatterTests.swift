@@ -37,6 +37,13 @@ final class TokenFormatterTests: XCTestCase {
         XCTAssertEqual(TokenFormatter.menuBarTitle(for: nil, showLabel: false), "--")
     }
 
+    func testMenuBarTitleExcludesCacheFromTotal() {
+        let agg = aggregate(input: 1_000, output: 2_000, cacheRead: 5_000, cacheCreation: 5_000)
+
+        // Headline = input + output (3k), not the 13k full sum.
+        XCTAssertEqual(TokenFormatter.menuBarTitle(for: agg, showLabel: false), "3.0k")
+    }
+
     // MARK: - Breakdown
 
     func testBreakdownRendersInputOutputCache() {

@@ -51,7 +51,7 @@ enum TokenWindowStats {
             let offset = event.timestamp.timeIntervalSince(start)
             guard offset >= 0, event.timestamp <= now else { continue }
             let index = min(bucketCount - 1, Int(offset / width))
-            buckets[index] += totalTokens(event)
+            buckets[index] += usageTokens(event)
         }
 
         return buckets
@@ -126,7 +126,9 @@ enum TokenWindowStats {
         }
     }
 
-    private static func totalTokens(_ event: TokenUsageEvent) -> Int {
-        event.inputTokens + event.outputTokens + event.cacheReadTokens + event.cacheCreationTokens
+    /// Sparkline tracks the same figure as the headline total: input + output, excluding
+    /// cache (which lives in the popover breakdown only).
+    private static func usageTokens(_ event: TokenUsageEvent) -> Int {
+        event.inputTokens + event.outputTokens
     }
 }

@@ -46,6 +46,16 @@ final class PopoverTokenRowTests: XCTestCase {
         XCTAssertEqual(state.tokenRowValue, "12.3k")
     }
 
+    func testRowValueExcludesCacheButBreakdownKeepsIt() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 1_000, output: 2_000, cacheRead: 5_000, cacheCreation: 5_000)])
+
+        // Headline = input + output only.
+        XCTAssertEqual(state.tokenRowValue, "3.0k")
+        // Popover breakdown still shows the cache total (read + creation = 10k).
+        XCTAssertEqual(state.tokenBreakdown.map(\.value), ["1.0k", "2.0k", "10.0k"])
+    }
+
     func testRowValueShowsLocalizedEmptyStateWhenNoData() {
         let state = CPUState(userDefaults: makeUserDefaults())
 

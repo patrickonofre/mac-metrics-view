@@ -17,6 +17,13 @@ final class TokenValueTypesTests: XCTestCase {
         XCTAssertEqual(aggregate.total, 0)
     }
 
+    func testTokenAggregateUsageTotalIsInputPlusOutputOnly() {
+        let aggregate = TokenAggregate(input: 2, output: 3, cacheRead: 5, cacheCreation: 7)
+
+        XCTAssertEqual(aggregate.total, 17)        // full sum (all four)
+        XCTAssertEqual(aggregate.usageTotal, 5)    // headline excludes cache
+    }
+
     func testTokenAggregateEquatableMatchesOnAllFields() {
         let lhs = TokenAggregate(input: 1, output: 2, cacheRead: 3, cacheCreation: 4)
         let rhs = TokenAggregate(input: 1, output: 2, cacheRead: 3, cacheCreation: 4)

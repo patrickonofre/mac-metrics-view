@@ -11,6 +11,11 @@ struct TokenAggregate: Equatable {
 
     var total: Int { input + output + cacheRead + cacheCreation }
 
+    /// Headline usage figure (menu bar + popover total + sparkline): input + output only.
+    /// Cache (read + creation) is large and cheap, so it is kept to the popover breakdown
+    /// rather than dominating the single number the user reads.
+    var usageTotal: Int { input + output }
+
     init(input: Int, output: Int, cacheRead: Int, cacheCreation: Int) {
         self.input = input
         self.output = output

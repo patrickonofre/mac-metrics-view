@@ -215,7 +215,7 @@ final class CPUState: ObservableObject {
     /// Headline value for the popover token row: the humanized total, or the localized
     /// empty/zero state when there is no data.
     var tokenRowValue: String {
-        tokenIsEmpty ? TokenFormatter.emptyState() : TokenFormatter.humanized(tokenAggregate.total)
+        tokenIsEmpty ? TokenFormatter.emptyState() : TokenFormatter.humanized(tokenAggregate.usageTotal)
     }
 
     /// Localized input/output/cache breakdown rows for the popover.
