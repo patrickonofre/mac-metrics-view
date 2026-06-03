@@ -1,16 +1,18 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate {
     // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
-    // its visibility (see applyFirstRunMetricPresetIfNeeded()).
-    private lazy var state = CPUState()
+    // its visibility (see applyFirstRunMetricPresetIfNeeded()). Internal (not private) so
+    // wiring tests can observe the published state after a delegate callback.
+    lazy var state = CPUState()
     private let launchAtLoginSettings = LaunchAtLoginSettings()
     private let cpuSampler = CPUSampler()
     private let ramSampler = RAMSampler()
     private let networkSampler = NetworkSampler()
     private let temperatureSampler = TemperatureSampler()
     private let diskSampler = DiskSampler()
+    private let tokenSampler = TokenUsageSampler()
     private var statusItemController: StatusItemController?
 
     // Cleaning-lock
@@ -83,6 +85,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.delegate = self
         temperatureSampler.delegate = self
         diskSampler.delegate = self
+        tokenSampler.delegate = self
         startAllSamplers()
     }
 
@@ -96,6 +99,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.stop()
         temperatureSampler.stop()
         diskSampler.stop()
+        tokenSampler.stop()
     }
 
     /// Seeds the first-run metric preset once, on a genuinely fresh install. The grant
@@ -183,6 +187,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
+    func tokenUsageSampler(_ sampler: TokenUsageSampler, didProduce events: [TokenUsageEvent]) {
+        state.update(with: events)
+        statusItemController?.setNeedsTitleUpdate()
+    }
+
     private func startAllSamplers() {
         // Every metric is sampled so the popover always shows live data; menu-bar
         // visibility is applied when the title is built, not at the sampler.
@@ -191,5 +200,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.start()
         temperatureSampler.start()
         diskSampler.start()
+        tokenSampler.start()
     }
 }
