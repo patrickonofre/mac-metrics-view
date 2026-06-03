@@ -120,6 +120,18 @@ final class StatusItemController {
             ))
         }
 
+        if state.visibility.showTokens {
+            if attributedTitle.length > 0 {
+                attributedTitle.append(separator)
+            }
+
+            attributedTitle.append(statusSegment(
+                metric: .tokens,
+                value: TokenFormatter.menuBarTitle(for: state.tokenAggregate, showLabel: false),
+                style: state.tokenMenuBarTextStyle
+            ))
+        }
+
         if attributedTitle.length == 0 {
             attributedTitle.append(NSAttributedString(
                 string: Strings.metricsPlaceholder(),
@@ -319,6 +331,7 @@ private enum MenuBarMetric {
     case network
     case temperature
     case disk
+    case tokens
 
     var label: String {
         switch self {
@@ -332,6 +345,8 @@ private enum MenuBarMetric {
             return "TEMP"
         case .disk:
             return "DISK"
+        case .tokens:
+            return TokenFormatter.menuBarLabel
         }
     }
 
@@ -347,6 +362,8 @@ private enum MenuBarMetric {
             return "thermometer"
         case .disk:
             return "circle.fill"
+        case .tokens:
+            return "number"
         }
     }
 
@@ -362,6 +379,8 @@ private enum MenuBarMetric {
             return Strings.temperature()
         case .disk:
             return Strings.disk()
+        case .tokens:
+            return Strings.tokens()
         }
     }
 }
