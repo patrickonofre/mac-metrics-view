@@ -60,6 +60,25 @@ final class StatusItemTokenSegmentTests: XCTestCase {
         XCTAssertFalse(state.visibleMenuBarTitles.contains { $0.contains(providerLabel) })
     }
 
+    func testTokenSegmentLabelReflectsSelectedProvider() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.setMetricIdentifierStyle(.labels)
+        state.setTokenVisible(true)
+        state.update(provider: .codex, with: [
+            TokenUsageEvent(timestamp: Date(), model: "gpt-5-codex", inputTokens: 12_300,
+                            outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0,
+                            reasoningTokens: 0, sessionID: "cx", projectDir: "/cx")
+        ])
+
+        state.setTokenProvider(.codex)
+        let codexLabel = TokenFormatter.menuBarLabel(for: .codex)
+        XCTAssertTrue(state.visibleMenuBarTitles.contains("\(codexLabel) 12.3k"))
+
+        state.setTokenProvider(.combined)
+        let combinedLabel = TokenFormatter.menuBarLabel(for: .combined)
+        XCTAssertTrue(state.visibleMenuBarTitles.contains { $0.contains(combinedLabel) })
+    }
+
     func testTokenStyleIsNormalRegardlessOfMagnitude() {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.setTokenVisible(true)

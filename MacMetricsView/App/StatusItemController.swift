@@ -128,7 +128,8 @@ final class StatusItemController {
             attributedTitle.append(statusSegment(
                 metric: .tokens,
                 value: TokenFormatter.menuBarTitle(for: state.tokenAggregate, showLabel: false),
-                style: state.tokenMenuBarTextStyle
+                style: state.tokenMenuBarTextStyle,
+                labelOverride: TokenFormatter.menuBarLabel(for: state.tokenProvider)
             ))
         }
 
@@ -153,7 +154,8 @@ final class StatusItemController {
     private func statusSegment(
         metric: MenuBarMetric,
         value: String,
-        style: CPUMenuBarTextStyle
+        style: CPUMenuBarTextStyle,
+        labelOverride: String? = nil
     ) -> NSAttributedString {
         // Hierarchy: the identifier (icon or label) is always secondary; only the value
         // carries severity color. This keeps severity an accent on the number the user
@@ -164,8 +166,10 @@ final class StatusItemController {
 
         switch state.display.identifierStyle {
         case .labels:
+            // `labelOverride` lets the token segment show the provider-aware name
+            // (Claude / Codex / Combined) instead of the fixed metric label.
             segment.append(NSAttributedString(
-                string: "\(metric.label) ",
+                string: "\(labelOverride ?? metric.label) ",
                 attributes: baseAttributes(color: identifierColor)
             ))
         case .icons:
