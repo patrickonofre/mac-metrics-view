@@ -57,6 +57,25 @@ enum TokenWindowStats {
         return buckets
     }
 
+    /// Events matching the given scope and window, ordered by timestamp descending.
+    /// For `.sinceReset`, returns all in-store events that match scope (raw events
+    /// only reach back to the retention horizon regardless of when reset occurred).
+    static func filteredEvents(
+        store: TokenUsageStore,
+        scope: TokenScope,
+        window: TokenWindow,
+        now: Date
+    ) -> [TokenUsageEvent] {
+        let mru = mostRecentlyUsed(in: store.events)
+        let start: Date? = window == .sinceReset ? nil : windowStart(window, now: now)
+        return store.events
+            .filter {
+                matches(scope: scope, event: $0, mru: mru) &&
+                (start == nil || $0.timestamp >= start!)
+            }
+            .sorted { $0.timestamp > $1.timestamp }
+    }
+
     // MARK: - Scope / MRU
 
     private static func mostRecentlyUsed(

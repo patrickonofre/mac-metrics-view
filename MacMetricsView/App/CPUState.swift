@@ -223,6 +223,25 @@ final class CPUState: ObservableObject {
         TokenFormatter.breakdown(for: tokenAggregate)
     }
 
+    /// Distinct friendly model names used within the current scope/window, newest first
+    /// (e.g. "Sonnet 4.6, Opus 4.8"). `nil` when there is no usage to attribute.
+    var tokenActiveModels: String? {
+        guard !tokenIsEmpty else { return nil }
+        let events = TokenWindowStats.filteredEvents(
+            store: tokenStore,
+            scope: display.tokenScope,
+            window: display.tokenMenuBarWindow,
+            now: Date()
+        )
+        var seen = Set<String>()
+        let names = events.compactMap { event -> String? in
+            guard !seen.contains(event.model) else { return nil }
+            seen.insert(event.model)
+            return TokenFormatter.modelDisplayName(event.model)
+        }
+        return names.isEmpty ? nil : names.joined(separator: ", ")
+    }
+
     /// Sparkline values (0–100 normalized) of recent token volume for the selected
     /// scope/window, mirroring `normalizedDiskTrend`. Empty when there is no data.
     var tokenSparkline: [Double] {

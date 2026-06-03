@@ -18,7 +18,9 @@ final class LocalizationTokenKeysTests: XCTestCase {
             Strings.tokenWindowToday,
             Strings.tokenWindowLastHour,
             Strings.tokenWindowLast24h,
-            Strings.tokenWindowSinceReset
+            Strings.tokenWindowSinceReset,
+            Strings.tokenSourceHelpTitle,
+            Strings.tokenSourceHelp
         ]
 
         for text in texts {

@@ -121,6 +121,15 @@ enum Strings {
     static let tokenWindowLastHour = LocalizedText(en: "Last hour", pt: "Última hora")
     static let tokenWindowLast24h = LocalizedText(en: "Last 24h", pt: "Últimas 24h")
     static let tokenWindowSinceReset = LocalizedText(en: "Since reset", pt: "Desde o reset")
+    // Source/coverage note: explains which usage the counter can see.
+    static let tokenSourceHelpTitle = LocalizedText(
+        en: "Which usage is counted",
+        pt: "Qual uso é contabilizado"
+    )
+    static let tokenSourceHelp = LocalizedText(
+        en: "Counts come from Claude Code session logs (~/.claude). Every Claude model used in Claude Code is included (Opus, Sonnet, Haiku). API usage and other apps aren't tracked.",
+        pt: "A contagem vem dos logs de sessão do Claude Code (~/.claude). Inclui todos os modelos Claude usados no Claude Code (Opus, Sonnet, Haiku). Uso via API ou outros apps não é contabilizado."
+    )
 
     static func tokenScopeName(_ scope: TokenScope) -> LocalizedText {
         switch scope {

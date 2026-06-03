@@ -320,15 +320,68 @@ private struct TokenBreakdownRow: View {
 private struct TokenControls: View {
     @ObservedObject var state: CPUState
 
+    @State private var showHelp = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
-            SettingSwitch(
-                title: Strings.tokens(),
-                isOn: Binding(
+            HStack(spacing: 6) {
+                HStack(spacing: 3) {
+                    Text(Strings.tokens())
+                        .lineLimit(1)
+                        .foregroundStyle(.primary)
+                    Button {
+                        showHelp.toggle()
+                    } label: {
+                        Image(systemName: showHelp ? "info.circle.fill" : "info.circle")
+                            .foregroundStyle(showHelp ? Color.accentColor : .secondary)
+                            .imageScale(.small)
+                    }
+                    .buttonStyle(.plain)
+                    .help(Strings.tokenSourceHelpTitle())
+                }
+                .frame(width: 88, alignment: .leading)
+
+                Toggle(Strings.tokens(), isOn: Binding(
                     get: { state.visibility.showTokens },
                     set: { state.setTokenVisible($0) }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+
+                if let models = state.tokenActiveModels {
+                    Text(models)
+                        .font(.caption2)
+                        .foregroundStyle(.tertiary)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .accessibilityLabel("\(Strings.tokens()), \(models)")
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            if showHelp {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(Strings.tokenSourceHelpTitle())
+                        .font(.caption.weight(.semibold))
+                        .foregroundStyle(.primary)
+                    Text(Strings.tokenSourceHelp())
+                        .font(.caption2)
+                        .foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(9)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Color(nsColor: .controlBackgroundColor))
                 )
-            )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .strokeBorder(Color.primary.opacity(0.08))
+                )
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
 
             picker(
                 label: Strings.tokenScopeLabel(),
@@ -357,6 +410,7 @@ private struct TokenControls: View {
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .animation(.easeInOut(duration: 0.18), value: showHelp)
     }
 
     private func picker<Value: Hashable, Content: View>(

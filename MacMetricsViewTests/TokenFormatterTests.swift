@@ -74,4 +74,25 @@ final class TokenFormatterTests: XCTestCase {
         XCTAssertEqual(TokenFormatter.menuBarTextStyle(for: nil), .normal)
         XCTAssertEqual(TokenFormatter.menuBarTextStyle(for: aggregate(input: 9_999_999)), .normal)
     }
+
+    // MARK: - Model display name
+
+    func testModelDisplayNameKnownFamilies() {
+        XCTAssertEqual(TokenFormatter.modelDisplayName("claude-opus-4-8"), "Opus 4.8")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("claude-sonnet-4-6"), "Sonnet 4.6")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("claude-haiku-4-5-20251001"), "Haiku 4.5")
+        // Legacy form: version digits precede the family, date suffix ignored.
+        XCTAssertEqual(TokenFormatter.modelDisplayName("claude-3-5-sonnet-20241022"), "Sonnet 3.5")
+    }
+
+    func testModelDisplayNameEmptyAndSynthetic() {
+        XCTAssertNil(TokenFormatter.modelDisplayName(""))
+        XCTAssertNil(TokenFormatter.modelDisplayName("   "))
+        XCTAssertNil(TokenFormatter.modelDisplayName("<synthetic>"))
+    }
+
+    func testModelDisplayNameUnknownFallsBackToStrippedId() {
+        XCTAssertEqual(TokenFormatter.modelDisplayName("claude-future-9-0"), "future-9-0")
+        XCTAssertEqual(TokenFormatter.modelDisplayName("gpt-4o"), "gpt-4o")
+    }
 }
