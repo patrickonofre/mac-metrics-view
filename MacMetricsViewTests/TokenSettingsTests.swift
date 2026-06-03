@@ -26,6 +26,55 @@ final class TokenSettingsTests: XCTestCase {
         XCTAssertEqual(display.tokenScope, .global)
     }
 
+    // MARK: - Provider selection
+
+    func testFreshLoadDefaultsProviderToCombined() {
+        XCTAssertEqual(MetricDisplaySettings.load(from: defaults).tokenProvider, .combined)
+    }
+
+    func testExistingInstallWithoutProviderKeyDefaultsToCombined() {
+        // An existing install has other token keys stored but never the provider key.
+        var display = MetricDisplaySettings.load(from: defaults)
+        display.tokenScope = .session
+        display.tokenMenuBarWindow = .last24h
+        display.save(to: defaults)
+        defaults.removeObject(forKey: "MetricDisplaySettings.tokenProvider")
+
+        let reloaded = MetricDisplaySettings.load(from: defaults)
+        XCTAssertEqual(reloaded.tokenProvider, .combined)
+        XCTAssertEqual(reloaded.tokenScope, .session)        // unrelated keys intact
+        XCTAssertEqual(reloaded.tokenMenuBarWindow, .last24h)
+    }
+
+    func testTokenProviderRoundTripsEveryValue() {
+        for provider in [TokenProviderSelection.claude, .codex, .combined] {
+            var display = MetricDisplaySettings.load(from: defaults)
+            display.tokenProvider = provider
+            display.save(to: defaults)
+
+            XCTAssertEqual(MetricDisplaySettings.load(from: defaults).tokenProvider, provider)
+        }
+    }
+
+    func testSavingProviderLeavesOtherTokenKeysUntouched() {
+        var display = MetricDisplaySettings.load(from: defaults)
+        display.tokenScope = .project
+        display.tokenMenuBarWindow = .lastHour
+        display.tokenProvider = .codex
+        display.save(to: defaults)
+
+        let reloaded = MetricDisplaySettings.load(from: defaults)
+        XCTAssertEqual(reloaded.tokenProvider, .codex)
+        XCTAssertEqual(reloaded.tokenScope, .project)
+        XCTAssertEqual(reloaded.tokenMenuBarWindow, .lastHour)
+    }
+
+    func testGarbageProviderFallsBackToCombined() {
+        defaults.set("not-a-provider", forKey: "MetricDisplaySettings.tokenProvider")
+
+        XCTAssertEqual(MetricDisplaySettings.load(from: defaults).tokenProvider, .combined)
+    }
+
     // MARK: - Round-trips
 
     func testShowTokensRoundTripsAndLeavesOtherFlagsUntouched() {

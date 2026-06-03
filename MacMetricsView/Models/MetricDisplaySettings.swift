@@ -25,6 +25,7 @@ struct MetricDisplaySettings: Equatable {
         static let diskMenuBarMetric = "MetricDisplaySettings.diskMenuBarMetric"
         static let tokenMenuBarWindow = "MetricDisplaySettings.tokenMenuBarWindow"
         static let tokenScope = "MetricDisplaySettings.tokenScope"
+        static let tokenProvider = "MetricDisplaySettings.tokenProvider"
     }
 
     var identifierStyle: IdentifierStyle
@@ -34,19 +35,24 @@ struct MetricDisplaySettings: Equatable {
     var tokenMenuBarWindow: TokenWindow
     /// The persisted counting scope for the token meter (reuses `TokenScope`).
     var tokenScope: TokenScope
+    /// Which provider the token meter shows: Claude, Codex, or Combined. Defaults to
+    /// `combined` so Codex surfaces immediately on update (ADR-003).
+    var tokenProvider: TokenProviderSelection
 
     init(
         identifierStyle: IdentifierStyle = .icons,
         ramMenuBarMetric: RAMMenuBarMetric = .appMemory,
         diskMenuBarMetric: DiskMenuBarMetric = .combined,
         tokenMenuBarWindow: TokenWindow = .today,
-        tokenScope: TokenScope = .global
+        tokenScope: TokenScope = .global,
+        tokenProvider: TokenProviderSelection = .combined
     ) {
         self.identifierStyle = identifierStyle
         self.ramMenuBarMetric = ramMenuBarMetric
         self.diskMenuBarMetric = diskMenuBarMetric
         self.tokenMenuBarWindow = tokenMenuBarWindow
         self.tokenScope = tokenScope
+        self.tokenProvider = tokenProvider
     }
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricDisplaySettings {
@@ -62,6 +68,11 @@ struct MetricDisplaySettings: Equatable {
         let tokenScope = userDefaults.string(forKey: Keys.tokenScope)
             .flatMap(TokenScope.init(rawValue:)) ?? .global
 
+        // Default combined for both fresh installs and existing installs with no stored key,
+        // so existing Claude-only users see Codex until they switch (ADR-003).
+        let tokenProvider = userDefaults.string(forKey: Keys.tokenProvider)
+            .flatMap(TokenProviderSelection.init(rawValue:)) ?? .combined
+
         if let rawIdentifierStyle = userDefaults.string(forKey: Keys.identifierStyle),
            let identifierStyle = IdentifierStyle(rawValue: rawIdentifierStyle) {
             return MetricDisplaySettings(
@@ -69,7 +80,8 @@ struct MetricDisplaySettings: Equatable {
                 ramMenuBarMetric: ramMetric,
                 diskMenuBarMetric: diskMetric,
                 tokenMenuBarWindow: tokenWindow,
-                tokenScope: tokenScope
+                tokenScope: tokenScope,
+                tokenProvider: tokenProvider
             )
         }
 
@@ -79,7 +91,8 @@ struct MetricDisplaySettings: Equatable {
                 ramMenuBarMetric: ramMetric,
                 diskMenuBarMetric: diskMetric,
                 tokenMenuBarWindow: tokenWindow,
-                tokenScope: tokenScope
+                tokenScope: tokenScope,
+                tokenProvider: tokenProvider
             )
         }
 
@@ -87,7 +100,8 @@ struct MetricDisplaySettings: Equatable {
             ramMenuBarMetric: ramMetric,
             diskMenuBarMetric: diskMetric,
             tokenMenuBarWindow: tokenWindow,
-            tokenScope: tokenScope
+            tokenScope: tokenScope,
+            tokenProvider: tokenProvider
         )
     }
 
@@ -98,5 +112,6 @@ struct MetricDisplaySettings: Equatable {
         userDefaults.set(diskMenuBarMetric.rawValue, forKey: Keys.diskMenuBarMetric)
         userDefaults.set(tokenMenuBarWindow.rawValue, forKey: Keys.tokenMenuBarWindow)
         userDefaults.set(tokenScope.rawValue, forKey: Keys.tokenScope)
+        userDefaults.set(tokenProvider.rawValue, forKey: Keys.tokenProvider)
     }
 }
