@@ -33,6 +33,10 @@ final class ClaudeCodeLogReader: TokenUsageReading {
     /// Active-set scan + per-file `(offset, ClaudeState)` storage, bounded to the active window.
     private var activeSet = ActiveFileSet<ClaudeState>()
 
+    /// Number of files currently tracked — bounded to the active window, never the corpus.
+    /// Diagnostic accessor for the bounded-memory validation harness (task_04).
+    var activeFileCount: Int { activeSet.entries.count }
+
     private static let newline: UInt8 = 0x0A
 
     init(

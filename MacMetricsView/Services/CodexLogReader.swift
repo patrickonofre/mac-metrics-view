@@ -48,6 +48,10 @@ final class CodexLogReader: TokenUsageReading {
     /// Active-set scan + per-file `(offset, CodexState)` storage, bounded to the active window.
     private var activeSet = ActiveFileSet<CodexState>()
 
+    /// Number of files currently tracked — bounded to the active window, never the corpus.
+    /// Diagnostic accessor for the bounded-memory validation harness (task_04).
+    var activeFileCount: Int { activeSet.entries.count }
+
     private var didWarnMissingRoot = false
     private var didWarnClamp = false
 
