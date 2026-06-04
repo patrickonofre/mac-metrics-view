@@ -11,10 +11,10 @@
       "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 1.5 para macOS",
+      "hero.eyebrow": "Versão 1.6 para macOS",
       "hero.title": "CPU, RAM e rede direto na barra de menus.",
       "hero.lede": "Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 1.5",
+      "hero.cta": "Baixar 1.6",
       "hero.secondary": "Ver novidades",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS",
@@ -41,6 +41,15 @@
       "news14.barBody": "Rede em formato compacto, métricas agrupadas com respiro e a cor de severidade só no valor — fica mais fácil ler de relance.",
       "news14.controlTitle": "Você no controle",
       "news14.controlBody": "Os botões agora só decidem o que vai para a barra; o popover mostra tudo. Escolha o valor de RAM e disco, e a primeira execução já começa com CPU, RAM e temperatura.",
+
+      "news16.eyebrow": "Versão 1.6",
+      "news16.title": "Agora também conta os tokens do Codex.",
+      "news16.providerTitle": "Tokens do Codex (ChatGPT)",
+      "news16.providerBody": "Além do Claude Code, o Mac Metrics View lê os logs locais do Codex (ChatGPT) em ~/.codex/sessions e mostra o consumo do provedor que você escolher.",
+      "news16.pickerTitle": "Troque o provedor",
+      "news16.pickerBody": "Um seletor no popover de tokens alterna entre Claude Code e Codex na hora. A barra de menus e o rótulo se ajustam ao provedor escolhido, e a seleção fica salva.",
+      "news16.modelTitle": "Raciocínio e modelos",
+      "news16.modelBody": "Uma linha de raciocínio (reasoning) para os modelos que reportam, com os nomes dos modelos da OpenAI ao lado. Tudo lido localmente; nada sai do seu Mac.",
 
       "news15.eyebrow": "Versão 1.5",
       "news15.title": "Quanto o Claude Code consome em tokens.",
@@ -87,9 +96,9 @@
       "privacy.li3": "Sem chamadas externas para monitorar a rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 1.5.",
-      "download.body": "Versão 1.5 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-1.5.0.zip",
+      "download.title": "Baixe a versão 1.6.",
+      "download.body": "Versão 1.6 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
+      "download.cta": "Baixar MacMetricsView-1.6.0.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
@@ -103,7 +112,7 @@
       "firstrun.alt": "No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.",
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
-      "footer.tagline": "Versão 1.5 para macOS"
+      "footer.tagline": "Versão 1.6 para macOS"
     },
     en: {
       "nav.news": "What's new",
@@ -112,10 +121,10 @@
       "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 1.5 for macOS",
+      "hero.eyebrow": "Version 1.6 for macOS",
       "hero.title": "CPU, RAM, and network right in the menu bar.",
       "hero.lede": "A compact, native app to read your Mac's load at a glance — without opening Activity Monitor.",
-      "hero.cta": "Download 1.5",
+      "hero.cta": "Download 1.6",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View showing CPU, RAM, network, and temperature in the macOS menu bar",
@@ -142,6 +151,15 @@
       "news14.barBody": "Compact network, metrics grouped with breathing room, and severity color on the value only — easier to read at a glance.",
       "news14.controlTitle": "You're in control",
       "news14.controlBody": "The toggles now only decide what goes in the menu bar; the popover shows everything. Pick the RAM and disk value, and a fresh install starts with CPU, RAM, and temperature.",
+
+      "news16.eyebrow": "Version 1.6",
+      "news16.title": "Now it counts Codex tokens too.",
+      "news16.providerTitle": "Codex (ChatGPT) tokens",
+      "news16.providerBody": "Beyond Claude Code, Mac Metrics View reads Codex (ChatGPT) local logs from ~/.codex/sessions and shows the usage of whichever provider you pick.",
+      "news16.pickerTitle": "Switch provider",
+      "news16.pickerBody": "A picker in the token popover switches between Claude Code and Codex instantly. The menu bar and label adapt to the chosen provider, and your choice is saved.",
+      "news16.modelTitle": "Reasoning and models",
+      "news16.modelBody": "A reasoning row for the models that report it, with OpenAI model names alongside. All read locally; nothing leaves your Mac.",
 
       "news15.eyebrow": "Version 1.5",
       "news15.title": "How many tokens Claude Code is using.",
@@ -188,9 +206,9 @@
       "privacy.li3": "No external calls to monitor the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 1.5.",
-      "download.body": "Version 1.5 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-1.5.0.zip",
+      "download.title": "Download version 1.6.",
+      "download.body": "Version 1.6 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
+      "download.cta": "Download MacMetricsView-1.6.0.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
@@ -204,7 +222,7 @@
       "firstrun.alt": "On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.",
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
-      "footer.tagline": "Version 1.5 for macOS"
+      "footer.tagline": "Version 1.6 for macOS"
     }
   };
 
