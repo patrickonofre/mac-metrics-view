@@ -2,9 +2,14 @@ import Foundation
 import os
 
 /// Reads OpenAI Codex CLI session logs (`~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`),
-/// tracking per-file byte offsets so each poll only parses newly appended lines, and maps
-/// Codex's overlapping cumulative fields into the non-overlapping `TokenUsageEvent`
+/// mapping Codex's overlapping cumulative fields into the non-overlapping `TokenUsageEvent`
 /// breakdown that reconciles exactly with `total_tokens` (ADR-004).
+///
+/// Per-file bookkeeping (byte offset + cwd/model/dedup-signature) lives in an
+/// `ActiveFileSet<CodexState>`, and the directory walk is scoped to the recent `YYYY/MM/DD`
+/// date directories covering the active window plus a midnight-boundary margin — so both the
+/// traversal and the per-file read work scale with current activity, and per-file state is
+/// evicted once a file ages past the retention tail (ADR-002, ADR-003).
 ///
 /// Token data lives on lines where `type == "event_msg"` and `payload.type ==
 /// "token_count"`, under `payload.info.last_token_usage`. Real logs emit each turn's
@@ -25,17 +30,23 @@ final class CodexLogReader: TokenUsageReading {
     private let maxBackfillBytes: UInt64
     private let now: () -> Date
     private let fileManager: FileManager
+    private let calendar: Calendar
 
-    /// Byte offset already consumed per file, keyed by path. `nil` means never seen.
-    private var offsets: [String: UInt64] = [:]
-    /// Working directory captured per file (from `session_meta`, or a `turn_context`
-    /// fallback), carried across incremental reads since the header is only at line 1.
-    private var cwdByFile: [String: String] = [:]
-    /// Latest model id seen per file (from `turn_context`), carried across reads.
-    private var modelByFile: [String: String] = [:]
-    /// Last emitted dedupe signature per file (the cumulative total, or a timestamp+total
-    /// fallback). Used to drop the duplicate `token_count` event each turn emits.
-    private var lastSignatureByFile: [String: String] = [:]
+    /// Parse state carried per file, collapsing the former four per-file dicts into one record
+    /// that is evicted together with the file's offset once it ages out of the active window.
+    struct CodexState {
+        /// Working directory (from `session_meta`, or a `turn_context` fallback), carried
+        /// across incremental reads since the header is only at line 1.
+        var cwd: String?
+        /// Latest model id seen (from `turn_context`), carried across reads.
+        var model: String?
+        /// Last emitted dedupe signature (the cumulative total, or a timestamp+total
+        /// fallback). Used to drop the duplicate `token_count` event each turn emits.
+        var lastSignature: String?
+    }
+
+    /// Active-set scan + per-file `(offset, CodexState)` storage, bounded to the active window.
+    private var activeSet = ActiveFileSet<CodexState>()
 
     private var didWarnMissingRoot = false
     private var didWarnClamp = false
@@ -48,12 +59,16 @@ final class CodexLogReader: TokenUsageReading {
         retentionTail: TimeInterval = 24 * 60 * 60,
         maxBackfillBytes: UInt64 = 1 * 1024 * 1024,
         fileManager: FileManager = .default,
+        timeZone: TimeZone = .current,
         now: @escaping () -> Date = { Date() }
     ) {
         self.rootURL = rootURL
         self.retentionTail = retentionTail
         self.maxBackfillBytes = maxBackfillBytes
         self.fileManager = fileManager
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = timeZone
+        self.calendar = calendar
         self.now = now
     }
 
@@ -63,50 +78,81 @@ final class CodexLogReader: TokenUsageReading {
     }
 
     func readNewEvents() -> [TokenUsageEvent] {
-        guard let files = rolloutFiles() else { return [] }
-        return files.flatMap { readEvents(from: $0) }
+        guard fileManager.fileExists(atPath: rootURL.path) else {
+            if !didWarnMissingRoot {
+                didWarnMissingRoot = true
+                Self.logger.debug("Codex sessions root absent at \(self.rootURL.path, privacy: .public)")
+            }
+            return []
+        }
+        // Scope the walk to recent date dirs (window + midnight margin); `window ==
+        // retentionTail` keeps the skip/evict threshold aligned with the backfill cutoff so
+        // eviction is reactivation-safe (ADR-002, ADR-003).
+        let active = activeSet.activeFiles(
+            roots: recentDateDirs(),
+            window: retentionTail,
+            now: now(),
+            fileManager: fileManager,
+            matches: { $0.pathExtension == "jsonl" && $0.lastPathComponent.hasPrefix("rollout-") }
+        )
+        return active.flatMap { readEvents(from: $0.url, size: $0.size) }
+    }
+
+    /// The `~/.codex/sessions/YYYY/MM/DD` directories that can hold a file modified inside the
+    /// active window. Covers `ceil(window / day)` days plus a one-day margin so a session
+    /// written just before midnight (previous date dir, mtime still in window) is in scope.
+    private func recentDateDirs() -> [URL] {
+        let today = now()
+        let daysBack = Int((retentionTail / 86_400).rounded(.up)) + 1
+        var dirs: [URL] = []
+        for dayOffset in 0...daysBack {
+            guard let day = calendar.date(byAdding: .day, value: -dayOffset, to: today) else { continue }
+            let parts = calendar.dateComponents([.year, .month, .day], from: day)
+            guard let year = parts.year, let month = parts.month, let dayOfMonth = parts.day else { continue }
+            dirs.append(
+                rootURL
+                    .appendingPathComponent(String(format: "%04d", year), isDirectory: true)
+                    .appendingPathComponent(String(format: "%02d", month), isDirectory: true)
+                    .appendingPathComponent(String(format: "%02d", dayOfMonth), isDirectory: true)
+            )
+        }
+        return dirs
     }
 
     // MARK: - Per-file reading
 
-    private func readEvents(from file: URL) -> [TokenUsageEvent] {
-        guard let size = fileSize(file) else { return [] }
+    /// `size` is the value prefetched by `ActiveFileSet` (no second `stat`).
+    private func readEvents(from file: URL, size: UInt64) -> [TokenUsageEvent] {
         let key = file.path
 
-        guard let known = offsets[key] else {
-            return backfill(file: file, key: key, size: size)
+        guard let entry = activeSet[key] else {
+            return backfill(file: file, key: key, size: size, state: CodexState())
         }
 
-        if size < known {                       // rotated / truncated
-            resetFileState(key)
-            return backfill(file: file, key: key, size: size)
+        if size < entry.offset {                 // rotated / truncated → fresh session state
+            return backfill(file: file, key: key, size: size, state: CodexState())
         }
-        if size == known { return [] }          // nothing appended
+        if size == entry.offset { return [] }    // nothing appended
 
-        guard let data = readData(from: file, start: known) else { return [] }
-        let parsed = parse(data, file: file, dropFirstPartial: false, applyTail: false)
-        offsets[key] = known + UInt64(parsed.consumed)
+        guard let data = readData(from: file, start: entry.offset) else { return [] }
+        var state = entry.state
+        let parsed = parse(data, file: file, dropFirstPartial: false, applyTail: false, state: &state)
+        activeSet[key] = .init(offset: entry.offset + UInt64(parsed.consumed), state: state)
         return parsed.events
     }
 
     /// Seeds the offset to EOF and returns only events inside the retention tail, reading
     /// at most `maxBackfillBytes` from the end so cold start never ingests the full file.
-    private func backfill(file: URL, key: String, size: UInt64) -> [TokenUsageEvent] {
+    private func backfill(file: URL, key: String, size: UInt64, state initialState: CodexState) -> [TokenUsageEvent] {
         let start = size > maxBackfillBytes ? size - maxBackfillBytes : 0
+        var state = initialState
         guard let data = readData(from: file, start: start) else {
-            offsets[key] = size
+            activeSet[key] = .init(offset: size, state: state)
             return []
         }
-        let parsed = parse(data, file: file, dropFirstPartial: start > 0, applyTail: true)
-        offsets[key] = start + UInt64(parsed.consumed)
+        let parsed = parse(data, file: file, dropFirstPartial: start > 0, applyTail: true, state: &state)
+        activeSet[key] = .init(offset: start + UInt64(parsed.consumed), state: state)
         return parsed.events
-    }
-
-    private func resetFileState(_ key: String) {
-        offsets[key] = 0
-        cwdByFile[key] = nil
-        modelByFile[key] = nil
-        lastSignatureByFile[key] = nil
     }
 
     // MARK: - Parsing
@@ -118,7 +164,8 @@ final class CodexLogReader: TokenUsageReading {
         _ data: Data,
         file: URL,
         dropFirstPartial: Bool,
-        applyTail: Bool
+        applyTail: Bool,
+        state: inout CodexState
     ) -> (events: [TokenUsageEvent], consumed: Int) {
         guard let lastNewline = data.lastIndex(of: Self.newline) else { return ([], 0) }
 
@@ -127,10 +174,9 @@ final class CodexLogReader: TokenUsageReading {
         if dropFirstPartial, !lines.isEmpty { lines.removeFirst() }
 
         let cutoff = now().addingTimeInterval(-retentionTail)
-        let key = file.path
         var events: [TokenUsageEvent] = []
         for line in lines {
-            guard let event = processLine(Data(line), file: file, key: key) else { continue }
+            guard let event = processLine(Data(line), file: file, state: &state) else { continue }
             if applyTail, event.timestamp < cutoff { continue }
             events.append(event)
         }
@@ -140,25 +186,25 @@ final class CodexLogReader: TokenUsageReading {
     /// Updates per-file state from a single line and returns a token event when the line is
     /// a new turn's `token_count`. `session_meta`/`turn_context` lines update cwd/model and
     /// return `nil`; duplicate or malformed token lines are skipped.
-    private func processLine(_ data: Data, file: URL, key: String) -> TokenUsageEvent? {
+    private func processLine(_ data: Data, file: URL, state: inout CodexState) -> TokenUsageEvent? {
         guard let line = try? Self.decoder.decode(RolloutLine.self, from: data) else { return nil }
 
         switch line.type {
         case "session_meta":
-            if let cwd = line.payload?.cwd, !cwd.isEmpty { cwdByFile[key] = cwd }
+            if let cwd = line.payload?.cwd, !cwd.isEmpty { state.cwd = cwd }
             return nil
         case "turn_context":
-            if let model = line.payload?.model, !model.isEmpty { modelByFile[key] = model }
-            if cwdByFile[key] == nil, let cwd = line.payload?.cwd, !cwd.isEmpty { cwdByFile[key] = cwd }
+            if let model = line.payload?.model, !model.isEmpty { state.model = model }
+            if state.cwd == nil, let cwd = line.payload?.cwd, !cwd.isEmpty { state.cwd = cwd }
             return nil
         case "event_msg":
-            return tokenEvent(from: line, file: file, key: key)
+            return tokenEvent(from: line, file: file, state: &state)
         default:
             return nil
         }
     }
 
-    private func tokenEvent(from line: RolloutLine, file: URL, key: String) -> TokenUsageEvent? {
+    private func tokenEvent(from line: RolloutLine, file: URL, state: inout CodexState) -> TokenUsageEvent? {
         guard line.payload?.type == "token_count",
               let info = line.payload?.info,
               let last = info.lastTokenUsage,
@@ -177,8 +223,8 @@ final class CodexLogReader: TokenUsageReading {
         } else {
             signature = "l\(rawTimestamp)|\(last.totalTokens ?? 0)"
         }
-        guard lastSignatureByFile[key] != signature else { return nil }
-        lastSignatureByFile[key] = signature
+        guard state.lastSignature != signature else { return nil }
+        state.lastSignature = signature
 
         // Non-overlapping mapping (ADR-004), each subtraction clamped at 0 so a category
         // never goes negative if Codex's subset assumptions ever break.
@@ -192,14 +238,14 @@ final class CodexLogReader: TokenUsageReading {
 
         return TokenUsageEvent(
             timestamp: timestamp,
-            model: modelByFile[key] ?? "",
+            model: state.model ?? "",
             inputTokens: input,
             outputTokens: output,
             cacheReadTokens: cachedInput,
             cacheCreationTokens: 0,   // Codex has no cache-creation category
             reasoningTokens: reasoning,
             sessionID: Self.sessionID(from: file),
-            projectDir: cwdByFile[key] ?? ""
+            projectDir: state.cwd ?? ""
         )
     }
 
@@ -281,34 +327,6 @@ final class CodexLogReader: TokenUsageReading {
         "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 
     // MARK: - Filesystem helpers
-
-    private func rolloutFiles() -> [URL]? {
-        guard fileManager.fileExists(atPath: rootURL.path) else {
-            if !didWarnMissingRoot {
-                didWarnMissingRoot = true
-                Self.logger.debug("Codex sessions root absent at \(self.rootURL.path, privacy: .public)")
-            }
-            return nil
-        }
-        guard let enumerator = fileManager.enumerator(at: rootURL, includingPropertiesForKeys: nil) else {
-            return []
-        }
-        var files: [URL] = []
-        for case let url as URL in enumerator
-        where url.pathExtension == "jsonl" && url.lastPathComponent.hasPrefix("rollout-") {
-            files.append(url)
-        }
-        return files
-    }
-
-    private func fileSize(_ file: URL) -> UInt64? {
-        guard let attributes = try? fileManager.attributesOfItem(atPath: file.path),
-              let size = (attributes[.size] as? NSNumber)?.uint64Value
-        else {
-            return nil
-        }
-        return size
-    }
 
     private func readData(from file: URL, start: UInt64) -> Data? {
         guard let handle = try? FileHandle(forReadingFrom: file) else { return nil }

@@ -9,12 +9,24 @@ final class CodexLogReaderTests: XCTestCase {
 
     private var root: URL!
     private let fixedNow = Date(timeIntervalSince1970: 1_700_000_000)
+    /// Mutable clock for reactivation tests that advance `now` past the active window.
+    private var currentNow = Date(timeIntervalSince1970: 1_700_000_000)
     private let uuid = "019c8cc1-a150-7be1-977b-3ba98fe3fe2e"
+
+    /// Codex date dirs are local-time; pin the reader and the fixtures to UTC so the computed
+    /// `YYYY/MM/DD` directory is deterministic regardless of the host timezone.
+    private static let utc = TimeZone(identifier: "UTC")!
 
     private static let iso: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
         return formatter
+    }()
+
+    private static let utcCalendar: Calendar = {
+        var calendar = Calendar(identifier: .gregorian)
+        calendar.timeZone = utc
+        return calendar
     }()
 
     override func setUpWithError() throws {
@@ -29,11 +41,22 @@ final class CodexLogReaderTests: XCTestCase {
 
     // MARK: - Fixture helpers
 
-    private func rolloutFile(uuid: String? = nil) throws -> URL {
-        let day = root.appendingPathComponent("2026/02/23", isDirectory: true)
+    /// `root/YYYY/MM/DD` for `base` shifted by `dayOffset`, computed in UTC to match the
+    /// reader's date-dir resolver under the injected UTC timezone.
+    private func dateDir(base: Date? = nil, dayOffset: Int = 0) -> URL {
+        let day = Self.utcCalendar.date(byAdding: .day, value: dayOffset, to: base ?? fixedNow)!
+        let parts = Self.utcCalendar.dateComponents([.year, .month, .day], from: day)
+        return root
+            .appendingPathComponent(String(format: "%04d", parts.year!), isDirectory: true)
+            .appendingPathComponent(String(format: "%02d", parts.month!), isDirectory: true)
+            .appendingPathComponent(String(format: "%02d", parts.day!), isDirectory: true)
+    }
+
+    private func rolloutFile(uuid: String? = nil, base: Date? = nil, dayOffset: Int = 0) throws -> URL {
+        let day = dateDir(base: base, dayOffset: dayOffset)
         try FileManager.default.createDirectory(at: day, withIntermediateDirectories: true)
         let id = uuid ?? self.uuid
-        return day.appendingPathComponent("rollout-2026-02-23T20-07-05-\(id).jsonl")
+        return day.appendingPathComponent("rollout-session-\(id).jsonl")
     }
 
     private func sessionMeta(cwd: String, at offset: TimeInterval = -3_600) -> String {
@@ -97,7 +120,19 @@ final class CodexLogReaderTests: XCTestCase {
     }
 
     private func makeReader(root: URL? = nil) -> CodexLogReader {
-        CodexLogReader(rootURL: root ?? self.root, now: { self.fixedNow })
+        CodexLogReader(rootURL: root ?? self.root, timeZone: Self.utc, now: { self.fixedNow })
+    }
+
+    /// Reader bound to the mutable `currentNow` clock (reactivation tests).
+    private func makeMutableReader() -> CodexLogReader {
+        CodexLogReader(rootURL: root, timeZone: Self.utc, now: { self.currentNow })
+    }
+
+    private func setMtime(_ file: URL, offsetFrom base: Date, _ offset: TimeInterval) throws {
+        try FileManager.default.setAttributes(
+            [.modificationDate: base.addingTimeInterval(offset)],
+            ofItemAtPath: file.path
+        )
     }
 
     // MARK: - Mapping & reconciliation
@@ -301,5 +336,89 @@ final class CodexLogReaderTests: XCTestCase {
 
         // Active sessions dir is empty → nothing counted.
         XCTAssertEqual(makeReader().readNewEvents(), [])
+    }
+
+    // MARK: - Date-dir scoping & reactivation (task_03)
+
+    func testFileUnderOldDateDirNotWalked() throws {
+        // 10 days before `now` → outside the window + margin date dirs, even though the file's
+        // mtime is recent: it is the *scoping* (not the mtime) that excludes it.
+        let old = try rolloutFile(dayOffset: -10)
+        try write(
+            [sessionMeta(cwd: "/proj"), turnContext(model: "gpt-5-codex")]
+            + turnLines([(offset: -60, input: 5_000, cached: 0, output: 100, reasoning: 0)]),
+            to: old
+        )
+        try setMtime(old, offsetFrom: fixedNow, -60)
+
+        XCTAssertEqual(makeReader().readNewEvents(), [])
+    }
+
+    func testFileNearMidnightInPreviousDateDirIncludedViaMargin() throws {
+        // Previous date dir, mtime still inside the active window → included via the margin.
+        let file = try rolloutFile(dayOffset: -1)
+        try write(
+            [sessionMeta(cwd: "/proj"), turnContext(model: "gpt-5-codex")]
+            + turnLines([(offset: -60, input: 100, cached: 0, output: 50, reasoning: 0)]),
+            to: file
+        )
+        try setMtime(file, offsetFrom: fixedNow, -3_600)
+
+        let events = makeReader().readNewEvents()
+        XCTAssertEqual(events.count, 1)
+        XCTAssertEqual(events.first?.inputTokens, 100)
+    }
+
+    func testReactivationAfterEvictionEmitsOnlyNewTurn() throws {
+        let file = try rolloutFile()   // under today's (fixedNow) date dir
+        try write(
+            [sessionMeta(cwd: "/proj"), turnContext(model: "gpt-5-codex")]
+            + turnLines([(offset: -60, input: 100, cached: 0, output: 50, reasoning: 0)]),
+            to: file
+        )
+        try setMtime(file, offsetFrom: fixedNow, -60)
+        let reader = makeMutableReader()
+        XCTAssertEqual(reader.readNewEvents().count, 1)
+
+        // Advance well past the window: the file's state is evicted on the next pass.
+        currentNow = fixedNow.addingTimeInterval(48 * 3_600)
+        XCTAssertEqual(reader.readNewEvents(), [])
+
+        // A genuinely new turn arrives, timestamped in-tail vs currentNow (offset off fixedNow).
+        try append(
+            turnLines([(offset: 48 * 3_600 - 60, input: 200, cached: 0, output: 70, reasoning: 0)]),
+            to: file
+        )
+        try setMtime(file, offsetFrom: currentNow, -30)
+
+        let reactivated = reader.readNewEvents()
+        // Only the new turn emits; the pre-eviction turn is tail-filtered, never re-counted.
+        XCTAssertEqual(reactivated.count, 1)
+        XCTAssertEqual(reactivated.first?.inputTokens, 200)
+        XCTAssertEqual(reactivated.first?.projectDir, "/proj")   // cwd re-read from the header
+        XCTAssertEqual(reader.readNewEvents(), [])
+    }
+
+    func testFiguresIdenticalMultiDayCorpus() throws {
+        let otherUUID = "019c8cc1-a150-7be1-977b-3ba98fe3fe2f"
+        let today = try rolloutFile(uuid: uuid, dayOffset: 0)
+        let yesterday = try rolloutFile(uuid: otherUUID, dayOffset: -1)
+        try write(
+            [sessionMeta(cwd: "/a"), turnContext(model: "gpt-5-codex")]
+            + turnLines([(offset: -60, input: 100, cached: 0, output: 50, reasoning: 0)]),
+            to: today
+        )
+        try write(
+            [sessionMeta(cwd: "/b"), turnContext(model: "gpt-5-codex")]
+            + turnLines([(offset: -120, input: 200, cached: 0, output: 60, reasoning: 0)]),
+            to: yesterday
+        )
+
+        let events = makeReader().readNewEvents()
+
+        // Order across date dirs is filesystem-dependent; assert the multiset and totals.
+        XCTAssertEqual(events.count, 2)
+        XCTAssertEqual(events.map(\.inputTokens).sorted(), [100, 200])
+        XCTAssertEqual(events.reduce(0) { $0 + $1.outputTokens }, 110)
     }
 }
