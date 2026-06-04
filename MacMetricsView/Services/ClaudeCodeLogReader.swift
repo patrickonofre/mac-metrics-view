@@ -1,7 +1,11 @@
 import Foundation
 
-/// Reads Claude Code session logs (`~/.claude/projects/<project>/<session>.jsonl`),
-/// tracking per-file byte offsets so each poll only parses newly appended lines (ADR-002).
+/// Reads Claude Code session logs (`~/.claude/projects/<project>/<session>.jsonl`).
+///
+/// Per-file bookkeeping (byte offset + dedup set) lives in an `ActiveFileSet<ClaudeState>`,
+/// so each poll only opens files that are currently active and reader memory stays bounded to
+/// the active window — dormant sessions cost one prefetched `stat` and no read, and their
+/// state is evicted once they age past the retention tail (ADR-002, ADR-003).
 ///
 /// Defensive by design: a missing root yields an empty stream, lines that fail to decode
 /// or lack `message.usage` are skipped without aborting the pass, and a file shorter than
@@ -14,14 +18,20 @@ final class ClaudeCodeLogReader: TokenUsageReading {
     private let now: () -> Date
     private let fileManager: FileManager
 
-    /// Byte offset already consumed per file, keyed by path. `nil` means never seen.
-    private var offsets: [String: UInt64] = [:]
+    /// Parse state carried per file. The dedup set is scoped to a single file (replacing the
+    /// former global set) and is evicted with the file's other state, so total dedup memory
+    /// scales with the active set rather than with lifetime history (ADR-003).
+    ///
+    /// Claude Code writes one JSONL line per assistant content-block (each `tool_use`),
+    /// repeating the same `message.usage` on every line, so summing all of them double-counts
+    /// a single message's tokens. We count each `message.id` once; lines without an id (e.g.
+    /// synthetic) are never deduped.
+    struct ClaudeState {
+        var seenMessageIDs: Set<String> = []
+    }
 
-    /// `message.id`s already counted. Claude Code writes one JSONL line per assistant
-    /// content-block (each `tool_use`), repeating the same `message.usage` on every line,
-    /// so summing all of them double-counts a single message's tokens. We count each
-    /// message once. Lines without a `message.id` (e.g. synthetic) are never deduped.
-    private var seenMessageIDs: Set<String> = []
+    /// Active-set scan + per-file `(offset, ClaudeState)` storage, bounded to the active window.
+    private var activeSet = ActiveFileSet<ClaudeState>()
 
     private static let newline: UInt8 = 0x0A
 
@@ -45,42 +55,54 @@ final class ClaudeCodeLogReader: TokenUsageReading {
     }
 
     func readNewEvents() -> [TokenUsageEvent] {
-        guard let files = jsonlFiles() else { return [] }
-        return files.flatMap { readEvents(from: $0) }
+        // `window == retentionTail` so the skip/evict threshold matches the backfill cutoff,
+        // keeping eviction reactivation-safe (ADR-003).
+        let active = activeSet.activeFiles(
+            roots: [rootURL],
+            window: retentionTail,
+            now: now(),
+            fileManager: fileManager,
+            matches: { $0.pathExtension == "jsonl" }
+        )
+        return active.flatMap { readEvents(from: $0.url, size: $0.size) }
     }
 
     // MARK: - Per-file reading
 
-    private func readEvents(from file: URL) -> [TokenUsageEvent] {
-        guard let size = fileSize(file) else { return [] }
+    /// `size` is the value prefetched by `ActiveFileSet` (no second `stat`). Only files that
+    /// have actually grown are opened; an unchanged active file short-circuits before any read.
+    private func readEvents(from file: URL, size: UInt64) -> [TokenUsageEvent] {
         let key = file.path
 
-        guard let known = offsets[key] else {
-            return backfill(file: file, key: key, size: size)
+        guard let entry = activeSet[key] else {
+            return backfill(file: file, key: key, size: size, state: ClaudeState())
         }
 
-        if size < known {                       // rotated / truncated
-            offsets[key] = 0
-            return backfill(file: file, key: key, size: size)
+        if size < entry.offset {                 // rotated / truncated
+            // Dedup state is intentionally preserved across rotation (matches the prior global
+            // set's behavior); backfill re-seeds the offset from EOF.
+            return backfill(file: file, key: key, size: size, state: entry.state)
         }
-        if size == known { return [] }          // nothing appended
+        if size == entry.offset { return [] }    // nothing appended
 
-        guard let data = readData(from: file, start: known) else { return [] }
-        let parsed = parse(data, file: file, dropFirstPartial: false, applyTail: false)
-        offsets[key] = known + UInt64(parsed.consumed)
+        guard let data = readData(from: file, start: entry.offset) else { return [] }
+        var state = entry.state
+        let parsed = parse(data, file: file, dropFirstPartial: false, applyTail: false, state: &state)
+        activeSet[key] = .init(offset: entry.offset + UInt64(parsed.consumed), state: state)
         return parsed.events
     }
 
     /// Seeds the offset to EOF and returns only events inside the retention tail, reading
     /// at most `maxBackfillBytes` from the end so cold start never ingests the full file.
-    private func backfill(file: URL, key: String, size: UInt64) -> [TokenUsageEvent] {
+    private func backfill(file: URL, key: String, size: UInt64, state initialState: ClaudeState) -> [TokenUsageEvent] {
         let start = size > maxBackfillBytes ? size - maxBackfillBytes : 0
+        var state = initialState
         guard let data = readData(from: file, start: start) else {
-            offsets[key] = size
+            activeSet[key] = .init(offset: size, state: state)
             return []
         }
-        let parsed = parse(data, file: file, dropFirstPartial: start > 0, applyTail: true)
-        offsets[key] = start + UInt64(parsed.consumed)
+        let parsed = parse(data, file: file, dropFirstPartial: start > 0, applyTail: true, state: &state)
+        activeSet[key] = .init(offset: start + UInt64(parsed.consumed), state: state)
         return parsed.events
     }
 
@@ -93,7 +115,8 @@ final class ClaudeCodeLogReader: TokenUsageReading {
         _ data: Data,
         file: URL,
         dropFirstPartial: Bool,
-        applyTail: Bool
+        applyTail: Bool,
+        state: inout ClaudeState
     ) -> (events: [TokenUsageEvent], consumed: Int) {
         guard let lastNewline = data.lastIndex(of: Self.newline) else { return ([], 0) }
 
@@ -104,14 +127,14 @@ final class ClaudeCodeLogReader: TokenUsageReading {
         let cutoff = now().addingTimeInterval(-retentionTail)
         var events: [TokenUsageEvent] = []
         for line in lines {
-            guard let event = parseLine(Data(line), file: file) else { continue }
+            guard let event = parseLine(Data(line), file: file, state: &state) else { continue }
             if applyTail, event.timestamp < cutoff { continue }
             events.append(event)
         }
         return (events, consumable.count)
     }
 
-    private func parseLine(_ data: Data, file: URL) -> TokenUsageEvent? {
+    private func parseLine(_ data: Data, file: URL, state: inout ClaudeState) -> TokenUsageEvent? {
         guard let line = try? Self.decoder.decode(LogLine.self, from: data),
               let usage = line.message?.usage,
               let rawTimestamp = line.timestamp,
@@ -121,10 +144,10 @@ final class ClaudeCodeLogReader: TokenUsageReading {
         }
 
         // One usage record per assistant message: skip repeated content-block lines that
-        // carry the same already-counted message id.
+        // carry the same already-counted message id (per file, ADR-003).
         if let messageID = line.message?.id {
-            guard !seenMessageIDs.contains(messageID) else { return nil }
-            seenMessageIDs.insert(messageID)
+            guard !state.seenMessageIDs.contains(messageID) else { return nil }
+            state.seenMessageIDs.insert(messageID)
         }
 
         return TokenUsageEvent(
@@ -181,27 +204,6 @@ final class ClaudeCodeLogReader: TokenUsageReading {
     }
 
     // MARK: - Filesystem helpers
-
-    private func jsonlFiles() -> [URL]? {
-        guard fileManager.fileExists(atPath: rootURL.path) else { return nil }
-        guard let enumerator = fileManager.enumerator(at: rootURL, includingPropertiesForKeys: nil) else {
-            return []
-        }
-        var files: [URL] = []
-        for case let url as URL in enumerator where url.pathExtension == "jsonl" {
-            files.append(url)
-        }
-        return files
-    }
-
-    private func fileSize(_ file: URL) -> UInt64? {
-        guard let attributes = try? fileManager.attributesOfItem(atPath: file.path),
-              let size = (attributes[.size] as? NSNumber)?.uint64Value
-        else {
-            return nil
-        }
-        return size
-    }
 
     private func readData(from file: URL, start: UInt64) -> Data? {
         guard let handle = try? FileHandle(forReadingFrom: file) else { return nil }

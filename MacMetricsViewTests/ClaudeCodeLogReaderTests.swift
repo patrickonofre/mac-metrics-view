@@ -5,6 +5,8 @@ final class ClaudeCodeLogReaderTests: XCTestCase {
 
     private var root: URL!
     private let fixedNow = Date(timeIntervalSince1970: 1_700_000_000)
+    /// Mutable clock for reactivation tests that advance `now` past the active window.
+    private var currentNow = Date(timeIntervalSince1970: 1_700_000_000)
 
     private static let iso: ISO8601DateFormatter = {
         let formatter = ISO8601DateFormatter()
@@ -61,6 +63,18 @@ final class ClaudeCodeLogReaderTests: XCTestCase {
 
     private func makeReader() -> ClaudeCodeLogReader {
         ClaudeCodeLogReader(rootURL: root, now: { self.fixedNow })
+    }
+
+    /// Reader bound to the mutable `currentNow` clock.
+    private func makeMutableReader() -> ClaudeCodeLogReader {
+        ClaudeCodeLogReader(rootURL: root, now: { self.currentNow })
+    }
+
+    private func setMtime(_ file: URL, offsetFrom base: Date, _ offset: TimeInterval) throws {
+        try FileManager.default.setAttributes(
+            [.modificationDate: base.addingTimeInterval(offset)],
+            ofItemAtPath: file.path
+        )
     }
 
     // MARK: - Tests
@@ -222,5 +236,71 @@ final class ClaudeCodeLogReaderTests: XCTestCase {
         let second = reader.readNewEvents()
         XCTAssertEqual(second.map(\.inputTokens), [5])
         XCTAssertEqual(second.first?.projectDir, "pA")
+    }
+
+    // MARK: - Active-set scanning & reactivation (task_02)
+
+    func testDormantFileNotReopenedWhileActiveFileGrows() throws {
+        let active = try projectDir("pA").appendingPathComponent("sA.jsonl")
+        let dormant = try projectDir("pB").appendingPathComponent("sB.jsonl")
+        try write([usageLine(at: -60, input: 10)], to: active)
+        try write([usageLine(at: -60, input: 999)], to: dormant)
+        // Age the dormant file past the 24h window relative to `fixedNow`.
+        try setMtime(dormant, offsetFrom: fixedNow, -48 * 3_600)
+        let reader = makeReader()
+
+        // Dormant file is skipped from the first pass; only the active file emits.
+        XCTAssertEqual(reader.readNewEvents().map(\.inputTokens), [10])
+
+        // Append to BOTH, but keep the dormant file's mtime old: it must stay skipped.
+        try append([usageLine(at: -30, input: 20)], to: active)
+        try append([usageLine(at: -30, input: 888)], to: dormant)
+        try setMtime(dormant, offsetFrom: fixedNow, -48 * 3_600)
+
+        XCTAssertEqual(reader.readNewEvents().map(\.inputTokens), [20])   // dormant never re-read
+    }
+
+    func testReactivationAfterEvictionEmitsOnlyNewInTailEvents() throws {
+        let file = try projectDir("pA").appendingPathComponent("sA.jsonl")
+        try write([usageLine(at: -60, input: 50, messageID: "msg_A")], to: file)
+        try setMtime(file, offsetFrom: currentNow, -60)
+        let reader = makeMutableReader()
+
+        XCTAssertEqual(reader.readNewEvents().map(\.inputTokens), [50])
+
+        // Advance well past the active window: the file's state is evicted next pass.
+        currentNow = fixedNow.addingTimeInterval(48 * 3_600)
+        XCTAssertEqual(reader.readNewEvents(), [])   // dormant → evicted, nothing emitted
+
+        // A genuinely new, in-tail message arrives; the stale msg_A line is still present.
+        // `usageLine` timestamps off `fixedNow`, so place msg_B at currentNow-30 (in-tail).
+        try append([usageLine(at: 48 * 3_600 - 30, input: 70, messageID: "msg_B")], to: file)
+        try setMtime(file, offsetFrom: currentNow, -30)
+
+        let reactivated = reader.readNewEvents()
+        // Only the new in-tail event emits; the pre-eviction msg_A is tail-filtered, never
+        // re-counted — totals equal a single counting (no double count).
+        XCTAssertEqual(reactivated.map(\.inputTokens), [70])
+        XCTAssertEqual(reader.readNewEvents(), [])
+    }
+
+    func testMultiFileCorpusEmitsDeterministicStream() throws {
+        let fileA = try projectDir("pA").appendingPathComponent("sA.jsonl")
+        let fileB = try projectDir("pB").appendingPathComponent("sB.jsonl")
+        try write([
+            usageLine(at: -60, input: 10, output: 1, messageID: "a1"),
+            usageLine(at: -50, input: 20, output: 2, messageID: "a2")
+        ], to: fileA)
+        try write([
+            usageLine(at: -40, input: 30, output: 3, messageID: "b1")
+        ], to: fileB)
+
+        let events = makeReader().readNewEvents()
+
+        // Order across files is filesystem-dependent; assert the multiset and totals so the
+        // emitted figures are locked regardless of traversal order.
+        XCTAssertEqual(events.map(\.inputTokens).sorted(), [10, 20, 30])
+        XCTAssertEqual(events.reduce(0) { $0 + $1.inputTokens }, 60)
+        XCTAssertEqual(events.reduce(0) { $0 + $1.outputTokens }, 6)
     }
 }
