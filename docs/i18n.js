@@ -98,7 +98,7 @@
       "download.eyebrow": "Download",
       "download.title": "Baixe a versão 1.6.",
       "download.body": "Versão 1.6 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-1.6.0.zip",
+      "download.cta": "Baixar MacMetricsView-1.6.1.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
@@ -208,7 +208,7 @@
       "download.eyebrow": "Download",
       "download.title": "Download version 1.6.",
       "download.body": "Version 1.6 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-1.6.0.zip",
+      "download.cta": "Download MacMetricsView-1.6.1.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
