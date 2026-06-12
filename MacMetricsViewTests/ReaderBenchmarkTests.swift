@@ -250,6 +250,44 @@ final class ReaderBenchmarkTests: XCTestCase {
         XCTAssertEqual(breakdown.unpricedTokens, 0)
     }
 
+    // MARK: - Burn-rate computation at max-retention volume (Phase 2 gate)
+
+    /// Burn-rate math is O(events) per recompute, bounded by the 25h retention horizon
+    /// (ADR-004). This gate feeds a max-retention-scale synthetic event set through
+    /// `TokenBurnRate.compute` and asserts the exact expected figures — proving the
+    /// computation stays correct and tractable at the volume ceiling.
+    func testBurnRateComputationAtMaxRetentionEventVolume() throws {
+        let count = 100_000   // well above a realistic 25h event volume
+        var events: [TokenUsageEvent] = []
+        events.reserveCapacity(count)
+        for index in 0..<count {
+            // First half lands inside the trailing hour (offsets 0–2999s); second half
+            // sits outside it (offsets 4000–83999s) but within retention.
+            let offset = index < count / 2
+                ? Double(index % 3_000)
+                : 4_000 + Double(index % 80_000)
+            events.append(TokenUsageEvent(
+                timestamp: fixedNow.addingTimeInterval(-offset),
+                model: "claude-opus-4-8",
+                inputTokens: 1_000,
+                outputTokens: 500,
+                cacheReadTokens: 2_000,
+                cacheCreationTokens: 100,
+                sessionID: "s\(index % 8)",
+                projectDir: "p\(index % 4)"
+            ))
+        }
+
+        let breakdown = try XCTUnwrap(TokenBurnRate.compute(events: events, now: fixedNow))
+
+        // 50k in-window events × 1500 usage tokens; per-event cost (opus 4.8):
+        // 0.005 + 0.0125 + 0.001 + 0.000625 = 0.019125 USD.
+        let inWindow = Double(count / 2)
+        XCTAssertEqual(breakdown.tokensPerHour, inWindow * 1_500, accuracy: 1e-6)
+        XCTAssertEqual(breakdown.costPerHourUSD, inWindow * 0.019125, accuracy: 1e-6)
+        XCTAssertEqual(breakdown.costPerDayUSD, inWindow * 0.019125 * 24, accuracy: 1e-5)
+    }
+
     func testCodexReaderMemoryPlateausAcrossMultiDayProgression() throws {
         let sessions = root.appendingPathComponent("sessions", isDirectory: true)
         try FileManager.default.createDirectory(at: sessions, withIntermediateDirectories: true)
