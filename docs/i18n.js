@@ -11,10 +11,10 @@
       "nav.firstrun": "Abrir o app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 1.7 para macOS",
+      "hero.eyebrow": "Versão 1.8 para macOS",
       "hero.title": "CPU, RAM e rede direto na barra de menus.",
       "hero.lede": "Um app nativo e compacto para entender a pressão do seu Mac sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 1.7",
+      "hero.cta": "Baixar 1.8",
       "hero.secondary": "Ver novidades",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View exibindo CPU, RAM, rede e temperatura na barra de menus do macOS",
@@ -41,6 +41,15 @@
       "news14.barBody": "Rede em formato compacto, métricas agrupadas com respiro e a cor de severidade só no valor — fica mais fácil ler de relance.",
       "news14.controlTitle": "Você no controle",
       "news14.controlBody": "Os botões agora só decidem o que vai para a barra; o popover mostra tudo. Escolha o valor de RAM e disco, e a primeira execução já começa com CPU, RAM e temperatura.",
+
+      "news18.eyebrow": "Versão 1.8",
+      "news18.title": "Em que ritmo você está gastando tokens.",
+      "news18.paceTitle": "Ritmo por hora",
+      "news18.paceBody": "O popover agora mostra seu ritmo de consumo na última hora: tokens e custo estimado por hora — sempre respondendo “quão rápido estou gastando agora”.",
+      "news18.projTitle": "Projeção diária",
+      "news18.projBody": "Nesse ritmo, quanto daria por dia? A linha projeta o custo de 24 horas (~$X/dia) — uma estimativa, não uma fatura.",
+      "news18.idleTitle": "Zero custo parado",
+      "news18.idleBody": "O ritmo se atualiza sozinho enquanto o popover está aberto e some quando a última hora fica vazia. Popover fechado, nenhum timer rodando.",
 
       "news17.eyebrow": "Versão 1.7",
       "news17.title": "Quanto custaria seu uso de IA, em dólares.",
@@ -105,9 +114,9 @@
       "privacy.li3": "Sem chamadas externas para monitorar a rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 1.7.",
-      "download.body": "Versão 1.7 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-1.7.0.zip",
+      "download.title": "Baixe a versão 1.8.",
+      "download.body": "Versão 1.8 para macOS (Apple Silicon). Na primeira abertura, o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, o app se mantém atualizado sozinho.",
+      "download.cta": "Baixar MacMetricsView-1.8.0.zip",
 
       "firstrun.eyebrow": "Primeira abertura",
       "firstrun.title": "Viu “MacMetricsView não foi aberto”? É esperado.",
@@ -121,7 +130,7 @@
       "firstrun.alt": "No macOS Ventura ou anterior: clique com o botão direito (ou Control+clique) no app e escolha “Abrir” — pule os passos 2 e 3 acima.",
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
-      "footer.tagline": "Versão 1.7 para macOS"
+      "footer.tagline": "Versão 1.8 para macOS"
     },
     en: {
       "nav.news": "What's new",
@@ -130,10 +139,10 @@
       "nav.firstrun": "Open the app",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 1.7 for macOS",
+      "hero.eyebrow": "Version 1.8 for macOS",
       "hero.title": "CPU, RAM, and network right in the menu bar.",
       "hero.lede": "A compact, native app to read your Mac's load at a glance — without opening Activity Monitor.",
-      "hero.cta": "Download 1.7",
+      "hero.cta": "Download 1.8",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View showing CPU, RAM, network, and temperature in the macOS menu bar",
@@ -160,6 +169,15 @@
       "news14.barBody": "Compact network, metrics grouped with breathing room, and severity color on the value only — easier to read at a glance.",
       "news14.controlTitle": "You're in control",
       "news14.controlBody": "The toggles now only decide what goes in the menu bar; the popover shows everything. Pick the RAM and disk value, and a fresh install starts with CPU, RAM, and temperature.",
+
+      "news18.eyebrow": "Version 1.8",
+      "news18.title": "How fast you’re burning tokens.",
+      "news18.paceTitle": "Hourly pace",
+      "news18.paceBody": "The popover now shows your pace over the last hour: tokens and estimated cost per hour — always answering “how fast am I spending right now”.",
+      "news18.projTitle": "Daily projection",
+      "news18.projBody": "At this pace, how much per day? The line projects the 24-hour cost (~$X/day) — an estimate, not a bill.",
+      "news18.idleTitle": "Zero cost when idle",
+      "news18.idleBody": "The pace refreshes on its own while the popover is open and hides when the last hour is empty. Popover closed, no timers running.",
 
       "news17.eyebrow": "Version 1.7",
       "news17.title": "What your AI usage would cost, in dollars.",
@@ -224,9 +242,9 @@
       "privacy.li3": "No external calls to monitor the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 1.7.",
-      "download.body": "Version 1.7 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-1.7.0.zip",
+      "download.title": "Download version 1.8.",
+      "download.body": "Version 1.8 for macOS (Apple Silicon). On first launch, macOS may ask for confirmation because the app is not yet notarized — after that, the app keeps itself up to date.",
+      "download.cta": "Download MacMetricsView-1.8.0.zip",
 
       "firstrun.eyebrow": "First launch",
       "firstrun.title": "See “MacMetricsView Was Not Opened”? That's expected.",
@@ -240,7 +258,7 @@
       "firstrun.alt": "On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.",
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
-      "footer.tagline": "Version 1.7 for macOS"
+      "footer.tagline": "Version 1.8 for macOS"
     }
   };
 
