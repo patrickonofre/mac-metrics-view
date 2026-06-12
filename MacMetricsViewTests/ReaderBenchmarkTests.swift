@@ -215,6 +215,41 @@ final class ReaderBenchmarkTests: XCTestCase {
         XCTAssertEqual(reader.activeFileCount, perDayActive)
     }
 
+    // MARK: - Cost computation at max-retention volume (Phase 1 gate)
+
+    /// Cost math is O(events) per UI refresh, bounded by the 25h retention horizon
+    /// (ADR-003). This gate feeds a max-retention-scale synthetic event set through
+    /// `TokenCostCalculator` and asserts the exact expected total — proving the
+    /// computation stays correct and tractable at the volume ceiling.
+    func testCostComputationAtMaxRetentionEventVolume() {
+        let count = 100_000   // well above a realistic 25h event volume
+        var events: [TokenUsageEvent] = []
+        events.reserveCapacity(count)
+        for index in 0..<count {
+            let isClaude = index % 2 == 0
+            events.append(TokenUsageEvent(
+                timestamp: fixedNow.addingTimeInterval(-Double(index % 86_400)),
+                model: isClaude ? "claude-opus-4-8" : "gpt-5-codex",
+                inputTokens: 1_000,
+                outputTokens: 500,
+                cacheReadTokens: 2_000,
+                cacheCreationTokens: 100,
+                reasoningTokens: isClaude ? 0 : 300,
+                sessionID: "s\(index % 8)",
+                projectDir: "p\(index % 4)"
+            ))
+        }
+
+        let breakdown = TokenCostCalculator.cost(of: events)
+
+        // Per-event: opus 0.005 + 0.0125 + 0.001 + 0.000625 = 0.019125 USD;
+        // codex (0.00125 + 0.005 + 0.00025 + 0.000125) + reasoning 0.003 = 0.009625 USD.
+        let expected = Double(count / 2) * 0.019125 + Double(count / 2) * 0.009625
+        XCTAssertEqual(breakdown.totalUSD, expected, accuracy: 1e-6)
+        XCTAssertEqual(breakdown.perModelUSD.count, 2)
+        XCTAssertEqual(breakdown.unpricedTokens, 0)
+    }
+
     func testCodexReaderMemoryPlateausAcrossMultiDayProgression() throws {
         let sessions = root.appendingPathComponent("sessions", isDirectory: true)
         try FileManager.default.createDirectory(at: sessions, withIntermediateDirectories: true)
