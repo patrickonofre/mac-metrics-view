@@ -288,6 +288,49 @@ final class ReaderBenchmarkTests: XCTestCase {
         XCTAssertEqual(breakdown.costPerDayUSD, inWindow * 0.019125 * 24, accuracy: 1e-5)
     }
 
+    // MARK: - Block computation at max-retention volume (Phase 3 gate)
+
+    /// Block math is O(n log n) per recompute, bounded by the 25h retention
+    /// horizon (ADR-006). This gate feeds a max-retention-scale synthetic event
+    /// set through `TokenRateLimitWindow.activeBlock` and asserts the exact
+    /// expected block — proving the computation stays correct and tractable at
+    /// the volume ceiling.
+    func testBlockComputationAtMaxRetentionEventVolume() throws {
+        let count = 100_000   // well above a realistic 25h event volume
+        // Whole-hour anchor so the expected block boundaries are exact dates.
+        let hour = Date(timeIntervalSince1970: (1_700_000_000.0 / 3_600).rounded(.down) * 3_600)
+        var events: [TokenUsageEvent] = []
+        events.reserveCapacity(count)
+        for index in 0..<count {
+            // First half: offsets 1–3,599s back → all inside the block opened at
+            // `hour − 1h` (first event floored to the hour). Second half: 7–24h
+            // back, leaving a >5h gap that resyncs the chain at the active block.
+            let offset = index < count / 2
+                ? 1 + Double(index % 3_599)
+                : 25_200 + Double(index % 61_200)
+            events.append(TokenUsageEvent(
+                timestamp: hour.addingTimeInterval(-offset),
+                model: "claude-opus-4-8",
+                inputTokens: 1_000,
+                outputTokens: 500,
+                cacheReadTokens: 2_000,
+                cacheCreationTokens: 100,
+                sessionID: "s\(index % 8)",
+                projectDir: "p\(index % 4)"
+            ))
+        }
+
+        let block = try XCTUnwrap(TokenRateLimitWindow.activeBlock(events: events, now: hour))
+
+        XCTAssertEqual(block.start, hour.addingTimeInterval(-3_600))
+        XCTAssertEqual(block.end, hour.addingTimeInterval(-3_600 + 5 * 3_600))
+        XCTAssertEqual(block.usage.input, 50_000 * 1_000)
+        XCTAssertEqual(block.usage.output, 50_000 * 500)
+        XCTAssertEqual(block.usage.cacheRead, 50_000 * 2_000)
+        // Per-event cost (opus 4.8): 0.005 + 0.0125 + 0.001 + 0.000625 = 0.019125.
+        XCTAssertEqual(block.costUSD, 50_000 * 0.019125, accuracy: 1e-5)
+    }
+
     func testCodexReaderMemoryPlateausAcrossMultiDayProgression() throws {
         let sessions = root.appendingPathComponent("sessions", isDirectory: true)
         try FileManager.default.createDirectory(at: sessions, withIntermediateDirectories: true)
