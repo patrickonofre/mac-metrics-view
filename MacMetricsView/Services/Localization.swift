@@ -141,6 +141,12 @@ enum Strings {
         en: "≈ usage from unrecognized models not included",
         pt: "≈ uso de modelos não reconhecidos não incluído"
     )
+    // Burn rate / pace line (Phase 2, ADR-004). One-word label — the pace line is
+    // already dense. No "estimated" disclaimer here: the line lives in the block
+    // that carries the Phase 1 note.
+    static let tokenPaceLabel = LocalizedText(en: "Pace", pt: "Ritmo")
+    /// Per-day unit word for the "~$X/day" projection; "/h" reads the same in both.
+    static let tokenPerDayUnit = LocalizedText(en: "day", pt: "dia")
 
     // Source/coverage note: explains which usage the counter can see.
     static let tokenSourceHelpTitle = LocalizedText(

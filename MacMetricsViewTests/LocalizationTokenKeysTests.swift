@@ -28,7 +28,9 @@ final class LocalizationTokenKeysTests: XCTestCase {
             Strings.tokenSourceHelp,
             Strings.tokenCostLabel,
             Strings.tokenCostEstimatedNote,
-            Strings.tokenCostUnpricedNote
+            Strings.tokenCostUnpricedNote,
+            Strings.tokenPaceLabel,
+            Strings.tokenPerDayUnit
         ]
 
         for text in texts {
@@ -76,6 +78,17 @@ final class LocalizationTokenKeysTests: XCTestCase {
         // Cost strings are real phrases that translate.
         XCTAssertNotEqual(Strings.tokenCostEstimatedNote(.english), Strings.tokenCostEstimatedNote(.portuguese))
         XCTAssertNotEqual(Strings.tokenCostUnpricedNote(.english), Strings.tokenCostUnpricedNote(.portuguese))
+    }
+
+    func testPaceStringsTranslateBetweenLanguages() {
+        // Pace label and per-day unit are real words that translate (Phase 2).
+        XCTAssertEqual(Strings.tokenPaceLabel(.english), "Pace")
+        XCTAssertEqual(Strings.tokenPaceLabel(.portuguese), "Ritmo")
+        XCTAssertNotEqual(Strings.tokenPaceLabel(.english), Strings.tokenPaceLabel(.portuguese))
+
+        XCTAssertEqual(Strings.tokenPerDayUnit(.english), "day")
+        XCTAssertEqual(Strings.tokenPerDayUnit(.portuguese), "dia")
+        XCTAssertNotEqual(Strings.tokenPerDayUnit(.english), Strings.tokenPerDayUnit(.portuguese))
     }
 
     func testProviderNameHelperMapsEverySelection() {
