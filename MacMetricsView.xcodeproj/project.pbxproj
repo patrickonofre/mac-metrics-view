@@ -123,6 +123,7 @@
 		1000000000000000000000FB0D /* ActiveFileSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0D /* ActiveFileSet.swift */; };
 		1000000000000000000000FB0E /* TokenPricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0E /* TokenPricing.swift */; };
 		1000000000000000000000FB0F /* TokenCostCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0F /* TokenCostCalculator.swift */; };
+		1000000000000000000000FB10 /* TokenBurnRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F10 /* TokenBurnRate.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -227,6 +228,7 @@
 		1000000000000000000000F0D /* ActiveFileSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ActiveFileSet.swift; sourceTree = "<group>"; };
 		1000000000000000000000F0E /* TokenPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenPricing.swift; sourceTree = "<group>"; };
 		1000000000000000000000F0F /* TokenCostCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenCostCalculator.swift; sourceTree = "<group>"; };
+		1000000000000000000000F10 /* TokenBurnRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenBurnRate.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -336,6 +338,7 @@
 				1000000000000000000000F0D /* ActiveFileSet.swift */,
 				1000000000000000000000F0E /* TokenPricing.swift */,
 				1000000000000000000000F0F /* TokenCostCalculator.swift */,
+				1000000000000000000000F10 /* TokenBurnRate.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -550,6 +553,7 @@
 				1000000000000000000000FB0D /* ActiveFileSet.swift in Sources */,
 				1000000000000000000000FB0E /* TokenPricing.swift in Sources */,
 				1000000000000000000000FB0F /* TokenCostCalculator.swift in Sources */,
+				1000000000000000000000FB10 /* TokenBurnRate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
