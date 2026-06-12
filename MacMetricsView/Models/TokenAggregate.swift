@@ -2,8 +2,10 @@ import Foundation
 
 /// The input/output/cache token breakdown produced by aggregation, with a derived total.
 ///
-/// A pure value type: no I/O, timers, or formatting.
-struct TokenAggregate: Equatable {
+/// A pure value type: no I/O, timers, or formatting. `Codable` so the daily
+/// ledger can persist day buckets (ADR-007) — additive; nothing persisted the
+/// type before, so there is no migration.
+struct TokenAggregate: Equatable, Codable {
     let input: Int
     let output: Int
     let cacheRead: Int
