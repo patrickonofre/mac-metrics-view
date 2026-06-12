@@ -86,13 +86,41 @@ enum TokenPricing {
 
     private static func openAIRates(_ lower: String) -> TokenModelRates? {
         if lower.hasPrefix("gpt-5") {
-            if lower.contains("nano") { return openAI(0.05, 0.40, cachedInput: 0.005) }
-            if lower.contains("mini") { return openAI(0.25, 2, cachedInput: 0.025) }
-            return openAI(1.25, 10, cachedInput: 0.125)   // gpt-5, gpt-5.x, gpt-5-codex
+            // OpenAI re-priced the gpt-5.x line per minor version (official pricing
+            // page, verified 2026-06-12): 5.5 = 5/30, 5.4 = 2.50/15, 5.3 (incl.
+            // codex) = 1.75/14; 5.0/5.1 keep the original 1.25/10. 5.2 has no
+            // published price — resolve to nil so it degrades to the unpriced
+            // indicator instead of a guess (ADR-003).
+            let minor = gpt5Minor(lower)
+            if lower.contains("nano") {
+                return minor >= 4
+                    ? openAI(0.20, 1.25, cachedInput: 0.02)
+                    : openAI(0.05, 0.40, cachedInput: 0.005)
+            }
+            if lower.contains("mini") {
+                return minor >= 4
+                    ? openAI(0.75, 4.5, cachedInput: 0.075)
+                    : openAI(0.25, 2, cachedInput: 0.025)
+            }
+            switch minor {
+            case 5...: return openAI(5, 30, cachedInput: 0.50)
+            case 4: return openAI(2.50, 15, cachedInput: 0.25)
+            case 3: return openAI(1.75, 14, cachedInput: 0.175)
+            case 2: return nil
+            default: return openAI(1.25, 10, cachedInput: 0.125)   // gpt-5, gpt-5.1
+            }
         }
         if lower.hasPrefix("o3-mini") { return openAI(1.1, 4.4, cachedInput: 0.55) }
         if lower.hasPrefix("o4-mini") { return openAI(1.1, 4.4, cachedInput: 0.275) }
         if lower.hasPrefix("o3") { return openAI(2, 8, cachedInput: 0.5) }
         return nil
+    }
+
+    /// Minor version of a `gpt-5.x` id (`gpt-5.3-codex` → 3); `gpt-5`/`gpt-5-codex`
+    /// (no dot) → 0.
+    private static func gpt5Minor(_ lower: String) -> Int {
+        guard lower.hasPrefix("gpt-5.") else { return 0 }
+        let digits = lower.dropFirst("gpt-5.".count).prefix(while: \.isNumber)
+        return Int(digits) ?? 0
     }
 }

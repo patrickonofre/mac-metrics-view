@@ -77,6 +77,19 @@ final class TokenPricingTests: XCTestCase {
     func testGPT5MiniAndNanoResolveToTheirOwnTiers() {
         XCTAssertEqual(TokenPricing.rates(for: "gpt-5-mini")?.inputPerMTok, 0.25)
         XCTAssertEqual(TokenPricing.rates(for: "gpt-5-nano")?.inputPerMTok, 0.05)
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.4-mini")?.inputPerMTok, 0.75)
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.4-nano")?.inputPerMTok, 0.20)
+    }
+
+    func testGPT5MinorVersionsResolvePerVersionRates() {
+        // Verified against the official OpenAI pricing page (2026-06-12).
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.3-codex")?.inputPerMTok, 1.75)
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.3-codex")?.outputPerMTok, 14)
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.4")?.inputPerMTok, 2.50)
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.5")?.outputPerMTok, 30)
+        XCTAssertEqual(TokenPricing.rates(for: "gpt-5.1")?.inputPerMTok, 1.25)
+        // No published price for 5.2 — must degrade to unpriced, never a guess.
+        XCTAssertNil(TokenPricing.rates(for: "gpt-5.2-codex"))
     }
 
     func testOSeriesEntries() {
