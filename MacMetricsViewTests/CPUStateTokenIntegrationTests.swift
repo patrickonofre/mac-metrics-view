@@ -538,4 +538,179 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.setTokenScope(.project)
         XCTAssertEqual(state.tokenAggregate.input, 150)   // claude /p1 + codex /cx, each its own MRU project
     }
+
+    // MARK: - Daily ledger persistence + ingest fold (Phase 3, task_05)
+
+    func testClaudeIngestAccumulatesTodayBucketWithIngestTimeCost() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        // Opus 4.8: 1M input = $5; 200k output = $5.
+        state.update(with: [
+            event(at: Date().addingTimeInterval(-120), input: 1_000_000),
+            event(at: Date().addingTimeInterval(-60), output: 200_000)
+        ])
+
+        let weekly = state.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        XCTAssertEqual(weekly.usage.input, 1_000_000)
+        XCTAssertEqual(weekly.usage.output, 200_000)
+        XCTAssertEqual(weekly.costUSD, 10, accuracy: 1e-9)
+    }
+
+    func testCodexIngestLeavesLedgerUntouched() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        state.update(provider: .codex, with: [codexEvent(input: 500_000)])
+
+        XCTAssertTrue(state.tokenDailyLedger.days.isEmpty)
+    }
+
+    func testLedgerSurvivesRestartWithIdenticalContents() {
+        let userDefaults = makeUserDefaults()
+        let state = CPUState(userDefaults: userDefaults)
+        state.update(with: [event(at: Date().addingTimeInterval(-60), input: 250_000, output: 10_000)])
+        let before = state.tokenDailyLedger
+
+        let restarted = CPUState(userDefaults: userDefaults)
+
+        XCTAssertEqual(restarted.tokenDailyLedger, before)
+        XCTAssertFalse(before.days.isEmpty)
+    }
+
+    func testRestartTailReEmissionDoesNotDoubleCountLedger() {
+        // The reader's cold-start backfill re-emits the retained tail after a
+        // relaunch; the persisted watermark must keep those events out of the
+        // ledger (ADR-007 no-double-count rule at the persistence boundary).
+        let userDefaults = makeUserDefaults()
+        let batch = [
+            event(at: Date().addingTimeInterval(-300), input: 100_000),
+            event(at: Date().addingTimeInterval(-60), input: 40_000)
+        ]
+        let state = CPUState(userDefaults: userDefaults)
+        state.update(with: batch)
+        let weeklyBefore = state.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+
+        let restarted = CPUState(userDefaults: userDefaults)
+        restarted.update(with: batch)   // simulated tail re-emission
+
+        let weeklyAfter = restarted.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        XCTAssertEqual(weeklyAfter.usage, weeklyBefore.usage)
+        XCTAssertEqual(weeklyAfter.costUSD, weeklyBefore.costUSD, accuracy: 1e-9)
+    }
+
+    func testCorruptLedgerPayloadDegradesToEmptyWithoutCrash() {
+        let userDefaults = makeUserDefaults()
+        userDefaults.set("not json at all".data(using: .utf8)!, forKey: "CPUState.tokenDailyLedger.claude")
+
+        let state = CPUState(userDefaults: userDefaults)
+
+        XCTAssertTrue(state.tokenDailyLedger.days.isEmpty)
+    }
+
+    func testLedgerPruneAtIngestKeepsTodayPlusSevenDays() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        // 9 synthetic days, oldest first so the watermark never skips a fold.
+        for daysBack in stride(from: 8, through: 0, by: -1) {
+            state.update(with: [event(at: Date().addingTimeInterval(Double(-daysBack) * 86_400), input: 10)])
+        }
+
+        XCTAssertEqual(state.tokenDailyLedger.days.count, 8)   // today + 7, the 8-days-back bucket dropped
+    }
+
+    // MARK: - tokenRateLimit snapshot (Phase 3, task_06)
+
+    func testSnapshotMatchesHandComputedBlockWeeklyAndBudgets() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.setTokenSessionBudget(2_000_000)
+        state.setTokenWeeklyBudget(10_000_000)
+        // One Claude event 10 min ago: in the active block and today's bucket.
+        state.update(with: [event(at: Date().addingTimeInterval(-600), input: 1_000_000, output: 200_000)])
+
+        let snapshot = try XCTUnwrap(state.tokenRateLimit)
+        let block = try XCTUnwrap(snapshot.block)
+        XCTAssertEqual(block.usage.input, 1_000_000)
+        XCTAssertEqual(block.usage.output, 200_000)
+        XCTAssertEqual(block.costUSD, 10, accuracy: 1e-9)        // $5 input + $5 output
+        XCTAssertEqual(block.end, block.start.addingTimeInterval(5 * 3_600))
+        XCTAssertEqual(snapshot.weeklyUsage.input, 1_000_000)
+        XCTAssertEqual(snapshot.weeklyCostUSD, 10, accuracy: 1e-9)
+        XCTAssertEqual(snapshot.sessionBudget, 2_000_000)
+        XCTAssertEqual(snapshot.weeklyBudget, 10_000_000)
+    }
+
+    func testSnapshotIgnoresProviderScopeAndWindowPickers() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-300), input: 100_000)])
+        state.update(provider: .codex, with: [codexEvent(at: Date().addingTimeInterval(-60), input: 999_000)])
+        let before = try XCTUnwrap(state.tokenRateLimit)
+
+        state.setTokenProvider(.codex)   // Codex-only selection
+        state.setTokenScope(.session)
+        state.setTokenMenuBarWindow(.lastHour)
+
+        let after = try XCTUnwrap(state.tokenRateLimit)
+        XCTAssertEqual(after, before)                              // Claude-scoped, picker-independent
+        XCTAssertEqual(after.block?.usage.input, 100_000)          // Codex event never counted
+    }
+
+    func testTickPastBlockEndClearsBlockButKeepsWeeklyFigure() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(at: Date().addingTimeInterval(-60), input: 50_000)])
+        XCTAssertNotNil(try XCTUnwrap(state.tokenRateLimit).block)
+
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(6 * 3_600))   // past block end
+
+        let snapshot = try XCTUnwrap(state.tokenRateLimit)        // still published
+        XCTAssertNil(snapshot.block)                               // block expired
+        XCTAssertEqual(snapshot.weeklyUsage.input, 50_000)         // week persists
+    }
+
+    func testSnapshotNilWithEmptyStoreAndEmptyLedger() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        XCTAssertNil(state.tokenRateLimit)
+    }
+
+    func testBudgetSettersPersistSanitizeAndRepublish() throws {
+        let userDefaults = makeUserDefaults()
+        let state = CPUState(userDefaults: userDefaults)
+        state.update(with: [event(at: Date().addingTimeInterval(-60), input: 1_000)])
+
+        state.setTokenSessionBudget(2_000_000)
+        state.setTokenWeeklyBudget(-5)   // sanitized to 0
+
+        let snapshot = try XCTUnwrap(state.tokenRateLimit)
+        XCTAssertEqual(snapshot.sessionBudget, 2_000_000)
+        XCTAssertEqual(snapshot.weeklyBudget, 0)
+        let persisted = MetricDisplaySettings.load(from: userDefaults)
+        XCTAssertEqual(persisted.tokenSessionBudget, 2_000_000)
+        XCTAssertEqual(persisted.tokenWeeklyBudget, 0)
+    }
+
+    func testIngestRecomputeUpdatesBlockAndTodayContributionInOnePass() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(at: Date().addingTimeInterval(-1_200), input: 100_000)])
+        let first = try XCTUnwrap(state.tokenRateLimit)
+
+        state.update(with: [event(at: Date().addingTimeInterval(-30), input: 40_000)])
+
+        let second = try XCTUnwrap(state.tokenRateLimit)
+        XCTAssertEqual(second.block?.usage.input, 140_000)
+        XCTAssertEqual(second.weeklyUsage.input, 140_000)
+        XCTAssertGreaterThan(second.weeklyUsage.input, first.weeklyUsage.input)
+    }
+
+    func testBatchPersistenceReflectsAllEventsOfTheBatch() {
+        let userDefaults = makeUserDefaults()
+        let state = CPUState(userDefaults: userDefaults)
+        let batch = (1...5).map { event(at: Date().addingTimeInterval(Double(-$0)), input: 10_000) }
+
+        state.update(with: batch)
+
+        // Full path: ingest → persisted payload → reload → weekly sum sees all N.
+        let reloaded = CPUState(userDefaults: userDefaults)
+        let weekly = reloaded.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        XCTAssertEqual(weekly.usage.input, 50_000)
+        XCTAssertEqual(weekly.costUSD, 0.25, accuracy: 1e-9)   // 50k × $5/MTok
+    }
 }

@@ -1,6 +1,19 @@
 import Foundation
 import Combine
 
+/// Rate-limit estimate published to the popover in one value (Phase 3): the
+/// active 5h block (or `nil` between blocks), the rolling-week figures from the
+/// daily ledger, and the user-set budgets (0 = off, ADR-008). Always
+/// Claude-scoped regardless of the provider picker (ADR-006). Defined here — not
+/// in its own file — so it adds no Xcode-target-membership risk.
+struct TokenRateLimitSnapshot: Equatable {
+    let block: TokenRateLimitBlock?
+    let weeklyUsage: TokenAggregate
+    let weeklyCostUSD: Double
+    let sessionBudget: Int
+    let weeklyBudget: Int
+}
+
 /// Where the cleaning-permission recovery flow is, for the UI to render and for the
 /// state machine to gate its probe poll loop and one-shot relaunch (see ADR-002).
 enum AccessibilityRecoveryPhase: Equatable {
@@ -48,6 +61,12 @@ final class CPUState: ObservableObject {
     /// ignores the scope/window pickers: it sources the providers' raw events filtered
     /// by timestamp only, always answering "pace right now".
     @Published private(set) var tokenBurnRate: TokenBurnRateBreakdown?
+    /// Claude rate-limit estimate (5h block + rolling week + budgets), or `nil`
+    /// when there is no data at all — no active block AND an empty week. A
+    /// missing block with a populated week still publishes, so the weekly row
+    /// stays meaningful (ADR-006/007/008). Ignores the scope/window/provider
+    /// pickers; refreshed on the same recompute pass and ADR-005 tick.
+    @Published private(set) var tokenRateLimit: TokenRateLimitSnapshot?
 
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
     /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
@@ -59,7 +78,23 @@ final class CPUState: ObservableObject {
         static func resetAt(_ provider: TokenProvider) -> String {
             "CPUState.tokenResetAt.\(provider.rawValue)"
         }
+        /// JSON-encoded `TokenDailyLedger` backing the weekly figure (ADR-007).
+        static let dailyLedger = "CPUState.tokenDailyLedger.claude"
+        /// Newest Claude event timestamp already folded into the ledger. Guards the
+        /// reader's cold-start tail re-emission after a relaunch — without it every
+        /// restart would re-fold up to 24h of already-counted events (ADR-007's
+        /// no-double-count rule applied at the persistence boundary).
+        static let ledgerWatermark = "CPUState.tokenLedgerWatermark.claude"
+        /// One-shot guard for the historical backfill scan (ADR-007).
+        static let ledgerBackfilled = "CPUState.tokenLedgerBackfilled.claude"
     }
+
+    /// Per-day Claude usage + cost buckets behind the weekly rate-limit figure
+    /// (ADR-007). Loaded at init, folded on ingest, persisted once per batch.
+    /// Not published — the UI reads it through the `tokenRateLimit` snapshot.
+    private(set) var tokenDailyLedger = TokenDailyLedger()
+    /// Newest folded event timestamp; events at or before it are skipped on fold.
+    private var tokenLedgerWatermark: Date?
 
     // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
     @Published private(set) var lockPhase: LockPhase = .idle
@@ -164,6 +199,14 @@ final class CPUState: ObservableObject {
             userDefaults.set(legacyResetAt, forKey: TokenKeys.resetAt(.claude))
             userDefaults.removeObject(forKey: TokenKeys.legacyResetAt)
         }
+
+        // Daily ledger restore (ADR-007). A missing or undecodable payload yields
+        // an empty ledger — corruption degrades, never crashes.
+        if let data = userDefaults.data(forKey: TokenKeys.dailyLedger),
+           let ledger = try? JSONDecoder().decode(TokenDailyLedger.self, from: data) {
+            tokenDailyLedger = ledger
+        }
+        tokenLedgerWatermark = userDefaults.object(forKey: TokenKeys.ledgerWatermark) as? Date
 
         evaluateAccessibility()
     }
@@ -417,7 +460,45 @@ final class CPUState: ObservableObject {
         for event in events {
             tokenStores[provider]?.append(event)
         }
+        if provider == .claude {
+            foldIntoDailyLedger(events)
+        }
         recomputeTokenAggregate()
+    }
+
+    /// Folds a Claude ingest batch into the daily ledger (ADR-007): cost computed
+    /// at ingest with the shipped price table, prune to the rolling 8 days, one
+    /// debounced persistence write per batch — never per event. The watermark
+    /// skips events already counted before a relaunch (the reader's cold-start
+    /// tail re-emits up to 24h of history).
+    private func foldIntoDailyLedger(_ events: [TokenUsageEvent]) {
+        let calendar = Calendar.current
+        var folded = false
+        for event in events {
+            if let watermark = tokenLedgerWatermark, event.timestamp <= watermark { continue }
+            tokenDailyLedger.fold(
+                event,
+                costUSD: TokenCostCalculator.cost(of: [event]).totalUSD,
+                calendar: calendar
+            )
+            folded = true
+        }
+        guard folded else { return }
+        if let newest = events.map(\.timestamp).max() {
+            tokenLedgerWatermark = max(tokenLedgerWatermark ?? .distantPast, newest)
+        }
+        tokenDailyLedger.prune(now: Date(), calendar: calendar)
+        persistDailyLedger()
+    }
+
+    /// One write per ingest batch / backfill merge — the ledger is ~8 small entries.
+    private func persistDailyLedger() {
+        if let data = try? JSONEncoder().encode(tokenDailyLedger) {
+            userDefaults.set(data, forKey: TokenKeys.dailyLedger)
+        }
+        if let watermark = tokenLedgerWatermark {
+            userDefaults.set(watermark, forKey: TokenKeys.ledgerWatermark)
+        }
     }
 
     /// Claude-provider convenience used by the existing Claude sampler path and tests.
@@ -456,6 +537,27 @@ final class CPUState: ObservableObject {
         display.save(to: userDefaults)
         recomputeTokenAggregate()
         onDisplayChange?()
+    }
+
+    /// Persists the 5h-block token budget (0 = off, negatives clamp to 0 —
+    /// ADR-008) and republishes the snapshot so the bar appears immediately.
+    func setTokenSessionBudget(_ budget: Int) {
+        let sanitized = max(0, budget)
+        guard display.tokenSessionBudget != sanitized else { return }
+
+        display.tokenSessionBudget = sanitized
+        display.save(to: userDefaults)
+        recomputeTokenAggregate()
+    }
+
+    /// Persists the weekly token budget (0 = off, negatives clamp to 0 — ADR-008).
+    func setTokenWeeklyBudget(_ budget: Int) {
+        let sanitized = max(0, budget)
+        guard display.tokenWeeklyBudget != sanitized else { return }
+
+        display.tokenWeeklyBudget = sanitized
+        display.save(to: userDefaults)
+        recomputeTokenAggregate()
     }
 
     /// Starts a fresh since-reset measurement for the selected provider(s) — both when
@@ -536,6 +638,25 @@ final class CPUState: ObservableObject {
         tokenAggregate = aggregate
         tokenCost = events.isEmpty ? nil : cost
         tokenBurnRate = TokenBurnRate.compute(events: rateEvents, now: now)
+
+        // Rate-limit snapshot: always the Claude store, regardless of the pickers
+        // (ADR-006); weekly from the ledger; budgets from display settings.
+        let block = TokenRateLimitWindow.activeBlock(
+            events: tokenStores[.claude]?.events ?? [],
+            now: now
+        )
+        let weekly = tokenDailyLedger.weeklyTotal(now: now, calendar: .current)
+        if block == nil, weekly.usage.total == 0, weekly.costUSD == 0 {
+            tokenRateLimit = nil
+        } else {
+            tokenRateLimit = TokenRateLimitSnapshot(
+                block: block,
+                weeklyUsage: weekly.usage,
+                weeklyCostUSD: weekly.costUSD,
+                sessionBudget: display.tokenSessionBudget,
+                weeklyBudget: display.tokenWeeklyBudget
+            )
+        }
     }
 
     func setCPUVisible(_ isVisible: Bool) {
