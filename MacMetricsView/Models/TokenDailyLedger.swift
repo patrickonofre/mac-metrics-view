@@ -30,6 +30,14 @@ struct TokenDailyLedger: Equatable, Codable {
         days[key] = entry
     }
 
+    /// Backfill merge: replaces a day bucket with the scan's complete view of it.
+    /// The scan supersedes any partial slice live ingest may have folded from the
+    /// reader's cold-start tail, so replacing — not adding — is what keeps the
+    /// first run free of double counts (ADR-007).
+    mutating func replaceDay(_ key: String, with entry: DayEntry) {
+        days[key] = entry
+    }
+
     /// Drops every bucket outside today + the 7 prior days (rolling 8 entries).
     mutating func prune(now: Date, calendar: Calendar) {
         let kept = Self.weekKeys(now: now, calendar: calendar)

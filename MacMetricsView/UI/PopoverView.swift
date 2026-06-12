@@ -10,38 +10,43 @@ struct PopoverView: View {
     private let popoverWidth: CGFloat = 380
 
     var body: some View {
-        // Content-driven height: data and config each take exactly the room their content
-        // needs, top to bottom — no forced split (which left the short data pane with a
-        // void and clipped the taller config pane). The popover resizes to fit; nothing
-        // scrolls. Width is fixed.
-        VStack(alignment: .leading, spacing: 12) {
-            headerBar
+        if state.isPopoverOpen {
+            // Content-driven height: data and config each take exactly the room their content
+            // needs, top to bottom — no forced split (which left the short data pane with a
+            // void and clipped the taller config pane). The popover resizes to fit; nothing
+            // scrolls. Width is fixed.
+            VStack(alignment: .leading, spacing: 12) {
+                headerBar
 
-            if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: state.isAccessibilityGranted) {
-                RecoveryBanner(wasResetByUpdate: state.accessibilityResetByUpdate)
+                if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: state.isAccessibilityGranted) {
+                    RecoveryBanner(wasResetByUpdate: state.accessibilityResetByUpdate)
+                }
+
+                dataPane
+
+                Divider()
+
+                configPane
             }
-
-            dataPane
-
-            Divider()
-
-            configPane
-        }
-        .controlSize(.small)
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .frame(width: popoverWidth, alignment: .topLeading)
-        .onAppear {
-            state.refreshAccessibilityAuthorization()
-            // Time-derived token figures (burn rate, rolling windows) refresh on a
-            // ~30s timer only while the popover is open (ADR-005).
-            state.beginTokenAutoRefresh()
-        }
-        .onDisappear {
-            // If the popover is dismissed mid-recovery, stop the probe poll loop.
-            // No-op unless we were awaiting a grant.
-            state.cancelAccessibilityRecovery()
-            state.endTokenAutoRefresh()
+            .controlSize(.small)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .frame(width: popoverWidth, alignment: .topLeading)
+            .onAppear {
+                state.refreshAccessibilityAuthorization()
+                // Time-derived token figures (burn rate, rolling windows) refresh on a
+                // ~30s timer only while the popover is open (ADR-005).
+                state.beginTokenAutoRefresh()
+            }
+            .onDisappear {
+                // If the popover is dismissed mid-recovery, stop the probe poll loop.
+                // No-op unless we were awaiting a grant.
+                state.cancelAccessibilityRecovery()
+                state.endTokenAutoRefresh()
+            }
+        } else {
+            Color.clear
+                .frame(width: 1, height: 1)
         }
     }
 

@@ -122,6 +122,11 @@ final class CPUState: ObservableObject {
     /// while `.awaitingGrant`.
     @Published private(set) var recoveryPhase: AccessibilityRecoveryPhase = .idle
 
+    /// Tracks if the popover is currently open. Used to lazy-load PopoverView content
+    /// and completely bypass SwiftUI view graph updates when the popover is closed.
+    @Published var isPopoverOpen: Bool = false
+
+
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
     /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.

@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 @MainActor
-final class StatusItemController {
+final class StatusItemController: NSObject, NSPopoverDelegate {
     private let state: CPUState
     private let launchAtLoginSettings: LaunchAtLoginSettings
     private let statusItem: NSStatusItem
@@ -22,6 +22,8 @@ final class StatusItemController {
         self.launchAtLoginSettings = launchAtLoginSettings
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         popover = NSPopover()
+
+        super.init()
 
         configureStatusItem()
         configurePopover()
@@ -290,6 +292,7 @@ final class StatusItemController {
 
     private func configurePopover() {
         popover.behavior = .transient
+        popover.delegate = self
         let hostingController = NSHostingController(
             rootView: PopoverView(
                 state: state,
@@ -326,6 +329,16 @@ final class StatusItemController {
         state.refreshAccessibilityAuthorization()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
+    }
+
+    // MARK: - NSPopoverDelegate
+
+    func popoverWillShow(_ notification: Notification) {
+        state.isPopoverOpen = true
+    }
+
+    func popoverDidClose(_ notification: Notification) {
+        state.isPopoverOpen = false
     }
 }
 

@@ -1,5 +1,87 @@
 import Foundation
 
+/// Shared Claude JSONL line parsing (decodables, decoder configuration, date
+/// parsing, line→event conversion, message-id dedup), extracted from
+/// `ClaudeCodeLogReader` so the incremental reader and `ClaudeHistoryBackfill`
+/// cannot drift (ADR-007). Stateless — per-file dedup state is the caller's.
+enum ClaudeLogLineParser {
+
+    struct LogLine: Decodable {
+        let timestamp: String?
+        let message: Message?
+
+        struct Message: Decodable {
+            let id: String?
+            let model: String?
+            let usage: Usage?
+        }
+
+        struct Usage: Decodable {
+            let inputTokens: Int?
+            let outputTokens: Int?
+            let cacheReadInputTokens: Int?
+            let cacheCreationInputTokens: Int?
+        }
+    }
+
+    static let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
+
+    private static let isoWithFractional: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+
+    private static let isoPlain: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
+
+    static func parseDate(_ string: String) -> Date? {
+        isoWithFractional.date(from: string) ?? isoPlain.date(from: string)
+    }
+
+    /// One JSONL line → event, or `nil` for undecodable lines, lines without
+    /// `message.usage`, and repeated content-block lines whose `message.id` was
+    /// already counted in `seenMessageIDs` (per-file dedup; lines without an id
+    /// are never deduped).
+    static func parseLine(
+        _ data: Data,
+        file: URL,
+        seenMessageIDs: inout Set<String>
+    ) -> TokenUsageEvent? {
+        guard let line = try? decoder.decode(LogLine.self, from: data),
+              let usage = line.message?.usage,
+              let rawTimestamp = line.timestamp,
+              let timestamp = parseDate(rawTimestamp)
+        else {
+            return nil
+        }
+
+        if let messageID = line.message?.id {
+            guard !seenMessageIDs.contains(messageID) else { return nil }
+            seenMessageIDs.insert(messageID)
+        }
+
+        return TokenUsageEvent(
+            timestamp: timestamp,
+            model: line.message?.model ?? "",
+            inputTokens: usage.inputTokens ?? 0,
+            outputTokens: usage.outputTokens ?? 0,
+            cacheReadTokens: usage.cacheReadInputTokens ?? 0,
+            cacheCreationTokens: usage.cacheCreationInputTokens ?? 0,
+            reasoningTokens: 0,   // Claude Code has no reasoning-token category (ADR-002)
+            sessionID: file.deletingPathExtension().lastPathComponent,
+            projectDir: file.deletingLastPathComponent().lastPathComponent
+        )
+    }
+}
+
 /// Reads Claude Code session logs (`~/.claude/projects/<project>/<session>.jsonl`).
 ///
 /// Per-file bookkeeping (byte offset + dedup set) lives in an `ActiveFileSet<ClaudeState>`,
@@ -138,73 +220,10 @@ final class ClaudeCodeLogReader: TokenUsageReading {
         return (events, consumable.count)
     }
 
+    /// One usage record per assistant message (per-file dedup, ADR-003); parsing
+    /// itself lives in the shared `ClaudeLogLineParser` (ADR-007).
     private func parseLine(_ data: Data, file: URL, state: inout ClaudeState) -> TokenUsageEvent? {
-        guard let line = try? Self.decoder.decode(LogLine.self, from: data),
-              let usage = line.message?.usage,
-              let rawTimestamp = line.timestamp,
-              let timestamp = Self.parseDate(rawTimestamp)
-        else {
-            return nil
-        }
-
-        // One usage record per assistant message: skip repeated content-block lines that
-        // carry the same already-counted message id (per file, ADR-003).
-        if let messageID = line.message?.id {
-            guard !state.seenMessageIDs.contains(messageID) else { return nil }
-            state.seenMessageIDs.insert(messageID)
-        }
-
-        return TokenUsageEvent(
-            timestamp: timestamp,
-            model: line.message?.model ?? "",
-            inputTokens: usage.inputTokens ?? 0,
-            outputTokens: usage.outputTokens ?? 0,
-            cacheReadTokens: usage.cacheReadInputTokens ?? 0,
-            cacheCreationTokens: usage.cacheCreationInputTokens ?? 0,
-            reasoningTokens: 0,   // Claude Code has no reasoning-token category (ADR-002)
-            sessionID: file.deletingPathExtension().lastPathComponent,
-            projectDir: file.deletingLastPathComponent().lastPathComponent
-        )
-    }
-
-    private struct LogLine: Decodable {
-        let timestamp: String?
-        let message: Message?
-
-        struct Message: Decodable {
-            let id: String?
-            let model: String?
-            let usage: Usage?
-        }
-
-        struct Usage: Decodable {
-            let inputTokens: Int?
-            let outputTokens: Int?
-            let cacheReadInputTokens: Int?
-            let cacheCreationInputTokens: Int?
-        }
-    }
-
-    private static let decoder: JSONDecoder = {
-        let decoder = JSONDecoder()
-        decoder.keyDecodingStrategy = .convertFromSnakeCase
-        return decoder
-    }()
-
-    private static let isoWithFractional: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-        return formatter
-    }()
-
-    private static let isoPlain: ISO8601DateFormatter = {
-        let formatter = ISO8601DateFormatter()
-        formatter.formatOptions = [.withInternetDateTime]
-        return formatter
-    }()
-
-    private static func parseDate(_ string: String) -> Date? {
-        isoWithFractional.date(from: string) ?? isoPlain.date(from: string)
+        ClaudeLogLineParser.parseLine(data, file: file, seenMessageIDs: &state.seenMessageIDs)
     }
 
     // MARK: - Filesystem helpers
