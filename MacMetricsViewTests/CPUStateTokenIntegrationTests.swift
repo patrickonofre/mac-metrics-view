@@ -447,6 +447,84 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         XCTAssertEqual(published.costPerDayUSD, direct.costPerDayUSD, accuracy: 1e-4)
     }
 
+    // MARK: - Popover-scoped auto-refresh (Phase 2, task_05)
+
+    func testBeginTokenAutoRefreshRecomputesImmediately() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(at: Date().addingTimeInterval(-600), input: 120_000)])
+
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+
+        let rate = try XCTUnwrap(state.tokenBurnRate)
+        XCTAssertEqual(rate.tokensPerHour, 120_000, accuracy: 1)
+    }
+
+    func testTickWithAdvancedNowClearsBurnRateWhileLast24hCounterKeepsEvent() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.setTokenMenuBarWindow(.last24h)
+        state.update(with: [event(input: 100)])
+        XCTAssertNotNil(state.tokenBurnRate)
+
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))   // window slid past it
+
+        XCTAssertNil(state.tokenBurnRate)
+        XCTAssertEqual(state.tokenAggregate.input, 100)   // 24h counter still shows it
+    }
+
+    func testTickThirtyMinutesLaterKeepsRateUnchangedFixedDenominator() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 120_000)])
+        let before = try XCTUnwrap(state.tokenBurnRate)
+
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(30 * 60))   // still in-window
+
+        let after = try XCTUnwrap(state.tokenBurnRate)
+        XCTAssertEqual(before.tokensPerHour, after.tokensPerHour, accuracy: 1)
+    }
+
+    func testDoubleBeginThenSingleEndLeavesNoLiveTick() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 100)])
+
+        state.beginTokenAutoRefresh()
+        state.beginTokenAutoRefresh()   // must not stack a second timer
+        state.endTokenAutoRefresh()
+
+        // With no live timer, a time-advanced tick is a no-op: the rate would have
+        // cleared if a recompute had run with the advanced clock.
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
+        XCTAssertNotNil(state.tokenBurnRate)
+    }
+
+    func testEndWithoutBeginIsANoOp() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 100)])
+
+        state.endTokenAutoRefresh()   // must not crash or change published state
+
+        XCTAssertNotNil(state.tokenBurnRate)
+        XCTAssertEqual(state.tokenAggregate.input, 100)
+    }
+
+    func testTickRefreshesLastHourAggregateSoAgedOutEventLeavesCounterToo() {
+        // ADR-005 side benefit: rolling windows stay honest while the popover is open.
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.setTokenMenuBarWindow(.lastHour)
+        state.update(with: [event(input: 100)])
+        XCTAssertEqual(state.tokenAggregate.input, 100)
+
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
+
+        XCTAssertEqual(state.tokenAggregate.input, 0)   // aged out of the lastHour window
+    }
+
     func testCombinedMergesPerModelAndPerProviderMRU() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-10), input: 100)])  // claude-opus-4-8

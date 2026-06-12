@@ -108,6 +108,13 @@ final class CPUState: ObservableObject {
     private var nudgeTracker: AccessibilityNudgeTracker
     /// Active only while `recoveryPhase == .awaitingGrant`; spawns a probe each tick.
     private var recoveryPollTimer: Timer?
+    /// Active only while the popover is open (ADR-005); each tick re-runs the token
+    /// recompute with a fresh `now` so the trailing-hour burn rate and the rolling
+    /// windows keep sliding without new ingest.
+    private var tokenAutoRefreshTimer: Timer?
+    /// Refresh cadence while the popover is open: fast enough that the 60-minute
+    /// window moves visibly, slow enough to be free (ADR-005). Not configurable.
+    private let tokenAutoRefreshInterval: TimeInterval = 30
     /// Probe cadence during recovery. Slow enough to stay cheap (a process spawn per
     /// tick), fast enough that re-adding the entry is noticed promptly.
     private let recoveryPollInterval: TimeInterval = 1.5
@@ -162,8 +169,9 @@ final class CPUState: ObservableObject {
     }
 
     deinit {
-        // No leaked poll timer if the state is torn down mid-recovery.
+        // No leaked timers if the state is torn down mid-recovery or popover-open.
         recoveryPollTimer?.invalidate()
+        tokenAutoRefreshTimer?.invalidate()
     }
 
     var menuBarTitle: String {
@@ -456,12 +464,40 @@ final class CPUState: ObservableObject {
         recomputeTokenAggregate()
     }
 
+    /// Starts the popover-open token refresh (ADR-005): recomputes immediately so the
+    /// figures are fresh the moment the popover opens, then ticks every ~30s.
+    /// Idempotent — a second `begin` refreshes but never stacks a second timer.
+    func beginTokenAutoRefresh() {
+        recomputeTokenAggregate()
+        guard tokenAutoRefreshTimer == nil else { return }
+        tokenAutoRefreshTimer = MainRunLoopTimer.repeating(every: tokenAutoRefreshInterval) { [weak self] in
+            self?.tokenAutoRefreshTick()
+        }
+    }
+
+    /// Stops the popover-open refresh. Safe without a matching `begin` (no-op); zero
+    /// timers run while the popover is closed (ADR-005).
+    func endTokenAutoRefresh() {
+        tokenAutoRefreshTimer?.invalidate()
+        tokenAutoRefreshTimer = nil
+    }
+
+    /// One refresh tick: re-runs the token recompute with a fresh (injectable) `now`.
+    /// Internal so tests can drive window decay deterministically, mirroring
+    /// `pollAccessibilityRecovery`. A no-op once `end` ran, so a late timer fire
+    /// cannot recompute after the popover closed.
+    func tokenAutoRefreshTick(now: Date = Date()) {
+        guard tokenAutoRefreshTimer != nil else { return }
+        recomputeTokenAggregate(now: now)
+    }
+
     /// The aggregate for the selected provider, or the sum of both providers' aggregates
     /// for `combined` (each computed independently with its own MRU — ADR-003). The same
     /// pass filters each provider's events once and derives the cost breakdown from them,
     /// so attribution and cost share the filtering work (TechSpec hot-path rule).
-    private func recomputeTokenAggregate() {
-        let now = Date()
+    /// `now` is injectable so the auto-refresh tick can slide the windows in tests;
+    /// production call sites use the default.
+    private func recomputeTokenAggregate(now: Date = Date()) {
         var aggregate = TokenAggregate.zero
         var cost = TokenCostBreakdown.zero
         var events: [TokenUsageEvent] = []
