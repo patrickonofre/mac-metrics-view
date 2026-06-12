@@ -102,6 +102,19 @@ enum TokenFormatter {
         return (["\(prefix)\(version)"] + suffixes).joined(separator: " ")
     }
 
+    /// Estimated USD cost for the popover: `$0.00` for zero, `< $0.01` below one cent,
+    /// two decimals up to $10 (`$0.04`, `$1.23`), one decimal up to $100 (`$12.4`),
+    /// whole dollars above. Defensively clamped — negative, NaN, or infinite input
+    /// renders as `$0.00`, never a misleading or impossible value (ADR-003).
+    static func costString(_ usd: Double) -> String {
+        guard usd.isFinite, usd > 0 else { return "$0.00" }
+
+        if usd < 0.01 { return "< $0.01" }
+        if usd < 10 { return String(format: "$%.2f", usd) }
+        if usd < 100 { return String(format: "$%.1f", usd) }
+        return String(format: "$%.0f", usd)
+    }
+
     /// Input / output / reasoning / cache breakdown rows for the popover. The reasoning row
     /// appears only when the aggregate reports it (Codex), so Claude keeps three rows
     /// (ADR-002). Cache combines read + creation into the single "cache" figure.

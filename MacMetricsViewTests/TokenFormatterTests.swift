@@ -136,3 +136,41 @@ final class TokenFormatterTests: XCTestCase {
         XCTAssertEqual(TokenFormatter.modelDisplayName("mistral-large-2"), "mistral-large-2")
     }
 }
+
+// MARK: - Cost formatting (Phase 1)
+
+extension TokenFormatterTests {
+    func testCostStringZeroRendersAsZeroDollars() {
+        XCTAssertEqual(TokenFormatter.costString(0), "$0.00")
+    }
+
+    func testCostStringSubCentBoundary() {
+        XCTAssertEqual(TokenFormatter.costString(0.009), "< $0.01")
+        XCTAssertEqual(TokenFormatter.costString(0.0001), "< $0.01")
+        XCTAssertEqual(TokenFormatter.costString(0.01), "$0.01")
+    }
+
+    func testCostStringTwoDecimalsBelowTen() {
+        XCTAssertEqual(TokenFormatter.costString(0.044), "$0.04")
+        XCTAssertEqual(TokenFormatter.costString(1.234), "$1.23")
+        XCTAssertEqual(TokenFormatter.costString(9.999), "$10.00")   // %.2f rounding at the edge
+    }
+
+    func testCostStringOneDecimalBetweenTenAndHundred() {
+        XCTAssertEqual(TokenFormatter.costString(12.44), "$12.4")
+        XCTAssertEqual(TokenFormatter.costString(10), "$10.0")
+        XCTAssertEqual(TokenFormatter.costString(99.94), "$99.9")
+    }
+
+    func testCostStringWholeDollarsAtHundredAndAbove() {
+        XCTAssertEqual(TokenFormatter.costString(100), "$100")
+        XCTAssertEqual(TokenFormatter.costString(1234.6), "$1235")
+    }
+
+    func testCostStringClampsNegativeNaNAndInfinity() {
+        XCTAssertEqual(TokenFormatter.costString(-5), "$0.00")
+        XCTAssertEqual(TokenFormatter.costString(.nan), "$0.00")
+        XCTAssertEqual(TokenFormatter.costString(.infinity), "$0.00")
+        XCTAssertEqual(TokenFormatter.costString(-.infinity), "$0.00")
+    }
+}
