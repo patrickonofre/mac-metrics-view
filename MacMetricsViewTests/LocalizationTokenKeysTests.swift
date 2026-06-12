@@ -30,7 +30,16 @@ final class LocalizationTokenKeysTests: XCTestCase {
             Strings.tokenCostEstimatedNote,
             Strings.tokenCostUnpricedNote,
             Strings.tokenPaceLabel,
-            Strings.tokenPerDayUnit
+            Strings.tokenPerDayUnit,
+            Strings.tokenLimitBlockLabel,
+            Strings.tokenLimitWeekLabel,
+            Strings.tokenLimitResetsAt,
+            Strings.tokenLimitNoActiveBlock,
+            Strings.tokenLimitDisclaimer,
+            Strings.tokenBudgetSessionLabel,
+            Strings.tokenBudgetWeeklyLabel,
+            Strings.tokenBudgetOver,
+            Strings.tokenBudgetPlaceholder
         ]
 
         for text in texts {
@@ -89,6 +98,23 @@ final class LocalizationTokenKeysTests: XCTestCase {
         XCTAssertEqual(Strings.tokenPerDayUnit(.english), "day")
         XCTAssertEqual(Strings.tokenPerDayUnit(.portuguese), "dia")
         XCTAssertNotEqual(Strings.tokenPerDayUnit(.english), Strings.tokenPerDayUnit(.portuguese))
+    }
+
+    // MARK: - Rate-limit strings (Phase 3)
+
+    func testLimitStringsResolvePerLanguageWithoutFallthrough() {
+        // Real phrases translate; neither language leaks into the other.
+        XCTAssertEqual(Strings.tokenLimitBlockLabel(.english), "5h block")
+        XCTAssertEqual(Strings.tokenLimitBlockLabel(.portuguese), "Bloco 5h")
+        XCTAssertNotEqual(Strings.tokenLimitResetsAt(.english), Strings.tokenLimitResetsAt(.portuguese))
+        XCTAssertNotEqual(Strings.tokenLimitNoActiveBlock(.english), Strings.tokenLimitNoActiveBlock(.portuguese))
+        XCTAssertNotEqual(Strings.tokenBudgetWeeklyLabel(.english), Strings.tokenBudgetWeeklyLabel(.portuguese))
+        XCTAssertNotEqual(Strings.tokenBudgetOver(.english), Strings.tokenBudgetOver(.portuguese))
+    }
+
+    func testLimitDisclaimerCarriesTheThisMacOnlyQualifier() {
+        XCTAssertTrue(Strings.tokenLimitDisclaimer(.english).contains("this Mac only"))
+        XCTAssertTrue(Strings.tokenLimitDisclaimer(.portuguese).contains("só este Mac"))
     }
 
     func testProviderNameHelperMapsEverySelection() {

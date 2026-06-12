@@ -148,6 +148,26 @@ enum Strings {
     /// Per-day unit word for the "~$X/day" projection; "/h" reads the same in both.
     static let tokenPerDayUnit = LocalizedText(en: "day", pt: "dia")
 
+    // Rate-limit window estimate (Phase 3, ADR-006/007/008). Short labels — the
+    // limit rows are caption-sized; the disclaimer carries the mandatory
+    // "estimate, this Mac only" qualifier (PRD UX rule).
+    static let tokenLimitBlockLabel = LocalizedText(en: "5h block", pt: "Bloco 5h")
+    static let tokenLimitWeekLabel = LocalizedText(en: "7 days", pt: "7 dias")
+    /// Verb preceding the block's reset time, e.g. "resets 17:30".
+    static let tokenLimitResetsAt = LocalizedText(en: "resets", pt: "reinicia")
+    static let tokenLimitNoActiveBlock = LocalizedText(en: "No active block", pt: "Nenhum bloco ativo")
+    static let tokenLimitDisclaimer = LocalizedText(
+        en: "Estimate — this Mac only.",
+        pt: "Estimativa — só este Mac."
+    )
+    // Optional user-set budgets (ADR-008): plain token counts, 0 = off.
+    static let tokenBudgetSessionLabel = LocalizedText(en: "5h budget", pt: "Orçamento 5h")
+    static let tokenBudgetWeeklyLabel = LocalizedText(en: "Weekly budget", pt: "Orçamento semanal")
+    /// Suffix marking usage past the configured budget — clamped, never "150%".
+    static let tokenBudgetOver = LocalizedText(en: "over budget", pt: "acima do orçamento")
+    /// Placeholder suggesting how to derive a value (tokens, 0 = off).
+    static let tokenBudgetPlaceholder = LocalizedText(en: "0 = off", pt: "0 = desligado")
+
     // Source/coverage note: explains which usage the counter can see.
     static let tokenSourceHelpTitle = LocalizedText(
         en: "Which usage is counted",
