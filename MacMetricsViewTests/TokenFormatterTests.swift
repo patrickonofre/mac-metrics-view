@@ -174,3 +174,70 @@ extension TokenFormatterTests {
         XCTAssertEqual(TokenFormatter.costString(-.infinity), "$0.00")
     }
 }
+
+// MARK: - Burn-rate string (Phase 2)
+
+extension TokenFormatterTests {
+    private func burnRate(
+        tokensPerHour: Double,
+        costPerHourUSD: Double,
+        costPerDayUSD: Double
+    ) -> TokenBurnRateBreakdown {
+        TokenBurnRateBreakdown(
+            tokensPerHour: tokensPerHour,
+            costPerHourUSD: costPerHourUSD,
+            costPerDayUSD: costPerDayUSD
+        )
+    }
+
+    func testBurnRateStringRendersExactEnglishForm() {
+        let breakdown = burnRate(tokensPerHour: 123_400, costPerHourUSD: 0.85, costPerDayUSD: 20.40)
+
+        XCTAssertEqual(
+            TokenFormatter.burnRateString(breakdown, language: .english),
+            "123.4k/h · $0.85/h · ~$20.4/day"
+        )
+    }
+
+    func testBurnRateStringLocalizesPerDaySuffixInPortuguese() {
+        let breakdown = burnRate(tokensPerHour: 123_400, costPerHourUSD: 0.85, costPerDayUSD: 20.40)
+
+        XCTAssertEqual(
+            TokenFormatter.burnRateString(breakdown, language: .portuguese),
+            "123.4k/h · $0.85/h · ~$20.4/dia"
+        )
+    }
+
+    func testBurnRateStringSubCentCostPerHourUsesInheritedForm() {
+        let breakdown = burnRate(tokensPerHour: 500, costPerHourUSD: 0.004, costPerDayUSD: 0.096)
+
+        XCTAssertEqual(
+            TokenFormatter.burnRateString(breakdown, language: .english),
+            "500/h · < $0.01/h · ~$0.10/day"
+        )
+    }
+
+    func testBurnRateStringSmallTokenRateRendersWithoutKSuffix() {
+        let breakdown = burnRate(tokensPerHour: 950.4, costPerHourUSD: 0.02, costPerDayUSD: 0.48)
+
+        XCTAssertTrue(TokenFormatter.burnRateString(breakdown, language: .english).hasPrefix("950/h"))
+    }
+
+    func testBurnRateStringZeroBreakdownNeverRendersNaNOrDash() {
+        let zero = burnRate(tokensPerHour: 0, costPerHourUSD: 0, costPerDayUSD: 0)
+
+        XCTAssertEqual(
+            TokenFormatter.burnRateString(zero, language: .english),
+            "0/h · $0.00/h · ~$0.00/day"
+        )
+    }
+
+    func testBurnRateStringClampsPathologicalValues() {
+        let pathological = burnRate(tokensPerHour: .nan, costPerHourUSD: -3, costPerDayUSD: .infinity)
+
+        XCTAssertEqual(
+            TokenFormatter.burnRateString(pathological, language: .english),
+            "0/h · $0.00/h · ~$0.00/day"
+        )
+    }
+}

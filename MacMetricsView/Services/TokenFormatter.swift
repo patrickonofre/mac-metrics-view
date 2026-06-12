@@ -115,6 +115,21 @@ enum TokenFormatter {
         return String(format: "$%.0f", usd)
     }
 
+    /// One-line pace string for the popover burn-rate row (ADR-004):
+    /// "123.4k/h · $0.85/h · ~$20.4/day". Reuses `humanized` and `costString`, so the
+    /// output inherits their clamping — pathological values never render NaN or
+    /// negative text. Tokens/hour rounds to the nearest integer before humanizing.
+    static func burnRateString(
+        _ breakdown: TokenBurnRateBreakdown,
+        language: AppLanguage = .current
+    ) -> String {
+        let tokens = breakdown.tokensPerHour.isFinite
+            ? Int(max(0, breakdown.tokensPerHour).rounded())
+            : 0
+        let day = Strings.tokenPerDayUnit(language)
+        return "\(humanized(tokens))/h · \(costString(breakdown.costPerHourUSD))/h · ~\(costString(breakdown.costPerDayUSD))/\(day)"
+    }
+
     /// Input / output / reasoning / cache breakdown rows for the popover. The reasoning row
     /// appears only when the aggregate reports it (Codex), so Claude keeps three rows
     /// (ADR-002). Cache combines read + creation into the single "cache" figure.
