@@ -241,3 +241,98 @@ extension TokenFormatterTests {
         )
     }
 }
+
+// MARK: - Rate-limit strings (Phase 3)
+
+extension TokenFormatterTests {
+    /// 2026-06-12 00:00:00 UTC; blocks built backwards from a 17:30 UTC end.
+    private var blockEnd: Date { Date(timeIntervalSinceReferenceDate: 802_915_200 + 17.5 * 3_600) }
+
+    private func block(usageTokens: Int, costUSD: Double) -> TokenRateLimitBlock {
+        TokenRateLimitBlock(
+            start: blockEnd.addingTimeInterval(-5 * 3_600),
+            end: blockEnd,
+            usage: TokenAggregate(input: usageTokens, output: 0, cacheRead: 0, cacheCreation: 0),
+            costUSD: costUSD
+        )
+    }
+
+    private var utc: TimeZone { TimeZone(identifier: "UTC")! }
+
+    func testLimitBlockStringRendersUsageCostAndResetInBothLanguages() {
+        let block = block(usageTokens: 1_234_000, costUSD: 4.10)
+
+        XCTAssertEqual(
+            TokenFormatter.limitBlockString(block, language: .english, locale: Locale(identifier: "en_GB"), timeZone: utc),
+            "1.2M · ~$4.10 · resets 17:30"
+        )
+        XCTAssertEqual(
+            TokenFormatter.limitBlockString(block, language: .portuguese, locale: Locale(identifier: "pt_BR"), timeZone: utc),
+            "1.2M · ~$4.10 · reinicia 17:30"
+        )
+    }
+
+    func testLimitBlockStringResetTimeFollowsLocaleHourConvention() {
+        let block = block(usageTokens: 500, costUSD: 0.02)
+        let locale = Locale(identifier: "en_US")   // 12h convention
+
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = utc
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        let expected = formatter.string(from: block.end)
+
+        XCTAssertTrue(
+            TokenFormatter.limitBlockString(block, language: .english, locale: locale, timeZone: utc)
+                .hasSuffix("resets \(expected)")
+        )
+    }
+
+    func testLimitWeeklyStringRendersHumanizedUsageAndCost() {
+        let usage = TokenAggregate(input: 8_400_000, output: 0, cacheRead: 1, cacheCreation: 1)
+
+        // Cache excluded from the headline figure; $31.2 renders with one decimal.
+        XCTAssertEqual(TokenFormatter.limitWeeklyString(usage: usage, costUSD: 31.2), "8.4M · ~$31.2")
+    }
+
+    func testBudgetPercentClampsAndFlagsOverBudget() {
+        XCTAssertEqual(TokenFormatter.budgetPercentString(usage: 1_000_000, budget: 2_000_000, language: .english), "50%")
+        XCTAssertEqual(TokenFormatter.budgetPercentString(usage: 2_000_000, budget: 2_000_000, language: .english), "100%")
+        XCTAssertEqual(
+            TokenFormatter.budgetPercentString(usage: 3_000_000, budget: 2_000_000, language: .english),
+            "100% · over budget"
+        )
+        XCTAssertEqual(
+            TokenFormatter.budgetPercentString(usage: 3_000_000, budget: 2_000_000, language: .portuguese),
+            "100% · acima do orçamento"
+        )
+        XCTAssertNil(TokenFormatter.budgetPercentString(usage: 1_000_000, budget: 0, language: .english))
+    }
+
+    func testBudgetFractionClampsToUnitRangeAndOffAtZeroBudget() {
+        XCTAssertEqual(TokenFormatter.budgetFraction(usage: 1_000_000, budget: 2_000_000) ?? -1, 0.5, accuracy: 1e-9)
+        XCTAssertEqual(TokenFormatter.budgetFraction(usage: 3_000_000, budget: 2_000_000) ?? -1, 1, accuracy: 1e-9)
+        XCTAssertEqual(TokenFormatter.budgetFraction(usage: -5, budget: 2_000_000) ?? -1, 0, accuracy: 1e-9)
+        XCTAssertNil(TokenFormatter.budgetFraction(usage: 1, budget: 0))
+        XCTAssertNil(TokenFormatter.budgetFraction(usage: 1, budget: -10))
+    }
+
+    func testLimitStringsNeverRenderNaNOrNegativeText() {
+        let pathological = TokenRateLimitBlock(
+            start: blockEnd.addingTimeInterval(-5 * 3_600),
+            end: blockEnd,
+            usage: TokenAggregate(input: -100, output: 0, cacheRead: 0, cacheCreation: 0),
+            costUSD: .nan
+        )
+
+        let rendered = TokenFormatter.limitBlockString(pathological, language: .english, locale: Locale(identifier: "en_GB"), timeZone: utc)
+        XCTAssertEqual(rendered, "0 · ~$0.00 · resets 17:30")
+        XCTAssertFalse(rendered.contains("NaN"))
+
+        let weekly = TokenFormatter.limitWeeklyString(usage: .zero, costUSD: -7)
+        XCTAssertEqual(weekly, "0 · ~$0.00")
+
+        XCTAssertEqual(TokenFormatter.budgetPercentString(usage: -50, budget: 100, language: .english), "0%")
+    }
+}

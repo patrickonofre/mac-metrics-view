@@ -130,6 +130,53 @@ enum TokenFormatter {
         return "\(humanized(tokens))/h · \(costString(breakdown.costPerHourUSD))/h · ~\(costString(breakdown.costPerDayUSD))/\(day)"
     }
 
+    /// One-line 5h-block string for the popover limit row (ADR-006):
+    /// "1.2M · ~$4.10 · resets 17:30". Usage is the headline figure (cache
+    /// excluded); the reset hour follows the user's 12/24h locale convention.
+    /// Pure — block, language, locale, and time zone all injected; inherits
+    /// `humanized`/`costString` clamping, so pathological values never render
+    /// NaN or negative text.
+    static func limitBlockString(
+        _ block: TokenRateLimitBlock,
+        language: AppLanguage = .current,
+        locale: Locale = .current,
+        timeZone: TimeZone = .current
+    ) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = locale
+        formatter.timeZone = timeZone
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        let reset = formatter.string(from: block.end)
+        return "\(humanized(block.usage.usageTotal)) · ~\(costString(block.costUSD)) · \(Strings.tokenLimitResetsAt(language)) \(reset)"
+    }
+
+    /// Rolling 7-day string for the weekly limit row (ADR-007): "8.4M · ~$31.2".
+    static func limitWeeklyString(usage: TokenAggregate, costUSD: Double) -> String {
+        "\(humanized(usage.usageTotal)) · ~\(costString(costUSD))"
+    }
+
+    /// Budget progress as a 0…1 fraction for the popover bar, or `nil` when the
+    /// budget is off (≤ 0). Clamped — usage past the budget caps at 1 (ADR-008).
+    static func budgetFraction(usage: Int, budget: Int) -> Double? {
+        guard budget > 0 else { return nil }
+        return min(1, Double(max(0, usage)) / Double(budget))
+    }
+
+    /// Budget percentage label, or `nil` when the budget is off. Clamps at 100%
+    /// and appends the localized over-budget state instead of extrapolating —
+    /// never "150%" (ADR-008).
+    static func budgetPercentString(
+        usage: Int,
+        budget: Int,
+        language: AppLanguage = .current
+    ) -> String? {
+        guard budget > 0 else { return nil }
+        let clamped = max(0, usage)
+        let percent = min(100, Int((Double(clamped) / Double(budget) * 100).rounded(.down)))
+        return clamped > budget ? "100% · \(Strings.tokenBudgetOver(language))" : "\(percent)%"
+    }
+
     /// Input / output / reasoning / cache breakdown rows for the popover. The reasoning row
     /// appears only when the aggregate reports it (Codex), so Claude keeps three rows
     /// (ADR-002). Cache combines read + creation into the single "cache" figure.
