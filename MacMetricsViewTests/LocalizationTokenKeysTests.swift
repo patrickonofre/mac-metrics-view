@@ -25,7 +25,10 @@ final class LocalizationTokenKeysTests: XCTestCase {
             Strings.tokenWindowLast24h,
             Strings.tokenWindowSinceReset,
             Strings.tokenSourceHelpTitle,
-            Strings.tokenSourceHelp
+            Strings.tokenSourceHelp,
+            Strings.tokenCostLabel,
+            Strings.tokenCostEstimatedNote,
+            Strings.tokenCostUnpricedNote
         ]
 
         for text in texts {
@@ -63,6 +66,16 @@ final class LocalizationTokenKeysTests: XCTestCase {
         // "Combined" is the only provider name that translates.
         XCTAssertNotEqual(Strings.tokenProviderCombined(.english), Strings.tokenProviderCombined(.portuguese))
         XCTAssertEqual(Strings.tokenProviderClaude(.english), Strings.tokenProviderClaude(.portuguese))
+    }
+
+    func testCostStringsCarryTheEstimatedQualifierInBothLanguages() {
+        XCTAssertTrue(Strings.tokenCostLabel(.english).localizedCaseInsensitiveContains("est"))
+        XCTAssertTrue(Strings.tokenCostLabel(.portuguese).localizedCaseInsensitiveContains("est"))
+        XCTAssertTrue(Strings.tokenCostEstimatedNote(.english).localizedCaseInsensitiveContains("estimated"))
+        XCTAssertTrue(Strings.tokenCostEstimatedNote(.portuguese).localizedCaseInsensitiveContains("estimativa"))
+        // Cost strings are real phrases that translate.
+        XCTAssertNotEqual(Strings.tokenCostEstimatedNote(.english), Strings.tokenCostEstimatedNote(.portuguese))
+        XCTAssertNotEqual(Strings.tokenCostUnpricedNote(.english), Strings.tokenCostUnpricedNote(.portuguese))
     }
 
     func testProviderNameHelperMapsEverySelection() {

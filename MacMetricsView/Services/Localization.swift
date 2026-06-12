@@ -128,6 +128,20 @@ enum Strings {
     static let tokenWindowLastHour = LocalizedText(en: "Last hour", pt: "Última hora")
     static let tokenWindowLast24h = LocalizedText(en: "Last 24h", pt: "Últimas 24h")
     static let tokenWindowSinceReset = LocalizedText(en: "Since reset", pt: "Desde o reset")
+    // Estimated cost (Phase 1). The label itself carries the "estimated" qualifier and
+    // the note reinforces it — the app must never imply billing authority (PRD).
+    static let tokenCostLabel = LocalizedText(en: "Est. cost", pt: "Custo est.")
+    static let tokenCostEstimatedNote = LocalizedText(
+        en: "Estimated at API list prices — not a bill.",
+        pt: "Estimativa pelos preços de tabela da API — não é uma fatura."
+    )
+    /// Shown when events from unrecognized models were excluded from the total
+    /// (ADR-003): the figure under-reports rather than guessing a price.
+    static let tokenCostUnpricedNote = LocalizedText(
+        en: "≈ usage from unrecognized models not included",
+        pt: "≈ uso de modelos não reconhecidos não incluído"
+    )
+
     // Source/coverage note: explains which usage the counter can see.
     static let tokenSourceHelpTitle = LocalizedText(
         en: "Which usage is counted",
