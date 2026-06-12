@@ -26,6 +26,8 @@ struct MetricDisplaySettings: Equatable {
         static let tokenMenuBarWindow = "MetricDisplaySettings.tokenMenuBarWindow"
         static let tokenScope = "MetricDisplaySettings.tokenScope"
         static let tokenProvider = "MetricDisplaySettings.tokenProvider"
+        static let tokenSessionBudget = "MetricDisplaySettings.tokenSessionBudget"
+        static let tokenWeeklyBudget = "MetricDisplaySettings.tokenWeeklyBudget"
     }
 
     var identifierStyle: IdentifierStyle
@@ -38,6 +40,11 @@ struct MetricDisplaySettings: Equatable {
     /// Which provider the token meter shows: Claude, Codex, or Combined. Defaults to
     /// `combined` so Codex surfaces immediately on update (ADR-003).
     var tokenProvider: TokenProviderSelection
+    /// Optional token budget for the 5h rate-limit block, in tokens; 0 = off
+    /// (ADR-008 — no shipped plan limits, the number is user-owned).
+    var tokenSessionBudget: Int
+    /// Optional token budget for the rolling 7-day window, in tokens; 0 = off.
+    var tokenWeeklyBudget: Int
 
     init(
         identifierStyle: IdentifierStyle = .icons,
@@ -45,7 +52,9 @@ struct MetricDisplaySettings: Equatable {
         diskMenuBarMetric: DiskMenuBarMetric = .combined,
         tokenMenuBarWindow: TokenWindow = .today,
         tokenScope: TokenScope = .global,
-        tokenProvider: TokenProviderSelection = .combined
+        tokenProvider: TokenProviderSelection = .combined,
+        tokenSessionBudget: Int = 0,
+        tokenWeeklyBudget: Int = 0
     ) {
         self.identifierStyle = identifierStyle
         self.ramMenuBarMetric = ramMenuBarMetric
@@ -53,6 +62,8 @@ struct MetricDisplaySettings: Equatable {
         self.tokenMenuBarWindow = tokenMenuBarWindow
         self.tokenScope = tokenScope
         self.tokenProvider = tokenProvider
+        self.tokenSessionBudget = max(0, tokenSessionBudget)
+        self.tokenWeeklyBudget = max(0, tokenWeeklyBudget)
     }
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricDisplaySettings {
@@ -73,6 +84,11 @@ struct MetricDisplaySettings: Equatable {
         let tokenProvider = userDefaults.string(forKey: Keys.tokenProvider)
             .flatMap(TokenProviderSelection.init(rawValue:)) ?? .combined
 
+        // `integer(forKey:)` yields 0 for missing or non-numeric values; negatives
+        // clamp to 0 (off) — a stored budget can never propagate as negative.
+        let sessionBudget = max(0, userDefaults.integer(forKey: Keys.tokenSessionBudget))
+        let weeklyBudget = max(0, userDefaults.integer(forKey: Keys.tokenWeeklyBudget))
+
         if let rawIdentifierStyle = userDefaults.string(forKey: Keys.identifierStyle),
            let identifierStyle = IdentifierStyle(rawValue: rawIdentifierStyle) {
             return MetricDisplaySettings(
@@ -81,7 +97,9 @@ struct MetricDisplaySettings: Equatable {
                 diskMenuBarMetric: diskMetric,
                 tokenMenuBarWindow: tokenWindow,
                 tokenScope: tokenScope,
-                tokenProvider: tokenProvider
+                tokenProvider: tokenProvider,
+                tokenSessionBudget: sessionBudget,
+                tokenWeeklyBudget: weeklyBudget
             )
         }
 
@@ -92,7 +110,9 @@ struct MetricDisplaySettings: Equatable {
                 diskMenuBarMetric: diskMetric,
                 tokenMenuBarWindow: tokenWindow,
                 tokenScope: tokenScope,
-                tokenProvider: tokenProvider
+                tokenProvider: tokenProvider,
+                tokenSessionBudget: sessionBudget,
+                tokenWeeklyBudget: weeklyBudget
             )
         }
 
@@ -101,7 +121,9 @@ struct MetricDisplaySettings: Equatable {
             diskMenuBarMetric: diskMetric,
             tokenMenuBarWindow: tokenWindow,
             tokenScope: tokenScope,
-            tokenProvider: tokenProvider
+            tokenProvider: tokenProvider,
+            tokenSessionBudget: sessionBudget,
+            tokenWeeklyBudget: weeklyBudget
         )
     }
 
@@ -113,5 +135,7 @@ struct MetricDisplaySettings: Equatable {
         userDefaults.set(tokenMenuBarWindow.rawValue, forKey: Keys.tokenMenuBarWindow)
         userDefaults.set(tokenScope.rawValue, forKey: Keys.tokenScope)
         userDefaults.set(tokenProvider.rawValue, forKey: Keys.tokenProvider)
+        userDefaults.set(max(0, tokenSessionBudget), forKey: Keys.tokenSessionBudget)
+        userDefaults.set(max(0, tokenWeeklyBudget), forKey: Keys.tokenWeeklyBudget)
     }
 }
