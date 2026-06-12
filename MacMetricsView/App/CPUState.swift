@@ -298,6 +298,13 @@ final class CPUState: ObservableObject {
         (tokenCost?.unpricedTokens ?? 0) > 0
     }
 
+    /// Formatted pace line for the popover ("123.4k/h · $0.85/h · ~$20.4/day"), or
+    /// `nil` when no event falls in the trailing hour — the row hides instead of
+    /// rendering a misleading zero pace (ADR-004).
+    var tokenPaceRowValue: String? {
+        tokenBurnRate.map { TokenFormatter.burnRateString($0) }
+    }
+
     /// Distinct friendly model names used within the current provider/scope/window, newest
     /// first (e.g. "GPT-5 Codex, Opus 4.8"). For `combined`, events from both providers are
     /// merged and ordered by recency. `nil` when there is no usage to attribute. Reads the

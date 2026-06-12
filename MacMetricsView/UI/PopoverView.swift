@@ -33,11 +33,15 @@ struct PopoverView: View {
         .frame(width: popoverWidth, alignment: .topLeading)
         .onAppear {
             state.refreshAccessibilityAuthorization()
+            // Time-derived token figures (burn rate, rolling windows) refresh on a
+            // ~30s timer only while the popover is open (ADR-005).
+            state.beginTokenAutoRefresh()
         }
         .onDisappear {
             // If the popover is dismissed mid-recovery, stop the probe poll loop.
             // No-op unless we were awaiting a grant.
             state.cancelAccessibilityRecovery()
+            state.endTokenAutoRefresh()
         }
     }
 
@@ -129,6 +133,10 @@ struct PopoverView: View {
                     perModel: state.tokenCostPerModel,
                     showsUnpricedNote: state.tokenCostHasUnpricedTokens
                 )
+            }
+
+            if let pace = state.tokenPaceRowValue {
+                TokenPaceRow(value: pace)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -376,6 +384,34 @@ private struct TokenCostRow: View {
         showsUnpricedNote
             ? "\(Strings.tokenCostEstimatedNote()) \(Strings.tokenCostUnpricedNote())"
             : Strings.tokenCostEstimatedNote()
+    }
+}
+
+/// Current pace under the cost row: one caption line with tokens/hour, cost/hour, and
+/// the daily projection (ADR-004). Hidden entirely (by the caller) when the trailing
+/// hour is empty. No "estimated" note of its own — it lives in the block whose
+/// `TokenCostRow` note already covers it. Indented to align with `TokenBreakdownRow`.
+private struct TokenPaceRow: View {
+    let value: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Spacer().frame(width: 26)   // icon (18) + row spacing (8)
+
+            HStack(spacing: 3) {
+                Text(Strings.tokenPaceLabel())
+                    .foregroundStyle(.secondary)
+                Text(value)
+                    .foregroundStyle(.primary)
+                    .monospacedDigit()
+            }
+
+            Spacer(minLength: 0)
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(Strings.tokenPaceLabel()), \(value)")
     }
 }
 

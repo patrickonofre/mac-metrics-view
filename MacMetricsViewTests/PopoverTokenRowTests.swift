@@ -229,6 +229,56 @@ final class PopoverTokenRowTests: XCTestCase {
         XCTAssertEqual(state.tokenCostRowValue, "< $0.01")
     }
 
+    // MARK: - Pace row (Phase 2)
+
+    func testPaceRowValueNilWithoutBurnRateSoTheRowHides() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        XCTAssertNil(state.tokenBurnRate)
+        XCTAssertNil(state.tokenPaceRowValue)
+    }
+
+    func testPaceRowValueMatchesFormatterOutputExactly() throws {
+        // No double formatting: the helper must be exactly the task_02 string for the
+        // published breakdown.
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(at: Date().addingTimeInterval(-300), input: 1_000_000, output: 200_000)])
+
+        let breakdown = try XCTUnwrap(state.tokenBurnRate)
+        XCTAssertEqual(state.tokenPaceRowValue, TokenFormatter.burnRateString(breakdown))
+    }
+
+    func testPaceLabelResolvesPerLanguage() {
+        XCTAssertEqual(Strings.tokenPaceLabel(.english), "Pace")
+        XCTAssertEqual(Strings.tokenPaceLabel(.portuguese), "Ritmo")
+    }
+
+    func testPaceLifecycleFreshOnAppearAndDeadAfterDisappear() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        // Simulated appear: begin starts the refresh; ingest lands fresh data.
+        state.beginTokenAutoRefresh()
+        state.update(with: [event(input: 120_000)])
+        XCTAssertNotNil(state.tokenPaceRowValue)
+
+        // Simulated disappear: end kills the timer; a time-advanced tick no longer
+        // fires, so the pace row keeps its last value instead of decaying.
+        state.endTokenAutoRefresh()
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
+        XCTAssertNotNil(state.tokenPaceRowValue)
+    }
+
+    func testPaceDecaysWhileOpenViaTick() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 120_000)])
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
+
+        XCTAssertNil(state.tokenPaceRowValue)   // row hides once the hour empties
+    }
+
     func testTokenRowDataSurvivesMenuBarVisibilityOff() {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.setTokenVisible(false)   // hidden from the menu bar
