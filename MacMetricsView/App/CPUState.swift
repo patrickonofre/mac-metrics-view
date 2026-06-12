@@ -35,6 +35,14 @@ final class CPUState: ObservableObject {
     /// whenever events arrive or the provider/scope/window changes. For `combined` it is the
     /// sum of each provider's aggregate. Drives the menu bar and popover.
     @Published private(set) var tokenAggregate: TokenAggregate = .zero
+    /// Estimated USD cost over the same selection, or `nil` when no events fall in the
+    /// window (ADR-003). For `combined` it is the sum of per-provider costs. Since-reset
+    /// cost only covers the retained-events horizon — same caveat as the sparkline.
+    @Published private(set) var tokenCost: TokenCostBreakdown?
+    /// Events backing the per-model attribution and the cost figure, merged across the
+    /// selected providers, newest first. Filtered once per recompute so attribution and
+    /// cost never trigger a second filtering pass on the hot path (TechSpec).
+    @Published private(set) var tokenFilteredEvents: [TokenUsageEvent] = []
 
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
     /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
@@ -255,23 +263,12 @@ final class CPUState: ObservableObject {
 
     /// Distinct friendly model names used within the current provider/scope/window, newest
     /// first (e.g. "GPT-5 Codex, Opus 4.8"). For `combined`, events from both providers are
-    /// merged and ordered by recency. `nil` when there is no usage to attribute.
+    /// merged and ordered by recency. `nil` when there is no usage to attribute. Reads the
+    /// events already filtered on the recompute path — no filtering of its own.
     var tokenActiveModels: String? {
         guard !tokenIsEmpty else { return nil }
-        let now = Date()
-        var events: [TokenUsageEvent] = []
-        for provider in display.tokenProvider.providers {
-            guard let store = tokenStores[provider] else { continue }
-            events += TokenWindowStats.filteredEvents(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-        }
-        events.sort { $0.timestamp > $1.timestamp }   // newest first across providers
         var seen = Set<String>()
-        let names = events.compactMap { event -> String? in
+        let names = tokenFilteredEvents.compactMap { event -> String? in
             guard !seen.contains(event.model) else { return nil }
             seen.insert(event.model)
             return TokenFormatter.modelDisplayName(event.model)
@@ -431,18 +428,37 @@ final class CPUState: ObservableObject {
     }
 
     /// The aggregate for the selected provider, or the sum of both providers' aggregates
-    /// for `combined` (each computed independently with its own MRU — ADR-003).
+    /// for `combined` (each computed independently with its own MRU — ADR-003). The same
+    /// pass filters each provider's events once and derives the cost breakdown from them,
+    /// so attribution and cost share the filtering work (TechSpec hot-path rule).
     private func recomputeTokenAggregate() {
         let now = Date()
-        tokenAggregate = display.tokenProvider.providers.reduce(.zero) { running, provider in
-            guard let store = tokenStores[provider] else { return running }
-            return running + TokenWindowStats.aggregate(
+        var aggregate = TokenAggregate.zero
+        var cost = TokenCostBreakdown.zero
+        var events: [TokenUsageEvent] = []
+
+        for provider in display.tokenProvider.providers {
+            guard let store = tokenStores[provider] else { continue }
+            aggregate = aggregate + TokenWindowStats.aggregate(
                 store: store,
                 scope: display.tokenScope,
                 window: display.tokenMenuBarWindow,
                 now: now
             )
+            let filtered = TokenWindowStats.filteredEvents(
+                store: store,
+                scope: display.tokenScope,
+                window: display.tokenMenuBarWindow,
+                now: now
+            )
+            events += filtered
+            cost = cost + TokenCostCalculator.cost(of: filtered)
         }
+
+        events.sort { $0.timestamp > $1.timestamp }   // newest first across providers
+        tokenFilteredEvents = events
+        tokenAggregate = aggregate
+        tokenCost = events.isEmpty ? nil : cost
     }
 
     func setCPUVisible(_ isVisible: Bool) {

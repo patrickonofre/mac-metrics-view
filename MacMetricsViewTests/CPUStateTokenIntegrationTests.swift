@@ -265,6 +265,99 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         XCTAssertTrue(state.visibleMenuBarTitles.contains("3.0k"))
     }
 
+    // MARK: - Estimated cost (Phase 1)
+
+    func testPublishedCostMatchesHandComputedValueForIngestedEvents() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        // Opus 4.8: 1M input = $5, 200k output = $5, 500k cacheRead = $0.25.
+        state.update(with: [event(input: 1_000_000, output: 200_000, cacheRead: 500_000)])
+
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 10.25, accuracy: 1e-9)
+        XCTAssertEqual(state.tokenCost?.perModelUSD.map { $0.model }, ["claude-opus-4-8"])
+        XCTAssertEqual(state.tokenCost?.unpricedTokens, 0)
+    }
+
+    func testCostRecomputesOnWindowSwitch() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [
+            event(at: Date().addingTimeInterval(-2 * 3_600), input: 1_000_000),   // $5, 2h ago
+            event(at: Date(), input: 200_000)                                       // $1, now
+        ])
+
+        state.setTokenMenuBarWindow(.lastHour)
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 1, accuracy: 1e-9)
+
+        state.setTokenMenuBarWindow(.last24h)
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 6, accuracy: 1e-9)
+    }
+
+    func testCostRecomputesOnScopeSwitch() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        // MRU session is s2 (newest event).
+        state.update(with: [
+            event(at: Date().addingTimeInterval(-120), input: 1_000_000, session: "s1", project: "p1"),
+            event(at: Date(), input: 400_000, session: "s2", project: "p2")
+        ])
+
+        state.setTokenScope(.session)
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 2, accuracy: 1e-9)   // s2 only: 0.4M × $5
+
+        state.setTokenScope(.global)
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 7, accuracy: 1e-9)
+    }
+
+    func testCombinedProviderCostSumsBothProvidersWithAttribution() {
+        let state = CPUState(userDefaults: makeUserDefaults())   // default selection: combined
+        state.update(provider: .claude, with: [event(input: 1_000_000)])             // $5
+        state.update(provider: .codex, with: [codexEvent(input: 1_000_000)])         // $1.25
+
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 6.25, accuracy: 1e-9)
+        XCTAssertEqual(state.tokenCost?.perModelUSD.map { $0.model }, ["claude-opus-4-8", "gpt-5-codex"])
+
+        state.setTokenProvider(.codex)
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 1.25, accuracy: 1e-9)
+    }
+
+    func testUnknownModelEventsPropagateUnpricedTokens() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [
+            event(input: 1_000_000),
+            TokenUsageEvent(
+                timestamp: Date(),
+                model: "mystery-model-9",
+                inputTokens: 300,
+                outputTokens: 100,
+                cacheReadTokens: 0,
+                cacheCreationTokens: 0,
+                sessionID: "s1.jsonl",
+                projectDir: "p1"
+            )
+        ])
+
+        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 5, accuracy: 1e-9)
+        XCTAssertEqual(state.tokenCost?.unpricedTokens, 400)
+    }
+
+    func testCostIsNilWithoutEvents() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        XCTAssertNil(state.tokenCost)
+    }
+
+    func testCostEventSetStaysConsistentWithAggregate() {
+        // Rolling-window cost and aggregate must derive from the same events: the
+        // filtered set's input sum equals the published aggregate's input.
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [
+            event(at: Date().addingTimeInterval(-30), input: 100),
+            event(at: Date(), input: 40)
+        ])
+
+        let filteredInput = state.tokenFilteredEvents.reduce(0) { $0 + $1.inputTokens }
+        XCTAssertEqual(filteredInput, state.tokenAggregate.input)
+        XCTAssertNotNil(state.tokenCost)
+    }
+
     func testCombinedMergesPerModelAndPerProviderMRU() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-10), input: 100)])  // claude-opus-4-8
