@@ -358,6 +358,95 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         XCTAssertNotNil(state.tokenCost)
     }
 
+    // MARK: - Burn rate (Phase 2, task_04)
+
+    func testBurnRateMatchesHandComputedValueForRecentEvents() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        // 10 minutes old, inside the trailing hour. Opus 4.8: 1M input = $5.
+        state.update(with: [event(at: Date().addingTimeInterval(-600), input: 1_000_000, output: 200_000)])
+
+        let rate = try XCTUnwrap(state.tokenBurnRate)
+        XCTAssertEqual(rate.tokensPerHour, 1_200_000, accuracy: 1e-6)
+        XCTAssertEqual(rate.costPerHourUSD, 10, accuracy: 1e-9)   // $5 input + $5 output (200k × $25)
+        XCTAssertEqual(rate.costPerDayUSD, rate.costPerHourUSD * 24, accuracy: 1e-9)
+    }
+
+    func testBurnRateIgnoresWindowPickerSwitch() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(at: Date().addingTimeInterval(-600), input: 500_000)])
+
+        let before = try XCTUnwrap(state.tokenBurnRate)
+        state.setTokenMenuBarWindow(.last24h)
+        let after = try XCTUnwrap(state.tokenBurnRate)
+
+        XCTAssertEqual(before.tokensPerHour, after.tokensPerHour, accuracy: 1)
+        XCTAssertEqual(before.costPerHourUSD, after.costPerHourUSD, accuracy: 1e-6)
+    }
+
+    func testBurnRateIgnoresScopePickerSwitch() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        // Two sessions; session scope narrows the counter to MRU s2, but the rate
+        // keeps counting both (timestamp-only filter, ADR-004).
+        state.update(with: [
+            event(at: Date().addingTimeInterval(-120), input: 100_000, session: "s1", project: "p1"),
+            event(at: Date(), input: 40_000, session: "s2", project: "p2")
+        ])
+
+        let before = try XCTUnwrap(state.tokenBurnRate)
+        state.setTokenScope(.session)
+        let after = try XCTUnwrap(state.tokenBurnRate)
+
+        XCTAssertEqual(state.tokenAggregate.input, 40_000)        // counter narrowed
+        XCTAssertEqual(after.tokensPerHour, 140_000, accuracy: 1)  // rate did not
+        XCTAssertEqual(before.tokensPerHour, after.tokensPerHour, accuracy: 1)
+    }
+
+    func testBurnRateFollowsProviderSelection() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())   // default: combined
+        state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-60), input: 100_000)])
+        state.update(provider: .codex, with: [codexEvent(at: Date().addingTimeInterval(-30), input: 50_000, reasoning: 10_000)])
+
+        let combined = try XCTUnwrap(state.tokenBurnRate)
+        XCTAssertEqual(combined.tokensPerHour, 160_000, accuracy: 1)
+
+        state.setTokenProvider(.codex)
+        let codexOnly = try XCTUnwrap(state.tokenBurnRate)
+        XCTAssertEqual(codexOnly.tokensPerHour, 60_000, accuracy: 1)   // Claude contribution dropped
+    }
+
+    func testBurnRateNilWhenEventsOlderThanHourButCounterStillShowsThem() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(at: Date().addingTimeInterval(-2 * 3_600), input: 100)])   // 2h ago
+
+        state.setTokenMenuBarWindow(.last24h)
+        XCTAssertEqual(state.tokenAggregate.input, 100)   // 24h counter sees it
+        XCTAssertNil(state.tokenBurnRate)                  // trailing hour does not
+    }
+
+    func testBurnRateNilWithNoEvents() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        XCTAssertNil(state.tokenBurnRate)
+    }
+
+    func testPublishedBurnRateConsistentWithDirectCompute() throws {
+        // Full path: store append → recompute → published rate equals compute() over
+        // the same merged store events with a now in the same pass-window.
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [
+            event(at: Date().addingTimeInterval(-300), input: 250_000),
+            event(at: Date().addingTimeInterval(-30), input: 50_000, output: 10_000)
+        ])
+
+        let published = try XCTUnwrap(state.tokenBurnRate)
+        let events = state.tokenStores[.claude]!.events + state.tokenStores[.codex]!.events
+        let direct = try XCTUnwrap(TokenBurnRate.compute(events: events, now: Date()))
+
+        XCTAssertEqual(published.tokensPerHour, direct.tokensPerHour, accuracy: 1)
+        XCTAssertEqual(published.costPerHourUSD, direct.costPerHourUSD, accuracy: 1e-6)
+        XCTAssertEqual(published.costPerDayUSD, direct.costPerDayUSD, accuracy: 1e-4)
+    }
+
     func testCombinedMergesPerModelAndPerProviderMRU() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-10), input: 100)])  // claude-opus-4-8

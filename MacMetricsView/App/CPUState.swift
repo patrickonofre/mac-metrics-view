@@ -43,6 +43,11 @@ final class CPUState: ObservableObject {
     /// selected providers, newest first. Filtered once per recompute so attribution and
     /// cost never trigger a second filtering pass on the hot path (TechSpec).
     @Published private(set) var tokenFilteredEvents: [TokenUsageEvent] = []
+    /// Pace over the fixed trailing hour for the selected provider(s), or `nil` when no
+    /// event falls in that window — the popover row hides (ADR-004). Deliberately
+    /// ignores the scope/window pickers: it sources the providers' raw events filtered
+    /// by timestamp only, always answering "pace right now".
+    @Published private(set) var tokenBurnRate: TokenBurnRateBreakdown?
 
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
     /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
@@ -460,6 +465,7 @@ final class CPUState: ObservableObject {
         var aggregate = TokenAggregate.zero
         var cost = TokenCostBreakdown.zero
         var events: [TokenUsageEvent] = []
+        var rateEvents: [TokenUsageEvent] = []
 
         for provider in display.tokenProvider.providers {
             guard let store = tokenStores[provider] else { continue }
@@ -477,12 +483,16 @@ final class CPUState: ObservableObject {
             )
             events += filtered
             cost = cost + TokenCostCalculator.cost(of: filtered)
+            // Burn rate reads the raw store, not the picker-filtered set: its window
+            // is the fixed trailing hour regardless of scope/window (ADR-004).
+            rateEvents += store.events
         }
 
         events.sort { $0.timestamp > $1.timestamp }   // newest first across providers
         tokenFilteredEvents = events
         tokenAggregate = aggregate
         tokenCost = events.isEmpty ? nil : cost
+        tokenBurnRate = TokenBurnRate.compute(events: rateEvents, now: now)
     }
 
     func setCPUVisible(_ isVisible: Bool) {
