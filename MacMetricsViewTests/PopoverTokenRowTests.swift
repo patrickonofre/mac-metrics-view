@@ -177,6 +177,58 @@ final class PopoverTokenRowTests: XCTestCase {
         XCTAssertTrue(state.tokenSparkline.isEmpty)
     }
 
+    // MARK: - Estimated cost row (Phase 1)
+
+    func testCostRowValueNilWithoutEventsSoTheRowHides() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+
+        XCTAssertNil(state.tokenCostRowValue)
+        XCTAssertTrue(state.tokenCostPerModel.isEmpty)
+        XCTAssertFalse(state.tokenCostHasUnpricedTokens)
+    }
+
+    func testCostRowValueFormatsTheBreakdownTotal() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 1_000_000, output: 100_000)])   // $5 + $2.50
+
+        XCTAssertEqual(state.tokenCostRowValue, "$7.50")
+    }
+
+    func testCostPerModelPairsFriendlyNamesWithFormattedValuesLargestFirst() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(provider: .claude, with: [event(input: 1_000_000)])        // $5
+        state.update(provider: .codex, with: [codexEvent(input: 1_000_000)])    // $1.25
+
+        let perModel = state.tokenCostPerModel
+        XCTAssertEqual(perModel.map { $0.label }, ["Opus 4.8", "GPT-5 Codex"])
+        XCTAssertEqual(perModel.map { $0.value }, ["$5.00", "$1.25"])
+    }
+
+    func testUnpricedIndicatorConditionFollowsUnpricedTokens() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 1_000_000)])
+        XCTAssertFalse(state.tokenCostHasUnpricedTokens)
+
+        state.update(with: [TokenUsageEvent(
+            timestamp: Date(),
+            model: "mystery-model-9",
+            inputTokens: 100,
+            outputTokens: 0,
+            cacheReadTokens: 0,
+            cacheCreationTokens: 0,
+            sessionID: "s1.jsonl",
+            projectDir: "p1"
+        )])
+        XCTAssertTrue(state.tokenCostHasUnpricedTokens)
+    }
+
+    func testSubCentUsageRendersTheSubCentForm() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.update(with: [event(input: 100)])   // 100 tokens × $5/MTok = $0.0005
+
+        XCTAssertEqual(state.tokenCostRowValue, "< $0.01")
+    }
+
     func testTokenRowDataSurvivesMenuBarVisibilityOff() {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.setTokenVisible(false)   // hidden from the menu bar

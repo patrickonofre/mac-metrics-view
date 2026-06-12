@@ -122,6 +122,14 @@ struct PopoverView: View {
             if !state.tokenIsEmpty {
                 TokenBreakdownRow(breakdown: state.tokenBreakdown)
             }
+
+            if let totalCost = state.tokenCostRowValue {
+                TokenCostRow(
+                    total: totalCost,
+                    perModel: state.tokenCostPerModel,
+                    showsUnpricedNote: state.tokenCostHasUnpricedTokens
+                )
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -311,6 +319,63 @@ private struct TokenBreakdownRow: View {
         }
         .font(.caption2)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Estimated USD cost under the token breakdown: headline total, per-model attribution
+/// (only when more than one model contributed, to avoid repeating the total), and the
+/// always-visible "estimated" note. A `≈` prefix plus a footnote flag totals that
+/// exclude unrecognized models (ADR-003). Indented to align with `TokenBreakdownRow`.
+private struct TokenCostRow: View {
+    let total: String
+    let perModel: [(label: String, value: String)]
+    let showsUnpricedNote: Bool
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 12) {
+                Spacer().frame(width: 26)   // icon (18) + row spacing (8)
+
+                HStack(spacing: 3) {
+                    Text(Strings.tokenCostLabel())
+                        .foregroundStyle(.secondary)
+                    Text(showsUnpricedNote ? "≈ \(total)" : total)
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                }
+
+                if perModel.count > 1 {
+                    ForEach(perModel, id: \.label) { item in
+                        HStack(spacing: 3) {
+                            Text(item.label)
+                                .foregroundStyle(.secondary)
+                                .lineLimit(1)
+                            Text(item.value)
+                                .foregroundStyle(.primary)
+                                .monospacedDigit()
+                        }
+                    }
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            HStack(spacing: 12) {
+                Spacer().frame(width: 26)
+                Text(note)
+                    .foregroundStyle(.tertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var note: String {
+        showsUnpricedNote
+            ? "\(Strings.tokenCostEstimatedNote()) \(Strings.tokenCostUnpricedNote())"
+            : Strings.tokenCostEstimatedNote()
     }
 }
 

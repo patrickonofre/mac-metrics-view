@@ -261,6 +261,30 @@ final class CPUState: ObservableObject {
         TokenFormatter.breakdown(for: tokenAggregate)
     }
 
+    /// Formatted estimated-cost headline for the popover cost row, or `nil` when there
+    /// is no cost to show (no events in the window) — the row hides instead of
+    /// rendering a misleading `$0.00`.
+    var tokenCostRowValue: String? {
+        tokenCost.map { TokenFormatter.costString($0.totalUSD) }
+    }
+
+    /// Per-model formatted costs for the attribution list, largest first. Models
+    /// without a friendly display name fall back to the raw id so attribution never
+    /// silently drops a priced model.
+    var tokenCostPerModel: [(label: String, value: String)] {
+        guard let cost = tokenCost else { return [] }
+        return cost.perModelUSD.map { entry in
+            (TokenFormatter.modelDisplayName(entry.model) ?? entry.model,
+             TokenFormatter.costString(entry.usd))
+        }
+    }
+
+    /// Whether the unpriced indicator must accompany the cost figure: events from
+    /// unrecognized models were excluded from the total (ADR-003).
+    var tokenCostHasUnpricedTokens: Bool {
+        (tokenCost?.unpricedTokens ?? 0) > 0
+    }
+
     /// Distinct friendly model names used within the current provider/scope/window, newest
     /// first (e.g. "GPT-5 Codex, Opus 4.8"). For `combined`, events from both providers are
     /// merged and ordered by recency. `nil` when there is no usage to attribute. Reads the
