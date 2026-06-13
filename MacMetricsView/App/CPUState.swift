@@ -171,14 +171,21 @@ final class CPUState: ObservableObject {
     /// version is recorded as "seen", the live tracker would no longer report a
     /// reset, but the user still needs the recovery guidance until they grant.
     private let resetBaselineTracker: AccessibilityGrantTracker
+    /// One-shot battery reader used to refresh the popover row on open, so the popover
+    /// shows live battery data like every other metric even while the menu-bar segment
+    /// is hidden and the continuous sampler is gated off (ADR-003). Returns nil on Macs
+    /// with no battery, so `latestBatterySample` stays nil → "no battery" row.
+    private let batteryReader: BatteryReading
 
     init(
         userDefaults: UserDefaults = .standard,
         accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization(),
         accessibilityProbe: AccessibilityProbing? = nil,
+        batteryReader: BatteryReading = IOKitBatteryReader(),
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
         self.userDefaults = userDefaults
+        self.batteryReader = batteryReader
         self.accessibilityAuthorization = accessibilityAuthorization
         // `SystemAccessibilityProbe` is `@MainActor`, so it cannot be a default
         // argument (those are evaluated in a nonisolated context); build it here in
@@ -495,6 +502,16 @@ final class CPUState: ObservableObject {
     /// No history is kept for battery (ADR-002 — no charge sparkline); just the latest.
     func update(with sample: BatterySample) {
         latestBatterySample = sample
+    }
+
+    /// One-shot battery read used when the popover opens, so the battery row shows live
+    /// data even when the menu-bar segment is hidden (its continuous sampler is gated off
+    /// while hidden, ADR-003). A nil read (no battery hardware) leaves the row as
+    /// "no battery"; it never clears a previously good sample.
+    func refreshBatteryReading() {
+        if let sample = batteryReader.readSample() {
+            latestBatterySample = sample
+        }
     }
 
     /// Ingests a batch of parsed token events into the given provider's store and

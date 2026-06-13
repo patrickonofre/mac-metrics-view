@@ -399,6 +399,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         guard let button = statusItem.button, !popover.isShown else { return }
         launchAtLoginSettings.refresh()
         state.refreshAccessibilityAuthorization()
+        // One-shot battery read so the popover row is live even when the segment is hidden
+        // and the continuous sampler is gated off (ADR-003). No-op cost on desktops.
+        state.refreshBatteryReading()
         // Build the SwiftUI graph fresh for this open, after the pre-show refreshes so the
         // first body pass reads current state; popoverDidClose releases it (ADR-001).
         popover.contentViewController = makePopoverHostingController()
