@@ -130,6 +130,19 @@ struct PopoverView: View {
                 severity: state.diskMenuBarTextStyle
             )
 
+            // No charge sparkline (ADR-002); detail rows carry source/time/health/cycles.
+            MetricRow(
+                symbol: state.batterySymbolName,
+                title: Strings.battery(),
+                value: state.batteryRowValue,
+                values: [],
+                severity: state.batteryMenuBarTextStyle
+            )
+
+            if !state.batteryDetailRows.isEmpty {
+                BatteryDetailRow(details: state.batteryDetailRows)
+            }
+
             // Always shown (like every metric); the visibility toggle below only curates
             // the menu bar. Empty/zero state is the localized copy, never an error.
             MetricRow(
@@ -183,6 +196,10 @@ struct PopoverView: View {
                     diskVisible: Binding(
                         get: { state.visibility.showDisk },
                         set: { state.setDiskVisible($0) }
+                    ),
+                    batteryVisible: Binding(
+                        get: { state.visibility.showBattery },
+                        set: { state.setBatteryVisible($0) }
                     ),
                     identifierStyle: Binding(
                         get: { state.display.identifierStyle },
@@ -316,6 +333,31 @@ private struct MetricRow: View {
         case .highCPU:
             return ", \(Strings.severityHigh())"
         }
+    }
+}
+
+/// Power source / time / health / cycle detail shown under the battery metric row,
+/// indented to align beneath the row title (mirrors `TokenBreakdownRow`). No sparkline
+/// (ADR-002).
+private struct BatteryDetailRow: View {
+    let details: [(label: String, value: String)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(details, id: \.label) { item in
+                HStack(spacing: 3) {
+                    Spacer().frame(width: 26)   // icon (18) + row spacing (8)
+                    Text(item.label)
+                        .foregroundStyle(.secondary)
+                    Text(item.value)
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -616,6 +658,7 @@ private struct MetricVisibilityControls: View {
     @Binding var networkVisible: Bool
     @Binding var temperatureVisible: Bool
     @Binding var diskVisible: Bool
+    @Binding var batteryVisible: Bool
     @Binding var identifierStyle: MetricDisplaySettings.IdentifierStyle
     @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
     @Binding var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric
@@ -635,6 +678,7 @@ private struct MetricVisibilityControls: View {
 
                 GridRow {
                     SettingSwitch(title: Strings.disk(), isOn: $diskVisible)
+                    SettingSwitch(title: Strings.battery(), isOn: $batteryVisible)
                 }
             }
 

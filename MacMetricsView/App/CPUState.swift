@@ -34,6 +34,9 @@ final class CPUState: ObservableObject {
     @Published private(set) var latestNetworkSample: NetworkSample?
     @Published private(set) var latestTemperatureSample: TemperatureSample?
     @Published private(set) var latestDiskSample: DiskSample?
+    /// Latest battery reading, or `nil` when no battery is present / not yet sampled.
+    /// No history is kept (ADR-002 — no charge sparkline).
+    @Published private(set) var latestBatterySample: BatterySample?
     @Published private(set) var history = CPUHistory()
     @Published private(set) var ramHistory = RAMHistory()
     @Published private(set) var networkHistory = NetworkHistory()
@@ -254,6 +257,12 @@ final class CPUState: ObservableObject {
             titles.append(TemperatureFormatter.menuBarTitle(for: latestTemperatureSample, showLabel: showLabel))
         }
 
+        // Battery omits its segment when no battery is present (sample stays nil), so a
+        // desktop Mac never shows it even with the toggle on (ADR-003).
+        if visibility.showBattery, latestBatterySample != nil {
+            titles.append(BatteryFormatter.menuBarTitle(for: latestBatterySample, showLabel: showLabel))
+        }
+
         if visibility.showTokens {
             let value = TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false)
             if showLabel {
@@ -284,6 +293,26 @@ final class CPUState: ObservableObject {
 
     var diskMenuBarTextStyle: CPUMenuBarTextStyle {
         DiskFormatter.menuBarTextStyle(for: latestDiskSample)
+    }
+
+    var batteryMenuBarTextStyle: CPUMenuBarTextStyle {
+        BatteryFormatter.menuBarTextStyle(for: latestBatterySample)
+    }
+
+    /// Popover headline for the battery row: the charge percentage, or the localized
+    /// "no battery" copy on a Mac without one.
+    var batteryRowValue: String {
+        latestBatterySample == nil ? Strings.batteryNoBattery() : BatteryFormatter.menuBarValue(for: latestBatterySample)
+    }
+
+    /// SF Symbol shown next to the battery row (charge-level glyph, bolt while charging).
+    var batterySymbolName: String {
+        BatteryFormatter.menuBarGlyphName(for: latestBatterySample)
+    }
+
+    /// Power source / time / health / cycle detail rows, empty when no battery present.
+    var batteryDetailRows: [(label: String, value: String)] {
+        BatteryFormatter.detailRows(for: latestBatterySample)
     }
 
     var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric {
@@ -424,6 +453,10 @@ final class CPUState: ObservableObject {
             segments.append("\(Strings.temperature()) \(TemperatureFormatter.displayString(for: latestTemperatureSample))")
         }
 
+        if visibility.showBattery, latestBatterySample != nil {
+            segments.append("\(Strings.battery()) \(BatteryFormatter.menuBarValue(for: latestBatterySample))")
+        }
+
         if visibility.showTokens {
             segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false))")
         }
@@ -457,6 +490,11 @@ final class CPUState: ObservableObject {
     func update(with sample: DiskSample) {
         latestDiskSample = sample
         diskHistory.append(sample)
+    }
+
+    /// No history is kept for battery (ADR-002 — no charge sparkline); just the latest.
+    func update(with sample: BatterySample) {
+        latestBatterySample = sample
     }
 
     /// Ingests a batch of parsed token events into the given provider's store and
@@ -686,6 +724,10 @@ final class CPUState: ObservableObject {
         updateVisibility(metric: .disk, isVisible: isVisible)
     }
 
+    func setBatteryVisible(_ isVisible: Bool) {
+        updateVisibility(metric: .battery, isVisible: isVisible)
+    }
+
     func setMetricIdentifierStyle(_ identifierStyle: MetricDisplaySettings.IdentifierStyle) {
         guard display.identifierStyle != identifierStyle else { return }
 
@@ -728,6 +770,8 @@ final class CPUState: ObservableObject {
             visibility.showDisk = isVisible
         case .tokens:
             visibility.showTokens = isVisible
+        case .battery:
+            visibility.showBattery = isVisible
         }
 
         visibility.save(to: userDefaults)
@@ -904,6 +948,8 @@ final class CPUState: ObservableObject {
             return visibility.showDisk
         case .tokens:
             return visibility.showTokens
+        case .battery:
+            return visibility.showBattery
         }
     }
 }

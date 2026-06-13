@@ -127,6 +127,21 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             ))
         }
 
+        // Battery emits only when present (sample non-nil), so a desktop Mac shows nothing
+        // even with the toggle on (ADR-003). The icon is the live charge-level glyph.
+        if state.visibility.showBattery, state.latestBatterySample != nil {
+            if attributedTitle.length > 0 {
+                attributedTitle.append(separator)
+            }
+
+            attributedTitle.append(statusSegment(
+                metric: .battery,
+                value: BatteryFormatter.menuBarValue(for: state.latestBatterySample),
+                style: state.batteryMenuBarTextStyle,
+                symbolOverride: BatteryFormatter.menuBarGlyphName(for: state.latestBatterySample)
+            ))
+        }
+
         if state.visibility.showTokens {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
@@ -169,7 +184,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         metric: MenuBarMetric,
         value: String,
         style: CPUMenuBarTextStyle,
-        labelOverride: String? = nil
+        labelOverride: String? = nil,
+        symbolOverride: String? = nil
     ) -> NSAttributedString {
         // Hierarchy: the identifier (icon or label) is always secondary; only the value
         // carries severity color. This keeps severity an accent on the number the user
@@ -187,7 +203,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 attributes: baseAttributes(color: identifierColor)
             ))
         case .icons:
-            segment.append(iconAttachment(for: metric, color: identifierColor))
+            segment.append(iconAttachment(for: metric, color: identifierColor, symbolOverride: symbolOverride))
             segment.append(NSAttributedString(
                 string: " ",
                 attributes: baseAttributes(color: identifierColor)
@@ -225,13 +241,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         }
     }
 
-    private func iconAttachment(for metric: MenuBarMetric, color: NSColor) -> NSAttributedString {
+    private func iconAttachment(for metric: MenuBarMetric, color: NSColor, symbolOverride: String? = nil) -> NSAttributedString {
+        let symbolName = symbolOverride ?? metric.symbolName
+        let cacheKey = iconCacheKey(for: metric, symbolOverride: symbolOverride)
         let image: NSImage
-        if let cached = iconCache[iconCacheKey(for: metric)] {
+        if let cached = iconCache[cacheKey] {
             image = cached
         } else {
             guard let symbol = NSImage(
-                systemSymbolName: metric.symbolName,
+                systemSymbolName: symbolName,
                 accessibilityDescription: metric.accessibilityLabel
             )?.withSymbolConfiguration(NSImage.SymbolConfiguration(
                 pointSize: max(NSFont.smallSystemFontSize, NSFont.systemFontSize - 2),
@@ -245,7 +263,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             }
 
             image = symbol.tinted(with: color)
-            iconCache[iconCacheKey(for: metric)] = image
+            iconCache[cacheKey] = image
         }
 
         let attachment = NSTextAttachment()
@@ -319,12 +337,13 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         return NSAttributedString(attachment: attachment)
     }
 
-    private func iconCacheKey(for metric: MenuBarMetric) -> String {
+    private func iconCacheKey(for metric: MenuBarMetric, symbolOverride: String? = nil) -> String {
         // Icons are now severity-independent (always secondary), so the key is just the
         // symbol and appearance. Appearance keeps a light/dark switch re-tinting once
-        // instead of baking a stale dynamic color forever.
+        // instead of baking a stale dynamic color forever. The override (e.g. the battery
+        // charge-level glyph) is part of the key so each charge bucket caches separately.
         let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
-        return "\(metric.symbolName)|\(appearance)"
+        return "\(symbolOverride ?? metric.symbolName)|\(appearance)"
     }
 
     private func configureStatusItem() {
@@ -408,6 +427,7 @@ private enum MenuBarMetric {
     case temperature
     case disk
     case tokens
+    case battery
 
     var label: String {
         switch self {
@@ -423,6 +443,8 @@ private enum MenuBarMetric {
             return "DISK"
         case .tokens:
             return TokenFormatter.menuBarLabel
+        case .battery:
+            return "BAT"
         }
     }
 
@@ -440,6 +462,9 @@ private enum MenuBarMetric {
             return "circle.fill"
         case .tokens:
             return "number"
+        case .battery:
+            // Static fallback; the live segment passes a charge-level glyph override.
+            return "battery.100"
         }
     }
 
@@ -457,6 +482,8 @@ private enum MenuBarMetric {
             return Strings.disk()
         case .tokens:
             return Strings.tokens()
+        case .battery:
+            return Strings.battery()
         }
     }
 }
