@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate, BatterySamplerDelegate {
     // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
     // its visibility (see applyFirstRunMetricPresetIfNeeded()). Internal (not private) so
     // wiring tests can observe the published state after a delegate callback.
@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     private let networkSampler = NetworkSampler()
     private let temperatureSampler = TemperatureSampler()
     private let diskSampler = DiskSampler()
+    // Internal so wiring tests can drive the gated lifecycle and assert routing.
+    let batterySampler = BatterySampler()
     // Internal (not private) so wiring tests can drive the delegate with the exact sampler
     // instances and assert provider-tagged routing, mirroring `state`.
     let tokenSampler = TokenUsageSampler()
@@ -33,10 +35,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         // visibility from UserDefaults.
         applyFirstRunMetricPresetIfNeeded()
 
-        state.onVisibilityChange = { [weak self] _, _ in
-            // Visibility only curates the menu bar; samplers always run so the popover
-            // keeps showing every metric. Just rebuild the title.
-            self?.statusItemController?.setNeedsTitleUpdate()
+        state.onVisibilityChange = { [weak self] metric, isVisible in
+            guard let self else { return }
+            // Most samplers always run (visibility only curates the menu bar). Battery is
+            // the exception: it runs only while visible AND a battery is present, to honor
+            // the zero-cost-when-hidden rule and desktop behavior (ADR-003).
+            if metric == .battery {
+                if isVisible, BatterySampler.batteryIsPresent() {
+                    self.batterySampler.start()
+                } else {
+                    self.batterySampler.stop()
+                }
+            }
+            self.statusItemController?.setNeedsTitleUpdate()
         }
         state.onDisplayChange = { [weak self] in
             self?.statusItemController?.setNeedsTitleUpdate()
@@ -89,6 +100,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.delegate = self
         temperatureSampler.delegate = self
         diskSampler.delegate = self
+        batterySampler.delegate = self
         tokenSampler.delegate = self
         codexTokenSampler.delegate = self
         geminiTokenSampler.delegate = self
@@ -105,6 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.stop()
         temperatureSampler.stop()
         diskSampler.stop()
+        batterySampler.stop()
         tokenSampler.stop()
         codexTokenSampler.stop()
         geminiTokenSampler.stop()
@@ -195,6 +208,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
+    func batterySampler(_ sampler: BatterySampler, didProduce sample: BatterySample) {
+        state.update(with: sample)
+        statusItemController?.setNeedsTitleUpdate()
+    }
+
     func tokenUsageSampler(_ sampler: TokenUsageSampler, didProduce events: [TokenUsageEvent]) {
         // Route each sampler's batch to its provider store by instance identity; default
         // to Claude for any other sampler (back-compat with the single-sampler call sites).
@@ -221,5 +239,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         tokenSampler.start()
         codexTokenSampler.start()
         geminiTokenSampler.start()
+        // Battery diverges from the always-run convention: start it only when the metric
+        // is visible and a battery exists (ADR-003). Visibility toggles re-evaluate this
+        // in onVisibilityChange.
+        if state.visibility.showBattery, BatterySampler.batteryIsPresent() {
+            batterySampler.start()
+        }
     }
 }

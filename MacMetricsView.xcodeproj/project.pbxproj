@@ -62,6 +62,14 @@
 		100000000000000000000032 /* TemperatureSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000123 /* TemperatureSample.swift */; };
 		100000000000000000000033 /* TemperatureHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000124 /* TemperatureHistory.swift */; };
 		100000000000000000000034 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000125 /* TemperatureFormatter.swift */; };
+		1000000000000000000000FC05 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
+		1000000000000000000000FC06 /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
+		1000000000000000000000FC07 /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
+		1000000000000000000000FC08 /* IOKitBatteryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC04 /* IOKitBatteryReader.swift */; };
+		1000000000000000000000FC09 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
+		1000000000000000000000FC0A /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
+		1000000000000000000000FC0B /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
+		1000000000000000000000FC0C /* IOKitBatteryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC04 /* IOKitBatteryReader.swift */; };
 		100000000000000000000035 /* TemperatureFormattingAndHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000127 /* TemperatureFormattingAndHistoryTests.swift */; };
 		100000000000000000000036 /* LaunchAtLoginSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000128 /* LaunchAtLoginSettings.swift */; };
 		100000000000000000000037 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000129 /* LaunchAtLoginManager.swift */; };
@@ -179,6 +187,10 @@
 		100000000000000000000123 /* TemperatureSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemperatureSample.swift; sourceTree = "<group>"; };
 		100000000000000000000124 /* TemperatureHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemperatureHistory.swift; sourceTree = "<group>"; };
 		100000000000000000000125 /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC01 /* BatterySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/BatterySample.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC02 /* BatteryFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatteryFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC03 /* BatterySampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatterySampler.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC04 /* IOKitBatteryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitBatteryReader.swift; sourceTree = "<group>"; };
 		100000000000000000000126 /* TemperatureSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureSampler.swift; sourceTree = "<group>"; };
 		10000000000000000000004E /* IOHIDTemperatureSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOHIDTemperatureSensors.swift; sourceTree = "<group>"; };
 		10000000000000000000004F /* IOKitTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitTemperatureReader.swift; sourceTree = "<group>"; };
@@ -286,6 +298,7 @@
 				100000000000000000000118 /* NetworkSample.swift */,
 				100000000000000000000119 /* NetworkHistory.swift */,
 				100000000000000000000123 /* TemperatureSample.swift */,
+				1000000000000000000000FC01 /* BatterySample.swift */,
 				100000000000000000000124 /* TemperatureHistory.swift */,
 				10000000000000000000011F /* MetricVisibilitySettings.swift */,
 				100000000000000000000121 /* MetricDisplaySettings.swift */,
@@ -294,6 +307,9 @@
 				100000000000000000000115 /* RAMFormatter.swift */,
 				10000000000000000000011C /* NetworkFormatter.swift */,
 				100000000000000000000125 /* TemperatureFormatter.swift */,
+				1000000000000000000000FC02 /* BatteryFormatter.swift */,
+				1000000000000000000000FC03 /* BatterySampler.swift */,
+				1000000000000000000000FC04 /* IOKitBatteryReader.swift */,
 				100000000000000000000129 /* LaunchAtLoginManager.swift */,
 				100000000000000000000B12 /* AppUpdateService.swift */,
 				100000000000000000000B13 /* SparkleUpdateService.swift */,
@@ -517,6 +533,10 @@
 				100000000000000000000015 /* RAMFormatter.swift in Sources */,
 				10000000000000000000001F /* NetworkFormatter.swift in Sources */,
 				100000000000000000000030 /* TemperatureFormatter.swift in Sources */,
+				1000000000000000000000FC05 /* BatterySample.swift in Sources */,
+				1000000000000000000000FC06 /* BatteryFormatter.swift in Sources */,
+				1000000000000000000000FC07 /* BatterySampler.swift in Sources */,
+				1000000000000000000000FC08 /* IOKitBatteryReader.swift in Sources */,
 				100000000000000000000037 /* LaunchAtLoginManager.swift in Sources */,
 				100000000000000000000008 /* CPUSnapshot.swift in Sources */,
 				100000000000000000000009 /* MachCPUReader.swift in Sources */,
@@ -602,6 +622,10 @@
 				100000000000000000000038 /* LaunchAtLoginSettings.swift in Sources */,
 				100000000000000000000025 /* NetworkFormatter.swift in Sources */,
 				100000000000000000000034 /* TemperatureFormatter.swift in Sources */,
+				1000000000000000000000FC09 /* BatterySample.swift in Sources */,
+				1000000000000000000000FC0A /* BatteryFormatter.swift in Sources */,
+				1000000000000000000000FC0B /* BatterySampler.swift in Sources */,
+				1000000000000000000000FC0C /* IOKitBatteryReader.swift in Sources */,
 				100000000000000000000039 /* LaunchAtLoginManager.swift in Sources */,
 				100000000000000000000026 /* NetworkSampleCalculator.swift in Sources */,
 				10000000000000000000003C /* Localization.swift in Sources */,

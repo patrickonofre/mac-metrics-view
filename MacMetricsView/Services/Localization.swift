@@ -42,6 +42,19 @@ enum Strings {
     static let network = LocalizedText(en: "Network", pt: "Rede")
     static let temperature = LocalizedText(en: "Temperature", pt: "Temperatura")
     static let disk = LocalizedText(en: "Disk", pt: "Disco")
+
+    // Battery
+    static let battery = LocalizedText(en: "Battery", pt: "Bateria")
+    static let batteryPowerSource = LocalizedText(en: "Power source", pt: "Fonte")
+    static let batteryOnAC = LocalizedText(en: "AC", pt: "Tomada")
+    static let batteryOnBattery = LocalizedText(en: "Battery", pt: "Bateria")
+    static let batteryTimeRemaining = LocalizedText(en: "Time left", pt: "Tempo restante")
+    static let batteryCalculating = LocalizedText(en: "Calculating…", pt: "Calculando…")
+    static let batteryHealth = LocalizedText(en: "Health", pt: "Saúde")
+    static let batteryHealthNormal = LocalizedText(en: "Normal", pt: "Normal")
+    static let batteryServiceRecommended = LocalizedText(en: "Service Recommended", pt: "Serviço recomendado")
+    static let batteryCycles = LocalizedText(en: "Cycles", pt: "Ciclos")
+    static let batteryNoBattery = LocalizedText(en: "No battery", pt: "Sem bateria")
     /// VoiceOver description for the menu-bar warning glyph shown while the cleaning
     /// permission is missing.
     static let accessibilityWarningBadge = LocalizedText(
