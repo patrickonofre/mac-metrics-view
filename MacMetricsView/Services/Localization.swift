@@ -243,6 +243,8 @@ enum Strings {
         case .portuguese: return "Nova versão \(version) disponível"
         }
     }
+    static let updateNow = LocalizedText(en: "Update now", pt: "Atualizar agora")
+    static let whatsNew = LocalizedText(en: "What's new", pt: "Novidades")
 
     // Cleaning-lock Accessibility recovery (self-healing flow). Tone matches the
     // existing Portuguese cleaning-section copy; the dead-end "reload" wording is

@@ -90,6 +90,7 @@
 		100000000000000000000C02 /* AccessibilityGrantTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
 		100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
 		100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */; };
+		100000000000000000000C08 /* UpdateBannerPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C07 /* UpdateBannerPresentationTests.swift */; };
 		100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000130 /* AccessibilityAuthorization.swift */; };
 		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
 		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
@@ -108,6 +109,7 @@
 		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
 		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
 		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
+		1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E05 /* UpdateBannerPresentation.swift */; };
 		1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F01 /* TokenUsageEvent.swift */; };
 		1000000000000000000000FB02 /* TokenAggregate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F02 /* TokenAggregate.swift */; };
 		1000000000000000000000FB03 /* TokenScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F03 /* TokenScope.swift */; };
@@ -201,6 +203,7 @@
 		100000000000000000000137 /* InputLockServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputLockServiceTests.swift; sourceTree = "<group>"; };
 		100000000000000000000138 /* CleaningLockStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockStateTests.swift; sourceTree = "<group>"; };
 		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
+		100000000000000000000C07 /* UpdateBannerPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerPresentationTests.swift; sourceTree = "<group>"; };
 		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
 		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
 		1000000000000000000000D01 /* DiskCounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskCounterSnapshot.swift; sourceTree = "<group>"; };
@@ -217,6 +220,7 @@
 		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
 		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
 		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
+		1000000000000000000000E05 /* UpdateBannerPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/UpdateBannerPresentation.swift; sourceTree = "<group>"; };
 		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
 		1000000000000000000000F02 /* TokenAggregate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenAggregate.swift; sourceTree = "<group>"; };
 		1000000000000000000000F03 /* TokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenScope.swift; sourceTree = "<group>"; };
@@ -331,6 +335,7 @@
 				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
 				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
+				1000000000000000000000E05 /* UpdateBannerPresentation.swift */,
 				1000000000000000000000F01 /* TokenUsageEvent.swift */,
 				1000000000000000000000F02 /* TokenAggregate.swift */,
 				1000000000000000000000F03 /* TokenScope.swift */,
@@ -371,6 +376,7 @@
 				100000000000000000000137 /* InputLockServiceTests.swift */,
 				100000000000000000000138 /* CleaningLockStateTests.swift */,
 				100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */,
+				100000000000000000000C07 /* UpdateBannerPresentationTests.swift */,
 			);
 			path = MacMetricsViewTests;
 			sourceTree = "<group>";
@@ -550,6 +556,7 @@
 				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
 				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
+				1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */,
 				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,
 				1000000000000000000000FB02 /* TokenAggregate.swift in Sources */,
 				1000000000000000000000FB03 /* TokenScope.swift in Sources */,
@@ -615,6 +622,7 @@
 				10000000000000000000004C /* InputLockServiceTests.swift in Sources */,
 				10000000000000000000004D /* CleaningLockStateTests.swift in Sources */,
 				100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */,
+				100000000000000000000C08 /* UpdateBannerPresentationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -635,7 +643,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -644,7 +652,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.9.0;
+				MARKETING_VERSION = 1.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -658,7 +666,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 37;
+				CURRENT_PROJECT_VERSION = 38;
 				ENABLE_CODE_COVERAGE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -667,7 +675,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.9.0;
+				MARKETING_VERSION = 1.9.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

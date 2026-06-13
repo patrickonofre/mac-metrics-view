@@ -52,4 +52,25 @@ final class UpdateControlsTests: XCTestCase {
             "New version 1.1.0 available"
         )
     }
+
+    func testCheckForUpdatesInvokesClosureExactlyOnce() {
+        let state = makeState()
+        var callCount = 0
+        state.onCheckForUpdates = {
+            callCount += 1
+        }
+        state.checkForUpdates()
+        XCTAssertEqual(callCount, 1)
+    }
+
+    func testSettingAndClearingAvailableUpdateVersionFlipsVisibility() {
+        let state = makeState()
+        XCTAssertFalse(UpdateBannerPresentation.showsBanner(availableVersion: state.availableUpdateVersion))
+        
+        state.setAvailableUpdateVersion("1.9.1")
+        XCTAssertTrue(UpdateBannerPresentation.showsBanner(availableVersion: state.availableUpdateVersion))
+        
+        state.setAvailableUpdateVersion(nil)
+        XCTAssertFalse(UpdateBannerPresentation.showsBanner(availableVersion: state.availableUpdateVersion))
+    }
 }

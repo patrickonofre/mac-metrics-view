@@ -32,4 +32,28 @@ final class AppUpdateServiceTests: XCTestCase {
 
         XCTAssertFalse(fired)
     }
+
+    func testStateUpdateOnAvailableVersionChangeCallback() {
+        let suiteName = "MacMetricsViewTests.UpdateService.\(UUID().uuidString)"
+        let ud = UserDefaults(suiteName: suiteName)!
+        ud.removePersistentDomain(forName: suiteName)
+        let state = CPUState(
+            userDefaults: ud,
+            accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false)
+        )
+        
+        let service = NoOpUpdateService()
+        
+        // Wire up like AppDelegate does
+        service.onAvailableVersionChange = { version in
+            state.setAvailableUpdateVersion(version)
+        }
+        
+        // Trigger manually
+        service.onAvailableVersionChange?("1.9.1")
+        XCTAssertEqual(state.availableUpdateVersion, "1.9.1")
+        
+        service.onAvailableVersionChange?(nil)
+        XCTAssertNil(state.availableUpdateVersion)
+    }
 }

@@ -24,6 +24,12 @@ struct PopoverView: View {
             VStack(alignment: .leading, spacing: 12) {
                 headerBar
 
+                if UpdateBannerPresentation.showsBanner(availableVersion: state.availableUpdateVersion) {
+                    UpdateBanner(availableVersion: state.availableUpdateVersion ?? "") {
+                        state.checkForUpdates()
+                    }
+                }
+
                 if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: state.isAccessibilityGranted) {
                     RecoveryBanner(wasResetByUpdate: state.accessibilityResetByUpdate)
                 }
@@ -598,12 +604,6 @@ private struct UpdatesControl: View {
             }
             .buttonStyle(.borderless)
             .foregroundStyle(Color.accentColor)
-
-            if let version = state.availableUpdateVersion {
-                Text(Strings.autoUpdateAvailable(version))
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-            }
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -934,6 +934,52 @@ private struct RecoveryBanner: View {
         .overlay(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .strokeBorder(Color.orange.opacity(0.35))
+        )
+        .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - Update header banner
+
+private struct UpdateBanner: View {
+    let availableVersion: String
+    let checkForUpdates: () -> Void
+
+    var body: some View {
+        HStack(alignment: .center, spacing: 8) {
+            Image(systemName: "arrow.down.circle.fill")
+                .foregroundStyle(.blue)
+                .imageScale(.medium)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(UpdateBannerPresentation.title(for: availableVersion))
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+
+                if let url = UpdateBannerPresentation.releaseNotesURL(for: availableVersion) {
+                    Link(Strings.whatsNew(), destination: url)
+                        .font(.caption2)
+                        .foregroundStyle(Color.accentColor)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            Button(Strings.updateNow()) {
+                checkForUpdates()
+            }
+            .buttonStyle(.borderless)
+            .foregroundStyle(Color.accentColor)
+        }
+        .padding(9)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color(nsColor: .controlBackgroundColor))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .strokeBorder(Color.blue.opacity(0.35))
         )
         .accessibilityElement(children: .combine)
     }

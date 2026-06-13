@@ -22,7 +22,7 @@ final class SparkleUpdateService: NSObject, AppUpdateService, SPUUpdaterDelegate
         controller = SPUStandardUpdaterController(
             startingUpdater: false,
             updaterDelegate: self,
-            userDriverDelegate: nil
+            userDriverDelegate: self
         )
         controller.startUpdater()
     }
@@ -48,6 +48,19 @@ final class SparkleUpdateService: NSObject, AppUpdateService, SPUUpdaterDelegate
 
     func updaterDidNotFindUpdate(_ updater: SPUUpdater) {
         onAvailableVersionChange?(nil)
+    }
+}
+
+// MARK: - SPUStandardUserDriverDelegate
+
+@MainActor
+extension SparkleUpdateService: @preconcurrency SPUStandardUserDriverDelegate {
+    var supportsGentleScheduledUpdateReminders: Bool {
+        true
+    }
+
+    func standardUserDriverShouldHandleShowingScheduledUpdate(_ update: SUAppcastItem, andInImmediateFocus immediateFocus: Bool) -> Bool {
+        false
     }
 }
 #endif

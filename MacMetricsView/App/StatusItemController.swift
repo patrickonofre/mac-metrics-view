@@ -35,6 +35,11 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .removeDuplicates()
             .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
             .store(in: &cancellables)
+
+        state.$availableUpdateVersion
+            .removeDuplicates()
+            .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
+            .store(in: &cancellables)
     }
 
     /// Coalesces title rebuilds: several samplers can deliver in the same run-loop
@@ -144,9 +149,16 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
         // Additive, secondary warning glyph while the cleaning permission is
         // missing — never recolors the metric segments (ADR-003).
+        // Appended in deterministic order: critical accessibility warning first,
+        // then the new version update badge.
         if MenuBarTitleComposer.showsAccessibilityWarning(isAccessibilityGranted: state.isAccessibilityGranted) {
             attributedTitle.append(separator)
             attributedTitle.append(warningGlyphAttachment(color: .secondaryLabelColor))
+        }
+
+        if MenuBarTitleComposer.showsUpdateBadge(availableVersion: state.availableUpdateVersion) {
+            attributedTitle.append(separator)
+            attributedTitle.append(updateBadgeGlyphAttachment(color: .secondaryLabelColor))
         }
 
         button.attributedTitle = attributedTitle
@@ -262,6 +274,38 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 scale: .small
             )) else {
                 return NSAttributedString(string: "!", attributes: baseAttributes(color: color))
+            }
+
+            image = symbol.tinted(with: color)
+            iconCache[cacheKey] = image
+        }
+
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = CGRect(x: 0, y: -2, width: image.size.width, height: image.size.height)
+
+        return NSAttributedString(attachment: attachment)
+    }
+
+    /// The secondary update badge glyph appended to the title while a newer version
+    /// is available. Cached per appearance like the warning glyph, so the per-tick
+    /// title rebuild does not re-render it.
+    private func updateBadgeGlyphAttachment(color: NSColor) -> NSAttributedString {
+        let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
+        let cacheKey = "update-badge|\(appearance)"
+        let image: NSImage
+        if let cached = iconCache[cacheKey] {
+            image = cached
+        } else {
+            guard let symbol = NSImage(
+                systemSymbolName: MenuBarTitleComposer.updateBadgeSymbolName,
+                accessibilityDescription: nil
+            )?.withSymbolConfiguration(NSImage.SymbolConfiguration(
+                pointSize: max(NSFont.smallSystemFontSize, NSFont.systemFontSize - 2),
+                weight: .regular,
+                scale: .small
+            )) else {
+                return NSAttributedString(string: "↓", attributes: baseAttributes(color: color))
             }
 
             image = symbol.tinted(with: color)

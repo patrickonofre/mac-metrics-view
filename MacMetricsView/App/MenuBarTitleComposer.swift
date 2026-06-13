@@ -16,4 +16,13 @@ enum MenuBarTitleComposer {
     static func showsAccessibilityWarning(isAccessibilityGranted: Bool) -> Bool {
         !isAccessibilityGranted
     }
+
+    /// SF Symbol appended after the metrics when an update is available.
+    static let updateBadgeSymbolName = "arrow.down.circle.fill"
+
+    /// Whether to append the update badge glyph to the status item title.
+    static func showsUpdateBadge(availableVersion: String?) -> Bool {
+        guard let v = availableVersion else { return false }
+        return !v.isEmpty
+    }
 }
