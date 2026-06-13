@@ -525,6 +525,29 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         XCTAssertEqual(state.tokenAggregate.input, 0)   // aged out of the lastHour window
     }
 
+    func testReopenAfterCloseReArmsAutoRefreshAndRecomputes() {
+        // The popover hosting controller is torn down on close and rebuilt on open (ADR-001);
+        // each reopen re-runs PopoverView.onAppear -> beginTokenAutoRefresh. Lock that begin
+        // re-arms the timer after a prior end, so a reopened popover keeps sliding its windows.
+        // Distinct from testDoubleBeginThenSingleEndLeavesNoLiveTick (which asserts NO
+        // recompute after end): here a fresh begin following an end must RESUME ticking.
+        let state = CPUState(userDefaults: makeUserDefaults())
+        state.setTokenMenuBarWindow(.lastHour)
+        state.update(with: [event(input: 100)])
+
+        // First open then close.
+        state.beginTokenAutoRefresh()
+        state.endTokenAutoRefresh()
+
+        // Reopen: begin must re-arm so an in-flight tick recomputes again. Advancing past the
+        // lastHour window ages the event out only if a live timer drove the recompute.
+        state.beginTokenAutoRefresh()
+        defer { state.endTokenAutoRefresh() }
+        state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
+
+        XCTAssertEqual(state.tokenAggregate.input, 0)   // recompute ran on the re-armed timer
+    }
+
     func testCombinedMergesPerModelAndPerProviderMRU() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-10), input: 100)])  // claude-opus-4-8

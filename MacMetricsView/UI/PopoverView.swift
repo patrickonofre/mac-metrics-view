@@ -10,6 +10,12 @@ struct PopoverView: View {
     private let popoverWidth: CGFloat = 380
 
     var body: some View {
+        // Defense-in-depth (ADR-002): StatusItemController tears down the popover hosting
+        // controller while closed (ADR-001), so normally this view is not even instantiated
+        // when the popover is shut. This gate is the second, independent layer — if a future
+        // change ever hosts this view while the popover is closed, the body stays inert
+        // instead of re-rendering on CPUState's 1 Hz churn. Do not remove without revisiting
+        // ADR-001/ADR-002.
         if state.isPopoverOpen {
             // Content-driven height: data and config each take exactly the room their content
             // needs, top to bottom — no forced split (which left the short data pane with a

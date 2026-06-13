@@ -293,6 +293,15 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private func configurePopover() {
         popover.behavior = .transient
         popover.delegate = self
+        // No content controller at init: the SwiftUI graph is built per-open and released on
+        // close (ADR-001), so nothing observes CPUState's 1 Hz churn while the popover is
+        // closed. This makes the idle-CPU render storm structurally impossible while closed.
+    }
+
+    /// Builds a fresh popover content controller. Called on every open and released on close,
+    /// so the `PopoverView` graph — and its observation of `CPUState` — exists only while the
+    /// popover is shown (ADR-001).
+    private func makePopoverHostingController() -> NSHostingController<PopoverView> {
         let hostingController = NSHostingController(
             rootView: PopoverView(
                 state: state,
@@ -307,9 +316,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         )
         // PopoverView fixes its width and sizes its height to content; propagate that
         // intrinsic size so the popover grows/shrinks to fit instead of clipping or
-        // leaving a void.
+        // leaving a void. Re-applied on every build.
         hostingController.sizingOptions = .preferredContentSize
-        popover.contentViewController = hostingController
+        return hostingController
     }
 
     @objc private func togglePopover(_ sender: NSStatusBarButton) {
@@ -327,6 +336,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         guard let button = statusItem.button, !popover.isShown else { return }
         launchAtLoginSettings.refresh()
         state.refreshAccessibilityAuthorization()
+        // Build the SwiftUI graph fresh for this open, after the pre-show refreshes so the
+        // first body pass reads current state; popoverDidClose releases it (ADR-001).
+        popover.contentViewController = makePopoverHostingController()
         popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
         popover.contentViewController?.view.window?.makeKey()
     }
@@ -339,6 +351,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     func popoverDidClose(_ notification: Notification) {
         state.isPopoverOpen = false
+        // Release the SwiftUI graph so nothing observes CPUState's 1 Hz churn while closed
+        // (ADR-001). Rebuilt fresh on the next open by makePopoverHostingController().
+        popover.contentViewController = nil
     }
 }
 
