@@ -27,7 +27,9 @@ let package = Package(
         .testTarget(
             name: "MacMetricsViewTests",
             dependencies: ["MacMetricsView"],
-            path: "MacMetricsViewTests"
+            path: "MacMetricsViewTests",
+            // Loaded by GeminiCLILogReaderTests via #filePath, not as SPM resources.
+            exclude: ["Fixtures"]
         )
     ]
 )

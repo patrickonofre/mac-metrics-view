@@ -9,6 +9,7 @@ import Foundation
 enum TokenProvider: String {
     case claude
     case codex
+    case gemini
 }
 
 /// The user-facing provider selection driving the meter: a single provider, or the
@@ -21,15 +22,18 @@ enum TokenProvider: String {
 enum TokenProviderSelection: String {
     case claude
     case codex
+    case gemini
     case combined
 
-    /// The concrete provider(s) this selection aggregates: a single provider, or both
-    /// for `combined`. The aggregation layer sums each provider's store independently.
+    /// The concrete provider(s) this selection aggregates: a single provider, or all
+    /// three for `combined`. The aggregation layer sums each provider's store
+    /// independently (ADR-011).
     var providers: [TokenProvider] {
         switch self {
         case .claude: return [.claude]
         case .codex: return [.codex]
-        case .combined: return [.claude, .codex]
+        case .gemini: return [.gemini]
+        case .combined: return [.claude, .codex, .gemini]
         }
     }
 }

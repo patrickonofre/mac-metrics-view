@@ -47,7 +47,7 @@ final class TokenSettingsTests: XCTestCase {
     }
 
     func testTokenProviderRoundTripsEveryValue() {
-        for provider in [TokenProviderSelection.claude, .codex, .combined] {
+        for provider in [TokenProviderSelection.claude, .codex, .gemini, .combined] {
             var display = MetricDisplaySettings.load(from: defaults)
             display.tokenProvider = provider
             display.save(to: defaults)

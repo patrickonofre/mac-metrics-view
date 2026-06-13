@@ -127,6 +127,7 @@
 		1000000000000000000000FB11 /* TokenDailyLedger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F11 /* TokenDailyLedger.swift */; };
 		1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F12 /* TokenRateLimitWindow.swift */; };
 		1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */; };
+		1000000000000000000000FB14 /* GeminiCLILogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F14 /* GeminiCLILogReader.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -235,6 +236,7 @@
 		1000000000000000000000F11 /* TokenDailyLedger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenDailyLedger.swift; sourceTree = "<group>"; };
 		1000000000000000000000F12 /* TokenRateLimitWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenRateLimitWindow.swift; sourceTree = "<group>"; };
 		1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeHistoryBackfill.swift; sourceTree = "<group>"; };
+		1000000000000000000000F14 /* GeminiCLILogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GeminiCLILogReader.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -348,6 +350,7 @@
 				1000000000000000000000F11 /* TokenDailyLedger.swift */,
 				1000000000000000000000F12 /* TokenRateLimitWindow.swift */,
 				1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */,
+				1000000000000000000000F14 /* GeminiCLILogReader.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -566,6 +569,7 @@
 				1000000000000000000000FB11 /* TokenDailyLedger.swift in Sources */,
 				1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */,
 				1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */,
+				1000000000000000000000FB14 /* GeminiCLILogReader.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

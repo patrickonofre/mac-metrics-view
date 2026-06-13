@@ -27,7 +27,8 @@ enum TokenPricing {
         guard !lower.isEmpty, lower != "<synthetic>" else { return nil }
 
         if let anthropic = anthropicRates(lower) { return anthropic }
-        return openAIRates(lower)
+        if let openAI = openAIRates(lower) { return openAI }
+        return geminiRates(lower)
     }
 
     // MARK: - Anthropic
@@ -114,6 +115,51 @@ enum TokenPricing {
         if lower.hasPrefix("o4-mini") { return openAI(1.1, 4.4, cachedInput: 0.275) }
         if lower.hasPrefix("o3") { return openAI(2, 8, cachedInput: 0.5) }
         return nil
+    }
+
+    // MARK: - Google (Gemini CLI)
+
+    /// Gemini billing: cached input is a discounted absolute rate; Gemini reports no
+    /// cache-creation tokens, so the write rate is effectively unused and billed as
+    /// regular input. `thoughts` tokens map to `reasoningTokens` and bill at the output
+    /// rate in `TokenCostCalculator` (ADR-002/011).
+    private static func gemini(_ input: Double, _ output: Double, cachedInput: Double) -> TokenModelRates {
+        TokenModelRates(
+            inputPerMTok: input,
+            outputPerMTok: output,
+            cacheReadPerMTok: cachedInput,
+            cacheWritePerMTok: input
+        )
+    }
+
+    /// Flat ≤200k-context tier (ADR-011): Gemini's published prices roughly double above
+    /// a 200k-token prompt, but the table ships one flat rate per model under the
+    /// "estimated" framing — the >200k premium is the accepted estimate error. Unknown
+    /// `gemini-*` ids resolve to `nil` so they surface as unpriced, never a guess
+    /// (ADR-003). Rates verified against the official Gemini pricing page at
+    /// implementation time (2026-06-13); re-verifying them is a release-runbook item.
+    private static func geminiRates(_ lower: String) -> TokenModelRates? {
+        guard lower.hasPrefix("gemini") else { return nil }
+        // flash-lite must precede flash (it also contains "flash").
+        if lower.contains("flash-lite") { return gemini(0.10, 0.40, cachedInput: 0.025) }
+        if lower.contains("flash") {
+            // 2.5 Flash is priced above 2.0 Flash; unversioned/2.0 keep the lower tier.
+            if let version = geminiVersion(lower), version >= 2.5 {
+                return gemini(0.30, 2.50, cachedInput: 0.075)
+            }
+            return gemini(0.10, 0.40, cachedInput: 0.025)
+        }
+        if lower.contains("pro") { return gemini(1.25, 10, cachedInput: 0.31) }
+        return nil
+    }
+
+    /// Dotted major.minor from a `gemini-<x.y>-…` id (`gemini-2.5-flash` → 2.5). Gemini
+    /// ids use a dotted version segment, unlike the dash-separated Claude/OpenAI ids that
+    /// `version(of:)` parses.
+    private static func geminiVersion(_ lower: String) -> Double? {
+        guard let range = lower.range(of: "gemini-") else { return nil }
+        let digits = lower[range.upperBound...].prefix { $0.isNumber || $0 == "." }
+        return Double(digits)
     }
 
     /// Minor version of a `gpt-5.x` id (`gpt-5.3-codex` → 3); `gpt-5`/`gpt-5-codex`

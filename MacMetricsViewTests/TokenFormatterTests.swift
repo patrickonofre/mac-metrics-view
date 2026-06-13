@@ -74,13 +74,16 @@ final class TokenFormatterTests: XCTestCase {
     func testProviderAwareMenuBarLabelDiffersPerSelection() {
         let claude = TokenFormatter.menuBarLabel(for: .claude, language: .english)
         let codex = TokenFormatter.menuBarLabel(for: .codex, language: .english)
+        let gemini = TokenFormatter.menuBarLabel(for: .gemini, language: .english)
         let combined = TokenFormatter.menuBarLabel(for: .combined, language: .english)
 
         XCTAssertEqual(claude, Strings.tokenProviderClaude(.english))
         XCTAssertEqual(codex, Strings.tokenProviderCodex(.english))
+        XCTAssertEqual(gemini, Strings.tokenProviderGemini(.english))
         XCTAssertEqual(combined, Strings.tokenProviderCombined(.english))
         XCTAssertNotEqual(claude, codex)
-        XCTAssertNotEqual(codex, combined)
+        XCTAssertNotEqual(codex, gemini)
+        XCTAssertNotEqual(gemini, combined)
     }
 
     // MARK: - Empty state

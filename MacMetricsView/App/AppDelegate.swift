@@ -16,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     // instances and assert provider-tagged routing, mirroring `state`.
     let tokenSampler = TokenUsageSampler()
     let codexTokenSampler = TokenUsageSampler(reader: CodexLogReader())
+    let geminiTokenSampler = TokenUsageSampler(reader: GeminiCLILogReader())
     private var statusItemController: StatusItemController?
 
     // Cleaning-lock
@@ -90,6 +91,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         diskSampler.delegate = self
         tokenSampler.delegate = self
         codexTokenSampler.delegate = self
+        geminiTokenSampler.delegate = self
         startAllSamplers()
     }
 
@@ -105,6 +107,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         diskSampler.stop()
         tokenSampler.stop()
         codexTokenSampler.stop()
+        geminiTokenSampler.stop()
     }
 
     /// Seeds the first-run metric preset once, on a genuinely fresh install. The grant
@@ -193,9 +196,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     }
 
     func tokenUsageSampler(_ sampler: TokenUsageSampler, didProduce events: [TokenUsageEvent]) {
-        // Route each sampler's batch to its provider store; default to Claude for any other
-        // sampler instance (back-compat with the single-sampler call sites).
-        let provider: TokenProvider = sampler === codexTokenSampler ? .codex : .claude
+        // Route each sampler's batch to its provider store by instance identity; default
+        // to Claude for any other sampler (back-compat with the single-sampler call sites).
+        let provider: TokenProvider
+        if sampler === codexTokenSampler {
+            provider = .codex
+        } else if sampler === geminiTokenSampler {
+            provider = .gemini
+        } else {
+            provider = .claude
+        }
         state.update(provider: provider, with: events)
         statusItemController?.setNeedsTitleUpdate()
     }
@@ -210,5 +220,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         diskSampler.start()
         tokenSampler.start()
         codexTokenSampler.start()
+        geminiTokenSampler.start()
     }
 }

@@ -12,6 +12,7 @@ final class LocalizationTokenKeysTests: XCTestCase {
             Strings.tokenProviderLabel,
             Strings.tokenProviderClaude,
             Strings.tokenProviderCodex,
+            Strings.tokenProviderGemini,
             Strings.tokenProviderCombined,
             Strings.tokenReset,
             Strings.tokenEmptyState,
@@ -73,10 +74,12 @@ final class LocalizationTokenKeysTests: XCTestCase {
 
         XCTAssertEqual(Strings.tokenProviderClaude(.english), "Claude")
         XCTAssertEqual(Strings.tokenProviderCodex(.english), "Codex")
+        XCTAssertEqual(Strings.tokenProviderGemini(.english), "Gemini")
         XCTAssertEqual(Strings.tokenProviderCombined(.english), "Combined")
-        // "Combined" is the only provider name that translates.
+        // "Combined" is the only provider name that translates; product names do not.
         XCTAssertNotEqual(Strings.tokenProviderCombined(.english), Strings.tokenProviderCombined(.portuguese))
         XCTAssertEqual(Strings.tokenProviderClaude(.english), Strings.tokenProviderClaude(.portuguese))
+        XCTAssertEqual(Strings.tokenProviderGemini(.english), Strings.tokenProviderGemini(.portuguese))
     }
 
     func testCostStringsCarryTheEstimatedQualifierInBothLanguages() {
@@ -120,6 +123,7 @@ final class LocalizationTokenKeysTests: XCTestCase {
     func testProviderNameHelperMapsEverySelection() {
         XCTAssertEqual(Strings.tokenProviderName(.claude)(.english), Strings.tokenProviderClaude(.english))
         XCTAssertEqual(Strings.tokenProviderName(.codex)(.english), Strings.tokenProviderCodex(.english))
+        XCTAssertEqual(Strings.tokenProviderName(.gemini)(.english), Strings.tokenProviderGemini(.english))
         XCTAssertEqual(Strings.tokenProviderName(.combined)(.portuguese), Strings.tokenProviderCombined(.portuguese))
     }
 }
