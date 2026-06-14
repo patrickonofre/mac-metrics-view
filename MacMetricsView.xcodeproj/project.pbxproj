@@ -148,6 +148,9 @@
 		1000000000000000000000A117 /* PopoverTabPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A107 /* PopoverTabPresentationTests.swift */; };
 		1000000000000000000000A118 /* MetricCardAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */; };
 		1000000000000000000000A119 /* MetricsTabLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A109 /* MetricsTabLayoutTests.swift */; };
+		100000000000000000000899 /* ProcessCPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000999 /* ProcessCPUSample.swift */; };
+		100000000000000000000799 /* ProcessCPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000999 /* ProcessCPUSample.swift */; };
+		10000000000000000000089A /* ProcessCPURankingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099A /* ProcessCPURankingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -273,6 +276,8 @@
 		1000000000000000000000A107 /* PopoverTabPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverTabPresentationTests.swift; sourceTree = "<group>"; };
 		1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCardAccessibilityTests.swift; sourceTree = "<group>"; };
 		1000000000000000000000A109 /* MetricsTabLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsTabLayoutTests.swift; sourceTree = "<group>"; };
+		100000000000000000000999 /* ProcessCPUSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ProcessCPUSample.swift; sourceTree = "<group>"; };
+		10000000000000000000099A /* ProcessCPURankingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessCPURankingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -399,6 +404,7 @@
 				1000000000000000000000A104 /* MetricsTab.swift */,
 				1000000000000000000000A105 /* SettingsTab.swift */,
 				1000000000000000000000A106 /* ActionsTab.swift */,
+				100000000000000000000999 /* ProcessCPUSample.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -423,6 +429,7 @@
 				1000000000000000000000A107 /* PopoverTabPresentationTests.swift */,
 				1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */,
 				1000000000000000000000A109 /* MetricsTabLayoutTests.swift */,
+				10000000000000000000099A /* ProcessCPURankingTests.swift */,
 			);
 			path = MacMetricsViewTests;
 			sourceTree = "<group>";
@@ -634,6 +641,7 @@
 				1000000000000000000000A114 /* MetricsTab.swift in Sources */,
 				1000000000000000000000A115 /* SettingsTab.swift in Sources */,
 				1000000000000000000000A116 /* ActionsTab.swift in Sources */,
+				100000000000000000000899 /* ProcessCPUSample.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -687,6 +695,8 @@
 				1000000000000000000000A117 /* PopoverTabPresentationTests.swift in Sources */,
 				1000000000000000000000A118 /* MetricCardAccessibilityTests.swift in Sources */,
 				1000000000000000000000A119 /* MetricsTabLayoutTests.swift in Sources */,
+				100000000000000000000799 /* ProcessCPUSample.swift in Sources */,
+				10000000000000000000089A /* ProcessCPURankingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
