@@ -40,6 +40,21 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .removeDuplicates()
             .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
             .store(in: &cancellables)
+
+        // The value color now follows the system accent and is resolved per appearance
+        // (ADR-001), so neither change is carried by a metric tick. Re-render immediately
+        // on either signal instead of trailing the next sample (ADR-003). The icon cache
+        // keys on appearance, so a light/dark flip also needs the rebuild to re-tint.
+        NotificationCenter.default
+            .publisher(for: NSColor.systemColorsDidChangeNotification)
+            .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
+            .store(in: &cancellables)
+
+        if let button = statusItem.button {
+            button.publisher(for: \.effectiveAppearance)
+                .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
+                .store(in: &cancellables)
+        }
     }
 
     /// Coalesces title rebuilds: several samplers can deliver in the same run-loop
@@ -228,17 +243,17 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         ]
     }
 
+    /// Resolves the value color through the shared `SeverityPalette`: normal follows
+    /// the live system accent, elevated is an accent-derived amber, high is always red,
+    /// with a contrast guard against the current menu bar appearance (ADR-001, ADR-002).
+    /// The accent is read fresh every render so an accent change is reflected immediately.
     private func color(for style: CPUMenuBarTextStyle) -> NSColor {
-        switch style {
-        case .normal:
-            return .labelColor
-        case .elevatedCPU:
-            // Orange (not yellow) for contrast in light mode, and to match the popover's
-            // severity palette so the same state reads the same in both surfaces.
-            return .systemOrange
-        case .highCPU:
-            return .systemRed
-        }
+        let appearance = statusItem.button?.effectiveAppearance ?? NSApp.effectiveAppearance
+        return SeverityPalette.default.color(
+            role: PopoverTabPresentation.colorRole(for: style),
+            accent: .controlAccentColor,
+            appearance: appearance
+        )
     }
 
     private func iconAttachment(for metric: MenuBarMetric, color: NSColor, symbolOverride: String? = nil) -> NSAttributedString {

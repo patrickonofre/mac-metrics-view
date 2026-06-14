@@ -42,6 +42,8 @@ struct MetricCard<Expanded: View>: View {
     @Binding var isExpanded: Bool
     @ViewBuilder var expanded: () -> Expanded
 
+    @Environment(\.colorScheme) private var colorScheme
+
     private var isExpandable: Bool { PopoverTabPresentation.isExpandable(kind) }
     private var showsExpanded: Bool { isExpandable && isExpanded }
 
@@ -131,12 +133,16 @@ struct MetricCard<Expanded: View>: View {
         }
     }
 
+    /// Resolved through the shared `SeverityPalette` so the card value reads identically
+    /// to the menu bar for every severity (ADR-001, ADR-002).
     private var valueColor: Color {
-        switch PopoverTabPresentation.colorRole(for: severity) {
-        case .normal: return .primary
-        case .elevated: return Color(nsColor: .systemOrange)
-        case .high: return Color(nsColor: .systemRed)
-        }
+        let appearance = NSAppearance(named: colorScheme == .dark ? .darkAqua : .aqua) ?? .currentDrawing()
+        let nsColor = SeverityPalette.default.color(
+            role: PopoverTabPresentation.colorRole(for: severity),
+            accent: .controlAccentColor,
+            appearance: appearance
+        )
+        return Color(nsColor: nsColor)
     }
 }
 
