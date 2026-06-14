@@ -37,6 +37,7 @@ final class CPUState: ObservableObject {
     /// Latest battery reading, or `nil` when no battery is present / not yet sampled.
     /// No history is kept (ADR-002 — no charge sparkline).
     @Published private(set) var latestBatterySample: BatterySample?
+    @Published private(set) var topCPUProcesses: [ProcessCPUSample] = []
     @Published private(set) var history = CPUHistory()
     @Published private(set) var ramHistory = RAMHistory()
     @Published private(set) var networkHistory = NetworkHistory()
@@ -158,6 +159,9 @@ final class CPUState: ObservableObject {
     /// Refresh cadence while the popover is open: fast enough that the 60-minute
     /// window moves visibly, slow enough to be free (ADR-005). Not configurable.
     private let tokenAutoRefreshInterval: TimeInterval = 30
+    private let processReader: ProcessReading
+    private var previousProcessSnapshot: ProcessCPUSnapshot?
+    private var processSamplingTimer: Timer?
     /// Probe cadence during recovery. Slow enough to stay cheap (a process spawn per
     /// tick), fast enough that re-adding the entry is noticed promptly.
     private let recoveryPollInterval: TimeInterval = 1.5
@@ -182,8 +186,10 @@ final class CPUState: ObservableObject {
         accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization(),
         accessibilityProbe: AccessibilityProbing? = nil,
         batteryReader: BatteryReading = IOKitBatteryReader(),
+        processReader: ProcessReading = LibprocProcessReader(),
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
+        self.processReader = processReader
         self.userDefaults = userDefaults
         self.batteryReader = batteryReader
         self.accessibilityAuthorization = accessibilityAuthorization
@@ -232,6 +238,7 @@ final class CPUState: ObservableObject {
         // No leaked timers if the state is torn down mid-recovery or popover-open.
         recoveryPollTimer?.invalidate()
         tokenAutoRefreshTimer?.invalidate()
+        processSamplingTimer?.invalidate()
     }
 
     var menuBarTitle: String {
@@ -793,6 +800,33 @@ final class CPUState: ObservableObject {
 
         visibility.save(to: userDefaults)
         onVisibilityChange?(metric, isVisible)
+    }
+
+    // MARK: - Process Sampling
+
+    func beginProcessSampling() {
+        guard processSamplingTimer == nil else { return } // idempotent
+        previousProcessSnapshot = processReader.readSnapshot() // baseline
+        processSamplingTimer = MainRunLoopTimer.repeating(every: 2) { [weak self] in
+            self?.processSamplingTick()
+        }
+    }
+
+    func endProcessSampling() {
+        processSamplingTimer?.invalidate()
+        processSamplingTimer = nil
+        previousProcessSnapshot = nil
+    }
+
+    func processSamplingTick(now: Date = Date()) {
+        guard processSamplingTimer != nil,
+              let prev = previousProcessSnapshot,
+              let cur = processReader.readSnapshot()
+        else {
+            return
+        }
+        topCPUProcesses = ProcessCPURanking.topProcesses(previous: prev, current: cur)
+        previousProcessSnapshot = cur
     }
 
     // MARK: - Cleaning lock

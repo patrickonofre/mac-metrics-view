@@ -154,6 +154,7 @@
 		10000000000000000000089B /* LibprocProcessReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099B /* LibprocProcessReader.swift */; };
 		10000000000000000000079B /* LibprocProcessReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099B /* LibprocProcessReader.swift */; };
 		10000000000000000000089C /* LibprocProcessReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099C /* LibprocProcessReaderTests.swift */; };
+		10000000000000000000089D /* CPUStateProcessSamplingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099D /* CPUStateProcessSamplingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -283,6 +284,7 @@
 		10000000000000000000099A /* ProcessCPURankingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessCPURankingTests.swift; sourceTree = "<group>"; };
 		10000000000000000000099B /* LibprocProcessReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LibprocProcessReader.swift; sourceTree = "<group>"; };
 		10000000000000000000099C /* LibprocProcessReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibprocProcessReaderTests.swift; sourceTree = "<group>"; };
+		10000000000000000000099D /* CPUStateProcessSamplingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUStateProcessSamplingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -437,6 +439,7 @@
 				1000000000000000000000A109 /* MetricsTabLayoutTests.swift */,
 				10000000000000000000099A /* ProcessCPURankingTests.swift */,
 				10000000000000000000099C /* LibprocProcessReaderTests.swift */,
+				10000000000000000000099D /* CPUStateProcessSamplingTests.swift */,
 			);
 			path = MacMetricsViewTests;
 			sourceTree = "<group>";
@@ -707,6 +710,7 @@
 				10000000000000000000089A /* ProcessCPURankingTests.swift in Sources */,
 				10000000000000000000079B /* LibprocProcessReader.swift in Sources */,
 				10000000000000000000089C /* LibprocProcessReaderTests.swift in Sources */,
+				10000000000000000000089D /* CPUStateProcessSamplingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
