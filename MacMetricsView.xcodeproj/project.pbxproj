@@ -138,6 +138,15 @@
 		1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F12 /* TokenRateLimitWindow.swift */; };
 		1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */; };
 		1000000000000000000000FB14 /* GeminiCLILogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F14 /* GeminiCLILogReader.swift */; };
+		1000000000000000000000A111 /* PopoverTabPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A101 /* PopoverTabPresentation.swift */; };
+		1000000000000000000000A112 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A102 /* MetricCard.swift */; };
+		1000000000000000000000A113 /* PopoverBanners.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A103 /* PopoverBanners.swift */; };
+		1000000000000000000000A114 /* MetricsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A104 /* MetricsTab.swift */; };
+		1000000000000000000000A115 /* SettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A105 /* SettingsTab.swift */; };
+		1000000000000000000000A116 /* ActionsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A106 /* ActionsTab.swift */; };
+		1000000000000000000000A117 /* PopoverTabPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A107 /* PopoverTabPresentationTests.swift */; };
+		1000000000000000000000A118 /* MetricCardAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */; };
+		1000000000000000000000A119 /* MetricsTabLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A109 /* MetricsTabLayoutTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -253,6 +262,15 @@
 		1000000000000000000000F12 /* TokenRateLimitWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenRateLimitWindow.swift; sourceTree = "<group>"; };
 		1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeHistoryBackfill.swift; sourceTree = "<group>"; };
 		1000000000000000000000F14 /* GeminiCLILogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/GeminiCLILogReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000A101 /* PopoverTabPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/PopoverTabPresentation.swift; sourceTree = "<group>"; };
+		1000000000000000000000A102 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/MetricCard.swift; sourceTree = "<group>"; };
+		1000000000000000000000A103 /* PopoverBanners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/PopoverBanners.swift; sourceTree = "<group>"; };
+		1000000000000000000000A104 /* MetricsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/MetricsTab.swift; sourceTree = "<group>"; };
+		1000000000000000000000A105 /* SettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/SettingsTab.swift; sourceTree = "<group>"; };
+		1000000000000000000000A106 /* ActionsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/ActionsTab.swift; sourceTree = "<group>"; };
+		1000000000000000000000A107 /* PopoverTabPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverTabPresentationTests.swift; sourceTree = "<group>"; };
+		1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCardAccessibilityTests.swift; sourceTree = "<group>"; };
+		1000000000000000000000A109 /* MetricsTabLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsTabLayoutTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -372,6 +390,12 @@
 				1000000000000000000000F12 /* TokenRateLimitWindow.swift */,
 				1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */,
 				1000000000000000000000F14 /* GeminiCLILogReader.swift */,
+				1000000000000000000000A101 /* PopoverTabPresentation.swift */,
+				1000000000000000000000A102 /* MetricCard.swift */,
+				1000000000000000000000A103 /* PopoverBanners.swift */,
+				1000000000000000000000A104 /* MetricsTab.swift */,
+				1000000000000000000000A105 /* SettingsTab.swift */,
+				1000000000000000000000A106 /* ActionsTab.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
 			);
@@ -393,6 +417,9 @@
 				100000000000000000000138 /* CleaningLockStateTests.swift */,
 				100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */,
 				100000000000000000000C07 /* UpdateBannerPresentationTests.swift */,
+				1000000000000000000000A107 /* PopoverTabPresentationTests.swift */,
+				1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */,
+				1000000000000000000000A109 /* MetricsTabLayoutTests.swift */,
 			);
 			path = MacMetricsViewTests;
 			sourceTree = "<group>";
@@ -597,6 +624,12 @@
 				1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */,
 				1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */,
 				1000000000000000000000FB14 /* GeminiCLILogReader.swift in Sources */,
+				1000000000000000000000A111 /* PopoverTabPresentation.swift in Sources */,
+				1000000000000000000000A112 /* MetricCard.swift in Sources */,
+				1000000000000000000000A113 /* PopoverBanners.swift in Sources */,
+				1000000000000000000000A114 /* MetricsTab.swift in Sources */,
+				1000000000000000000000A115 /* SettingsTab.swift in Sources */,
+				1000000000000000000000A116 /* ActionsTab.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -647,6 +680,9 @@
 				10000000000000000000004D /* CleaningLockStateTests.swift in Sources */,
 				100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */,
 				100000000000000000000C08 /* UpdateBannerPresentationTests.swift in Sources */,
+				1000000000000000000000A117 /* PopoverTabPresentationTests.swift in Sources */,
+				1000000000000000000000A118 /* MetricCardAccessibilityTests.swift in Sources */,
+				1000000000000000000000A119 /* MetricsTabLayoutTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

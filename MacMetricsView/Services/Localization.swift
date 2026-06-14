@@ -40,6 +40,13 @@ enum Strings {
     // Menu bar / general
     static let metricsPlaceholder = LocalizedText(en: "Metrics", pt: "Métricas")
     static let network = LocalizedText(en: "Network", pt: "Rede")
+
+    // Popover tab titles (redesign). Metrics reuses `metricsPlaceholder`.
+    static let settingsTab = LocalizedText(en: "Settings", pt: "Ajustes")
+    static let actionsTab = LocalizedText(en: "Actions", pt: "Ações")
+    // Card expand/collapse accessibility actions (redesign).
+    static let cardExpand = LocalizedText(en: "Expand", pt: "Expandir")
+    static let cardCollapse = LocalizedText(en: "Collapse", pt: "Recolher")
     static let temperature = LocalizedText(en: "Temperature", pt: "Temperatura")
     static let disk = LocalizedText(en: "Disk", pt: "Disco")
 
