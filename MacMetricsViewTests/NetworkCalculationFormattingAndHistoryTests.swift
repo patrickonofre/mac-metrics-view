@@ -132,4 +132,110 @@ final class NetworkCalculationFormattingAndHistoryTests: XCTestCase {
 
         XCTAssertEqual(history.samples.map(\.downloadBytesPerSecond), [2, 3, 4])
     }
+
+    // MARK: - Byte-count formatting (totals, not rates)
+
+    func testByteCountStringUsesAdaptiveUnitsWithoutPerSecondSuffix() {
+        XCTAssertEqual(NetworkFormatter.byteCountString(42), "42 B")
+        XCTAssertEqual(NetworkFormatter.byteCountString(1_536), "1.5 KB")
+        XCTAssertEqual(NetworkFormatter.byteCountString(1_572_864), "1.5 MB")
+        XCTAssertEqual(NetworkFormatter.byteCountString(1_610_612_736), "1.5 GB")
+        XCTAssertEqual(NetworkFormatter.byteCountString(0), "0 B")
+    }
+
+    // MARK: - Window stats
+
+    func testRecentTotalBytesIntegratesRatesOverInterval() {
+        var history = NetworkHistory(capacity: 45)
+        history.append(NetworkSample(downloadBytesPerSecond: 1_000, uploadBytesPerSecond: 100))
+        history.append(NetworkSample(downloadBytesPerSecond: 3_000, uploadBytesPerSecond: 300))
+
+        let totals = NetworkWindowStats.recentTotalBytes(in: history, interval: 2)
+
+        // (1000 + 3000) * 2 = 8000 down; (100 + 300) * 2 = 800 up.
+        XCTAssertEqual(totals.download, 8_000)
+        XCTAssertEqual(totals.upload, 800)
+    }
+
+    func testRecentTotalBytesRejectsNonPositiveInterval() {
+        var history = NetworkHistory(capacity: 45)
+        history.append(NetworkSample(downloadBytesPerSecond: 1_000, uploadBytesPerSecond: 100))
+
+        XCTAssertEqual(NetworkWindowStats.recentTotalBytes(in: history, interval: 0).download, 0)
+        XCTAssertEqual(NetworkWindowStats.recentTotalBytes(in: history, interval: -1).upload, 0)
+    }
+
+    func testRecentPeakRatesReturnsMaxPerDirection() {
+        var history = NetworkHistory(capacity: 45)
+        history.append(NetworkSample(downloadBytesPerSecond: 1_000, uploadBytesPerSecond: 500))
+        history.append(NetworkSample(downloadBytesPerSecond: 4_000, uploadBytesPerSecond: 200))
+        history.append(NetworkSample(downloadBytesPerSecond: 2_000, uploadBytesPerSecond: 900))
+
+        let peaks = NetworkWindowStats.recentPeakRates(in: history)
+
+        XCTAssertEqual(peaks.download, 4_000)
+        XCTAssertEqual(peaks.upload, 900)
+    }
+
+    func testRecentPeakRatesOnEmptyHistoryIsZero() {
+        let peaks = NetworkWindowStats.recentPeakRates(in: NetworkHistory())
+        XCTAssertEqual(peaks.download, 0)
+        XCTAssertEqual(peaks.upload, 0)
+    }
+
+    func testDetailRowsRenderRecentPeaksThenSession() {
+        var history = NetworkHistory(capacity: 45)
+        history.append(NetworkSample(downloadBytesPerSecond: 1_024, uploadBytesPerSecond: 512))
+
+        var session = TrafficSessionTotals()
+        session.add(inboundRate: 3_072, outboundRate: 1_024, elapsed: 1)
+
+        let rows = NetworkFormatter.detailRows(history: history, interval: 1, session: session, .english)
+
+        XCTAssertEqual(rows.count, 6)
+        XCTAssertEqual(rows[0].label, "Recent download (~45s)")
+        XCTAssertEqual(rows[0].value, "1.0 KB")
+        XCTAssertEqual(rows[1].label, "Recent upload (~45s)")
+        XCTAssertEqual(rows[2].label, "Peak download (~45s)")
+        XCTAssertEqual(rows[2].value, "1.0 KB/s")
+        XCTAssertEqual(rows[3].label, "Peak upload (~45s)")
+        XCTAssertEqual(rows[4].label, "Session download")
+        XCTAssertEqual(rows[4].value, "3.0 KB")
+        XCTAssertEqual(rows[5].label, "Session upload")
+        XCTAssertEqual(rows[5].value, "1.0 KB")
+
+        // Empty history + zero session still yields six rows so the card never blanks out.
+        let emptyRows = NetworkFormatter.detailRows(history: NetworkHistory(), interval: 1, .english)
+        XCTAssertEqual(emptyRows.count, 6)
+        XCTAssertEqual(emptyRows[0].value, "0 B")
+        XCTAssertEqual(emptyRows[2].value, "0 B/s")
+        XCTAssertEqual(emptyRows[4].value, "0 B")
+    }
+
+    // MARK: - Localization keys
+
+    func testNetworkDetailLabelsNonEmptyInBothLanguagesAndCommunicateWindow() {
+        let texts: [LocalizedText] = [
+            Strings.netRecentTotalDownload,
+            Strings.netRecentTotalUpload,
+            Strings.netRecentPeakDownload,
+            Strings.netRecentPeakUpload
+        ]
+        for text in texts {
+            XCTAssertFalse(text(.english).isEmpty)
+            XCTAssertFalse(text(.portuguese).isEmpty)
+            XCTAssertTrue(text(.english).contains("45"))
+            XCTAssertTrue(text(.portuguese).contains("45"))
+        }
+    }
+
+    func testNetworkSessionLabelsNonEmptyAndOmitWindowMarker() {
+        let texts: [LocalizedText] = [Strings.netSessionDownload, Strings.netSessionUpload]
+        for text in texts {
+            XCTAssertFalse(text(.english).isEmpty)
+            XCTAssertFalse(text(.portuguese).isEmpty)
+            // Session totals are since-launch, not the ~45s window — must not say "45".
+            XCTAssertFalse(text(.english).contains("45"))
+        }
+    }
 }

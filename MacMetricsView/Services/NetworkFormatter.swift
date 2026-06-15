@@ -73,4 +73,44 @@ enum NetworkFormatter {
     static func compactMenuBarValue(for sample: NetworkSample?) -> String {
         "↓\(compactFixedWidthRate(sample?.downloadBytesPerSecond)) ↑\(compactFixedWidthRate(sample?.uploadBytesPerSecond))"
     }
+
+    /// Formats a cumulative byte count (not a rate) into adaptive units. Mirrors
+    /// `DiskFormatter.byteCountString` so the network and disk detail rows read alike.
+    static func byteCountString(_ bytes: UInt64) -> String {
+        let units = ["B", "KB", "MB", "GB", "TB"]
+        var scaledValue = Double(bytes)
+        var unitIndex = 0
+
+        while scaledValue >= 1024, unitIndex < units.count - 1 {
+            scaledValue /= 1024
+            unitIndex += 1
+        }
+
+        if unitIndex == 0 {
+            return "\(Int(scaledValue.rounded())) \(units[unitIndex])"
+        }
+
+        return String(format: "%.1f %@", scaledValue, units[unitIndex])
+    }
+
+    /// Rolling-window detail rows for the expanded network card: recent transferred
+    /// totals and peak rates, download then upload. Empty history still renders rows
+    /// (zeroes) so the expanded card never collapses to a blank region.
+    static func detailRows(
+        history: NetworkHistory,
+        interval: TimeInterval,
+        session: TrafficSessionTotals = TrafficSessionTotals(),
+        _ language: AppLanguage = .current
+    ) -> [(label: String, value: String)] {
+        let totals = NetworkWindowStats.recentTotalBytes(in: history, interval: interval)
+        let peaks = NetworkWindowStats.recentPeakRates(in: history)
+        return [
+            (Strings.netRecentTotalDownload(language), byteCountString(totals.download)),
+            (Strings.netRecentTotalUpload(language), byteCountString(totals.upload)),
+            (Strings.netRecentPeakDownload(language), byteRateString(peaks.download)),
+            (Strings.netRecentPeakUpload(language), byteRateString(peaks.upload)),
+            (Strings.netSessionDownload(language), byteCountString(session.inbound)),
+            (Strings.netSessionUpload(language), byteCountString(session.outbound))
+        ]
+    }
 }

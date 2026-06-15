@@ -123,7 +123,9 @@ struct MetricsTab: View {
                 sparkline: MetricTrend.normalized(state.networkHistory.samples.map(\.totalBytesPerSecond)),
                 severity: .normal,
                 isExpanded: expansionBinding(for: .network)
-            ) { EmptyView() }
+            ) {
+                networkDetail
+            }
 
         case .temperature:
             MetricCard(
@@ -149,7 +151,9 @@ struct MetricsTab: View {
                 sparkline: MetricTrend.normalized(state.diskHistory.samples.map(\.totalBytesPerSecond)),
                 severity: state.diskMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .disk)
-            ) { EmptyView() }
+            ) {
+                diskDetail
+            }
 
         case .battery:
             MetricCard(
@@ -243,6 +247,16 @@ struct MetricsTab: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    @ViewBuilder
+    private var networkDetail: some View {
+        NetworkDetailRow(details: state.networkDetailRows)
+    }
+
+    @ViewBuilder
+    private var diskDetail: some View {
+        DiskDetailRow(details: state.diskDetailRows)
+    }
+
     private var networkSummary: String {
         "↓ \(NetworkFormatter.byteRateString(state.latestNetworkSample?.downloadBytesPerSecond)) ↑ \(NetworkFormatter.byteRateString(state.latestNetworkSample?.uploadBytesPerSecond))"
     }
@@ -276,6 +290,56 @@ struct TopProcessRow: View {
 /// Activity-Monitor-style memory breakdown, shown inside the expanded RAM card:
 /// App Memory, Wired, Compressed, Cached Files, Swap Used, and Pressure.
 struct RAMDetailRow: View {
+    let details: [(label: String, value: String)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(details, id: \.label) { item in
+                HStack(spacing: 6) {
+                    Text(item.label)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(item.value)
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Rolling-window network detail, shown inside the expanded Network card: recent
+/// transferred totals and peak rates for download and upload. Same row layout as
+/// `RAMDetailRow` (label left, value right) for visual consistency.
+struct NetworkDetailRow: View {
+    let details: [(label: String, value: String)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(details, id: \.label) { item in
+                HStack(spacing: 6) {
+                    Text(item.label)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(item.value)
+                        .foregroundStyle(.primary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Rolling-window disk detail, shown inside the expanded Disk card: recent
+/// transferred totals and peak rates for read and write. Same row layout as
+/// `NetworkDetailRow` (label left, value right) for visual consistency.
+struct DiskDetailRow: View {
     let details: [(label: String, value: String)]
 
     var body: some View {

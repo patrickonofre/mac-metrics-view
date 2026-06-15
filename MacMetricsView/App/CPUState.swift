@@ -45,6 +45,14 @@ final class CPUState: ObservableObject {
     @Published private(set) var temperatureHistory = TemperatureHistory()
     @Published private(set) var diskHistory = DiskHistory()
 
+    /// Cumulative download/upload and read/write byte totals since launch (in-memory,
+    /// reset each launch), folded from consecutive sample gaps. Surface the since-launch
+    /// rows in the expanded network/disk cards, distinct from the ~45s window stats.
+    @Published private(set) var networkSessionTotals = TrafficSessionTotals()
+    @Published private(set) var diskSessionTotals = TrafficSessionTotals()
+    private var lastNetworkSampleTimestamp: Date?
+    private var lastDiskSampleTimestamp: Date?
+
     /// One bounded token event store + since-reset accumulator per provider (ADR-003).
     /// Ingested via `update(provider:with:)`; the popover/menu bar read the selected
     /// provider's store (or both, summed, for `combined`).
@@ -322,6 +330,26 @@ final class CPUState: ObservableObject {
         RAMFormatter.detailRows(for: latestRAMSample)
     }
 
+    /// Rolling-window download/upload totals and peaks for the expanded network card.
+    /// Integrates the retained rates over the configured sampling interval (ADR-002).
+    var networkDetailRows: [(label: String, value: String)] {
+        NetworkFormatter.detailRows(
+            history: networkHistory,
+            interval: TimeInterval(updateRate),
+            session: networkSessionTotals
+        )
+    }
+
+    /// Rolling-window read/write totals and peaks for the expanded disk card.
+    /// Integrates the retained rates over the configured sampling interval (ADR-002).
+    var diskDetailRows: [(label: String, value: String)] {
+        DiskFormatter.detailRows(
+            history: diskHistory,
+            interval: TimeInterval(updateRate),
+            session: diskSessionTotals
+        )
+    }
+
     var temperatureMenuBarTextStyle: CPUMenuBarTextStyle {
         TemperatureFormatter.menuBarTextStyle(for: latestTemperatureSample)
     }
@@ -515,6 +543,14 @@ final class CPUState: ObservableObject {
     func update(with sample: NetworkSample) {
         latestNetworkSample = sample
         networkHistory.append(sample)
+        if let last = lastNetworkSampleTimestamp {
+            networkSessionTotals.add(
+                inboundRate: sample.downloadBytesPerSecond,
+                outboundRate: sample.uploadBytesPerSecond,
+                elapsed: sample.timestamp.timeIntervalSince(last)
+            )
+        }
+        lastNetworkSampleTimestamp = sample.timestamp
     }
 
     func update(with sample: TemperatureSample) {
@@ -525,6 +561,14 @@ final class CPUState: ObservableObject {
     func update(with sample: DiskSample) {
         latestDiskSample = sample
         diskHistory.append(sample)
+        if let last = lastDiskSampleTimestamp {
+            diskSessionTotals.add(
+                inboundRate: sample.readBytesPerSecond,
+                outboundRate: sample.writeBytesPerSecond,
+                elapsed: sample.timestamp.timeIntervalSince(last)
+            )
+        }
+        lastDiskSampleTimestamp = sample.timestamp
     }
 
     /// No history is kept for battery (ADR-002 — no charge sparkline); just the latest.

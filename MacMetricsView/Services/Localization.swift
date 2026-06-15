@@ -122,9 +122,18 @@ enum Strings {
         pt: "O quanto a memória está sob estresse no geral (%). Fica baixa no uso normal; só sobe quando falta memória."
     )
 
-    // Network detail rows (loanwords, identical in both)
+    // Network detail rows (loanwords, identical in both). Recent totals/peaks are a
+    // rolling sparkline window (~45s) per ADR-002 — labels say so to avoid a
+    // "since launch" read, mirroring the disk detail rows.
     static let download = LocalizedText(en: "Download", pt: "Download")
     static let upload = LocalizedText(en: "Upload", pt: "Upload")
+    static let netRecentTotalDownload = LocalizedText(en: "Recent download (~45s)", pt: "Download recente (~45s)")
+    static let netRecentTotalUpload = LocalizedText(en: "Recent upload (~45s)", pt: "Upload recente (~45s)")
+    static let netRecentPeakDownload = LocalizedText(en: "Peak download (~45s)", pt: "Pico de download (~45s)")
+    static let netRecentPeakUpload = LocalizedText(en: "Peak upload (~45s)", pt: "Pico de upload (~45s)")
+    // Since-launch cumulative totals (reset each launch), distinct from the ~45s window.
+    static let netSessionDownload = LocalizedText(en: "Session download", pt: "Download da sessão")
+    static let netSessionUpload = LocalizedText(en: "Session upload", pt: "Upload da sessão")
 
     // Disk detail rows + picker. Recent totals/peaks are a rolling sparkline
     // window (~45s) per ADR-002 — labels say so to avoid a "since launch" read.
@@ -134,6 +143,9 @@ enum Strings {
     static let diskRecentTotalWrite = LocalizedText(en: "Recent write (~45s)", pt: "Escrita recente (~45s)")
     static let diskRecentPeakRead = LocalizedText(en: "Peak read (~45s)", pt: "Pico de leitura (~45s)")
     static let diskRecentPeakWrite = LocalizedText(en: "Peak write (~45s)", pt: "Pico de escrita (~45s)")
+    // Since-launch cumulative totals (reset each launch), distinct from the ~45s window.
+    static let diskSessionRead = LocalizedText(en: "Session read", pt: "Leitura da sessão")
+    static let diskSessionWrite = LocalizedText(en: "Session write", pt: "Escrita da sessão")
     static let diskMenuBarMetric = LocalizedText(en: "Disk value", pt: "Valor Disco")
     static let diskMetricCombinedShort = LocalizedText(en: "Total", pt: "Total")
     static let diskMetricSplitShort = LocalizedText(en: "R/W", pt: "L/E")

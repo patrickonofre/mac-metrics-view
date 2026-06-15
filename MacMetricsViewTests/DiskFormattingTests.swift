@@ -104,4 +104,59 @@ final class DiskFormattingTests: XCTestCase {
         let sample = DiskSample(readBytesPerSecond: 60 * 1_048_576, writeBytesPerSecond: 60 * 1_048_576)
         XCTAssertEqual(DiskFormatter.menuBarTextStyle(for: sample), .elevatedCPU)
     }
+
+    // MARK: - Detail rows
+
+    func testDetailRowsRenderRecentPeaksThenSession() {
+        var history = DiskHistory(capacity: 45)
+        history.append(DiskSample(readBytesPerSecond: 1_024, writeBytesPerSecond: 512))
+
+        var session = TrafficSessionTotals()
+        session.add(inboundRate: 2_048, outboundRate: 1_024, elapsed: 1)
+
+        let rows = DiskFormatter.detailRows(history: history, interval: 1, session: session, .english)
+
+        XCTAssertEqual(rows.count, 6)
+        XCTAssertEqual(rows[0].label, "Recent read (~45s)")
+        XCTAssertEqual(rows[0].value, "1.0 KB")
+        XCTAssertEqual(rows[1].label, "Recent write (~45s)")
+        XCTAssertEqual(rows[2].label, "Peak read (~45s)")
+        XCTAssertEqual(rows[2].value, "1.0 KB/s")
+        XCTAssertEqual(rows[3].label, "Peak write (~45s)")
+        XCTAssertEqual(rows[4].label, "Session read")
+        XCTAssertEqual(rows[4].value, "2.0 KB")
+        XCTAssertEqual(rows[5].label, "Session write")
+        XCTAssertEqual(rows[5].value, "1.0 KB")
+
+        // Empty history + zero session still yields six rows so the card never blanks out.
+        let emptyRows = DiskFormatter.detailRows(history: DiskHistory(), interval: 1, .english)
+        XCTAssertEqual(emptyRows.count, 6)
+        XCTAssertEqual(emptyRows[0].value, "0 B")
+        XCTAssertEqual(emptyRows[2].value, "0 B/s")
+        XCTAssertEqual(emptyRows[4].value, "0 B")
+    }
+
+    func testDetailLabelsNonEmptyInBothLanguagesAndCommunicateWindow() {
+        let texts: [LocalizedText] = [
+            Strings.diskRecentTotalRead,
+            Strings.diskRecentTotalWrite,
+            Strings.diskRecentPeakRead,
+            Strings.diskRecentPeakWrite
+        ]
+        for text in texts {
+            XCTAssertFalse(text(.english).isEmpty)
+            XCTAssertFalse(text(.portuguese).isEmpty)
+            XCTAssertTrue(text(.english).contains("45"))
+        }
+    }
+
+    func testSessionLabelsNonEmptyInBothLanguagesAndOmitWindowMarker() {
+        let texts: [LocalizedText] = [Strings.diskSessionRead, Strings.diskSessionWrite]
+        for text in texts {
+            XCTAssertFalse(text(.english).isEmpty)
+            XCTAssertFalse(text(.portuguese).isEmpty)
+            // Session totals are since-launch, not the ~45s window — must not say "45".
+            XCTAssertFalse(text(.english).contains("45"))
+        }
+    }
 }

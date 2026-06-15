@@ -46,6 +46,21 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         XCTAssertEqual(state.diskHistory.samples.count, 1)
     }
 
+    func testDiskSessionTotalsAccumulateFromConsecutiveSampleGaps() {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        let t0 = Date(timeIntervalSince1970: 1_000)
+
+        // First sample is the baseline — no previous timestamp, so it adds nothing.
+        state.update(with: DiskSample(timestamp: t0, readBytesPerSecond: 1_000, writeBytesPerSecond: 500))
+        XCTAssertEqual(state.diskSessionTotals.inbound, 0)
+        XCTAssertEqual(state.diskSessionTotals.outbound, 0)
+
+        // Second sample 2 s later: rate × elapsed folds into the running total.
+        state.update(with: DiskSample(timestamp: t0.addingTimeInterval(2), readBytesPerSecond: 1_500, writeBytesPerSecond: 250))
+        XCTAssertEqual(state.diskSessionTotals.inbound, 3_000)
+        XCTAssertEqual(state.diskSessionTotals.outbound, 500)
+    }
+
     func testSetDiskMenuBarMetricUpdatesDisplayAndFiresCallbackAndPersists() {
         let userDefaults = makeUserDefaults()
         let state = CPUState(userDefaults: userDefaults)

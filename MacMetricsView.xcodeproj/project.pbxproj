@@ -58,6 +58,7 @@
 		100000000000000000000031 /* TemperatureSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000126 /* TemperatureSampler.swift */; };
 		100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* IOHIDTemperatureSensors.swift */; };
 		100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* IOKitTemperatureReader.swift */; };
+		1000000000000000000000FFB /* SMCTemperatureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF2 /* SMCTemperatureReader.swift */; };
 		100000000000000000000053 /* TemperatureReaderFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000050 /* TemperatureReaderFactory.swift */; };
 		100000000000000000000032 /* TemperatureSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000123 /* TemperatureSample.swift */; };
 		100000000000000000000033 /* TemperatureHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000124 /* TemperatureHistory.swift */; };
@@ -107,6 +108,8 @@
 		1000000000000000000000DB02 /* DiskSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D02 /* DiskSample.swift */; };
 		1000000000000000000000DB03 /* DiskHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D03 /* DiskHistory.swift */; };
 		1000000000000000000000DB04 /* DiskWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D04 /* DiskWindowStats.swift */; };
+		1000000000000000000000FFA /* NetworkWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF1 /* NetworkWindowStats.swift */; };
+		1000000000000000000000FFC /* TrafficSessionTotals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF3 /* TrafficSessionTotals.swift */; };
 		1000000000000000000000DB05 /* DiskSampleCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D05 /* DiskSampleCalculator.swift */; };
 		1000000000000000000000DB06 /* DiskSeverityThresholds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D06 /* DiskSeverityThresholds.swift */; };
 		1000000000000000000000DB07 /* DiskFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D07 /* DiskFormatter.swift */; };
@@ -192,6 +195,8 @@
 		100000000000000000000117 /* NetworkCounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkCounterSnapshot.swift; sourceTree = "<group>"; };
 		100000000000000000000118 /* NetworkSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkSample.swift; sourceTree = "<group>"; };
 		100000000000000000000119 /* NetworkHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkHistory.swift; sourceTree = "<group>"; };
+		1000000000000000000000FF1 /* NetworkWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkWindowStats.swift; sourceTree = "<group>"; };
+		1000000000000000000000FF3 /* TrafficSessionTotals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TrafficSessionTotals.swift; sourceTree = "<group>"; };
 		10000000000000000000011A /* NetworkSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/NetworkSampler.swift; sourceTree = "<group>"; };
 		10000000000000000000011B /* DarwinNetworkReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DarwinNetworkReader.swift; sourceTree = "<group>"; };
 		10000000000000000000011C /* NetworkFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/NetworkFormatter.swift; sourceTree = "<group>"; };
@@ -211,6 +216,7 @@
 		100000000000000000000126 /* TemperatureSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureSampler.swift; sourceTree = "<group>"; };
 		10000000000000000000004E /* IOHIDTemperatureSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOHIDTemperatureSensors.swift; sourceTree = "<group>"; };
 		10000000000000000000004F /* IOKitTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitTemperatureReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000FF2 /* SMCTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SMCTemperatureReader.swift; sourceTree = "<group>"; };
 		100000000000000000000050 /* TemperatureReaderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureReaderFactory.swift; sourceTree = "<group>"; };
 		10000000000000000000012B /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Localization.swift; sourceTree = "<group>"; };
 		10000000000000000000012C /* MainRunLoopTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MainRunLoopTimer.swift; sourceTree = "<group>"; };
@@ -353,6 +359,7 @@
 				100000000000000000000126 /* TemperatureSampler.swift */,
 				10000000000000000000004E /* IOHIDTemperatureSensors.swift */,
 				10000000000000000000004F /* IOKitTemperatureReader.swift */,
+				1000000000000000000000FF2 /* SMCTemperatureReader.swift */,
 				100000000000000000000050 /* TemperatureReaderFactory.swift */,
 				10000000000000000000011B /* DarwinNetworkReader.swift */,
 				10000000000000000000011D /* NetworkSampleCalculator.swift */,
@@ -373,6 +380,8 @@
 				1000000000000000000000D02 /* DiskSample.swift */,
 				1000000000000000000000D03 /* DiskHistory.swift */,
 				1000000000000000000000D04 /* DiskWindowStats.swift */,
+				1000000000000000000000FF1 /* NetworkWindowStats.swift */,
+				1000000000000000000000FF3 /* TrafficSessionTotals.swift */,
 				1000000000000000000000D05 /* DiskSampleCalculator.swift */,
 				1000000000000000000000D06 /* DiskSeverityThresholds.swift */,
 				1000000000000000000000D07 /* DiskFormatter.swift */,
@@ -593,6 +602,7 @@
 				100000000000000000000031 /* TemperatureSampler.swift in Sources */,
 				100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */,
 				100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */,
+				1000000000000000000000FFB /* SMCTemperatureReader.swift in Sources */,
 				100000000000000000000053 /* TemperatureReaderFactory.swift in Sources */,
 				10000000000000000000001E /* DarwinNetworkReader.swift in Sources */,
 				100000000000000000000020 /* NetworkSampleCalculator.swift in Sources */,
@@ -613,6 +623,8 @@
 				1000000000000000000000DB02 /* DiskSample.swift in Sources */,
 				1000000000000000000000DB03 /* DiskHistory.swift in Sources */,
 				1000000000000000000000DB04 /* DiskWindowStats.swift in Sources */,
+				1000000000000000000000FFA /* NetworkWindowStats.swift in Sources */,
+				1000000000000000000000FFC /* TrafficSessionTotals.swift in Sources */,
 				1000000000000000000000DB05 /* DiskSampleCalculator.swift in Sources */,
 				1000000000000000000000DB06 /* DiskSeverityThresholds.swift in Sources */,
 				1000000000000000000000DB07 /* DiskFormatter.swift in Sources */,

@@ -1,16 +1,15 @@
 import Foundation
 
 /// Selects the temperature reader for the current hardware at runtime. Apple Silicon
-/// reads numeric Celsius via IOKit; Intel uses the SMC reader when delivered (task-003),
-/// otherwise the state-only `ProcessInfoTemperatureReader`. Numeric absence is handled
-/// inside each reader (`celsius = nil`), so the fallback never regresses today's UI.
+/// reads numeric Celsius via IOKit; Intel reads it from the SMC (`SMCTemperatureReader`).
+/// Numeric absence is handled inside each reader (`celsius = nil`), so the state-only
+/// fallback never regresses today's UI even if a given Mac exposes no usable keys.
 enum TemperatureReaderFactory {
     static func makeDefault() -> TemperatureReading {
         #if arch(arm64)
         return IOKitTemperatureReader()
         #else
-        // Intel SMC reader is optional/deferred (task-003); fall back to state-only.
-        return ProcessInfoTemperatureReader()
+        return SMCTemperatureReader()
         #endif
     }
 }

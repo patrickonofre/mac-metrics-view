@@ -60,6 +60,28 @@ enum DiskFormatter {
         return String(format: "%.1f %@", scaledValue, units[unitIndex])
     }
 
+    /// Rolling-window detail rows for the expanded disk card: recent transferred
+    /// totals and peak rates, read then write. Empty history still renders rows
+    /// (zeroes) so the expanded card never collapses to a blank region. Mirrors
+    /// `NetworkFormatter.detailRows`.
+    static func detailRows(
+        history: DiskHistory,
+        interval: TimeInterval,
+        session: TrafficSessionTotals = TrafficSessionTotals(),
+        _ language: AppLanguage = .current
+    ) -> [(label: String, value: String)] {
+        let totals = DiskWindowStats.recentTotalBytes(in: history, interval: interval)
+        let peaks = DiskWindowStats.recentPeakRates(in: history)
+        return [
+            (Strings.diskRecentTotalRead(language), byteCountString(totals.read)),
+            (Strings.diskRecentTotalWrite(language), byteCountString(totals.written)),
+            (Strings.diskRecentPeakRead(language), combinedRateString(peaks.read)),
+            (Strings.diskRecentPeakWrite(language), combinedRateString(peaks.write)),
+            (Strings.diskSessionRead(language), byteCountString(session.inbound)),
+            (Strings.diskSessionWrite(language), byteCountString(session.outbound))
+        ]
+    }
+
     static func fixedWidthCombinedRateString(_ value: Double?) -> String {
         guard let value, value.isFinite, value >= 0 else { return "--.- MB/s" }
 
