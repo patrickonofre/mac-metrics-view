@@ -80,11 +80,18 @@ enum Strings {
     static let developedBy = LocalizedText(en: "Developed by Patrick Onofre", pt: "Desenvolvido por Patrick Onofre")
     static let updated = LocalizedText(en: "Updated", pt: "Atualizado")
     static let quit = LocalizedText(en: "Quit Mac Metrics View", pt: "Sair do Mac Metrics View")
+    
+    // Settings Update Rate
+    static let updateRateLabel = LocalizedText(en: "Update Rate", pt: "Taxa de Atualização")
+    static let updateRateSeconds1 = LocalizedText(en: "1 second", pt: "1 segundo")
+    static let updateRateSeconds2 = LocalizedText(en: "2 seconds", pt: "2 segundos")
+    static let updateRateSeconds3 = LocalizedText(en: "3 seconds", pt: "3 segundos")
 
     // CPU detail rows
     static let cpuUser = LocalizedText(en: "User", pt: "Usuário")
     static let cpuSystem = LocalizedText(en: "System", pt: "Sistema")
     static let cpuIdle = LocalizedText(en: "Idle", pt: "Ocioso")
+    static let cpuSampling = LocalizedText(en: "sampling…", pt: "amostrando…")
 
     // RAM detail rows
     static let ramTotal = LocalizedText(en: "Total", pt: "Total")

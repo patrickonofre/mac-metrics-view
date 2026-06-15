@@ -91,10 +91,11 @@ final class CPUStateProcessSamplingTests: XCTestCase {
         XCTAssertEqual(state.topCPUProcesses.count, 2)
         
         // p2 is 150%, p1 is 100% -> p2 should be first
+        let cores = Double(ProcessInfo.processInfo.activeProcessorCount)
         XCTAssertEqual(state.topCPUProcesses[0].pid, 2)
-        XCTAssertEqual(state.topCPUProcesses[0].cpuPercent, 150.0)
+        XCTAssertEqual(state.topCPUProcesses[0].cpuPercent, 150.0 / cores)
         XCTAssertEqual(state.topCPUProcesses[1].pid, 1)
-        XCTAssertEqual(state.topCPUProcesses[1].cpuPercent, 100.0)
+        XCTAssertEqual(state.topCPUProcesses[1].cpuPercent, 100.0 / cores)
         
         state.endProcessSampling()
     }

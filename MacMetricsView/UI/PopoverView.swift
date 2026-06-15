@@ -61,12 +61,14 @@ struct PopoverView: View {
                 // Time-derived token figures (burn rate, rolling windows) refresh on a
                 // ~30s timer only while the popover is open (ADR-005).
                 state.beginTokenAutoRefresh()
+                state.beginProcessSampling()
             }
             .onDisappear {
                 // If the popover is dismissed mid-recovery, stop the probe poll loop.
                 // No-op unless we were awaiting a grant.
                 state.cancelAccessibilityRecovery()
                 state.endTokenAutoRefresh()
+                state.endProcessSampling()
             }
         } else {
             Color.clear

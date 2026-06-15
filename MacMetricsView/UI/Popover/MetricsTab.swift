@@ -93,7 +93,9 @@ struct MetricsTab: View {
                 sparkline: state.history.samples.map(\.totalUsagePercent),
                 severity: state.menuBarTextStyle,
                 isExpanded: expansionBinding(for: .cpu)
-            ) { EmptyView() }
+            ) {
+                cpuDetail
+            }
 
         case .ram:
             MetricCard(
@@ -178,6 +180,18 @@ struct MetricsTab: View {
     // MARK: - Expanded detail content
 
     @ViewBuilder
+    private var cpuDetail: some View {
+        if state.topCPUProcesses.isEmpty {
+            Text(Strings.cpuSampling())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            TopProcessRow(processes: state.topCPUProcesses)
+        }
+    }
+
+    @ViewBuilder
     private var batteryDetail: some View {
         if state.batteryDetailRows.isEmpty {
             Text(Strings.batteryNoBattery())
@@ -221,6 +235,29 @@ struct MetricsTab: View {
 }
 
 // MARK: - Relocated detail subviews (internal; task_04)
+
+/// List of top CPU consuming processes, shown inside the expanded CPU card.
+struct TopProcessRow: View {
+    let processes: [ProcessCPUSample]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(processes) { process in
+                HStack(spacing: 6) {
+                    Text(process.name)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(String(format: "%.1f%%", process.cpuPercent))
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
 
 /// Power source / time / health / cycle detail, shown inside the expanded Battery
 /// card. Relocated from `PopoverView.swift` (task_04). No sparkline (ADR-002).

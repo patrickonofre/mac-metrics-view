@@ -55,7 +55,7 @@ enum PopoverTabPresentation {
 
     /// Cards that can expand to double width; all others are summary-only.
     static func isExpandable(_ kind: MetricCardKind) -> Bool {
-        kind == .tokens || kind == .battery
+        kind == .tokens || kind == .battery || kind == .cpu
     }
 
     /// Maps a metric's menu-bar severity to the card's value color role.

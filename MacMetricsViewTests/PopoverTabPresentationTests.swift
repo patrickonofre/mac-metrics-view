@@ -57,10 +57,11 @@ final class PopoverTabPresentationTests: XCTestCase {
     func testExpandableKinds() {
         XCTAssertTrue(PopoverTabPresentation.isExpandable(.tokens))
         XCTAssertTrue(PopoverTabPresentation.isExpandable(.battery))
+        XCTAssertTrue(PopoverTabPresentation.isExpandable(.cpu))
     }
 
     func testSummaryOnlyKinds() {
-        for kind: MetricCardKind in [.cpu, .ram, .network, .temperature, .disk] {
+        for kind: MetricCardKind in [.ram, .network, .temperature, .disk] {
             XCTAssertFalse(PopoverTabPresentation.isExpandable(kind))
         }
     }

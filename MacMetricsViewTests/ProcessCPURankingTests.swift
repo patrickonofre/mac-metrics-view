@@ -19,7 +19,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 1)
         
         XCTAssertEqual(ranked.count, 2)
         XCTAssertEqual(ranked[0].pid, 1)
@@ -46,7 +46,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 1)
         
         XCTAssertEqual(ranked.count, 1)
         XCTAssertEqual(ranked[0].pid, 1)
@@ -72,7 +72,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 1)
         
         XCTAssertEqual(ranked.count, 3)
         XCTAssertEqual(ranked[0].pid, 2)
@@ -105,7 +105,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, limit: 5)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, limit: 5, activeProcessorCount: 1)
         
         XCTAssertEqual(ranked.count, 5)
         XCTAssertEqual(ranked.map { $0.pid }, [1, 2, 3, 4, 5])
@@ -128,7 +128,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, limit: 5)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, limit: 5, activeProcessorCount: 1)
         
         XCTAssertEqual(ranked.count, 2)
     }
@@ -149,7 +149,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 1)
         
         XCTAssertEqual(ranked.count, 1)
         XCTAssertEqual(ranked[0].pid, 1)
@@ -170,7 +170,7 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 1)
         
         XCTAssertTrue(ranked.isEmpty)
     }
@@ -191,7 +191,7 @@ final class ProcessCPURankingTests: XCTestCase {
                 1: .init(name: "p1", cpuNanos: 100_000_000)
             ]
         )
-        XCTAssertTrue(ProcessCPURanking.topProcesses(previous: previous, current: currentZero).isEmpty)
+        XCTAssertTrue(ProcessCPURanking.topProcesses(previous: previous, current: currentZero, activeProcessorCount: 1).isEmpty)
         
         // Negative elapsed
         let currentNegative = ProcessCPUSnapshot(
@@ -200,7 +200,7 @@ final class ProcessCPURankingTests: XCTestCase {
                 1: .init(name: "p1", cpuNanos: 100_000_000)
             ]
         )
-        XCTAssertTrue(ProcessCPURanking.topProcesses(previous: previous, current: currentNegative).isEmpty)
+        XCTAssertTrue(ProcessCPURanking.topProcesses(previous: previous, current: currentNegative, activeProcessorCount: 1).isEmpty)
     }
     
     func testZeroDeltasAreSkipped() {
@@ -218,8 +218,30 @@ final class ProcessCPURankingTests: XCTestCase {
             ]
         )
         
-        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current)
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 1)
         
         XCTAssertTrue(ranked.isEmpty)
+    }
+    
+    func testNormalizationWithMultipleCores() {
+        let now = Date()
+        let previous = ProcessCPUSnapshot(
+            timestamp: now,
+            entries: [
+                1: .init(name: "process1", cpuNanos: 1_000_000_000)
+            ]
+        )
+        let current = ProcessCPUSnapshot(
+            timestamp: now.addingTimeInterval(2.0),
+            entries: [
+                1: .init(name: "process1", cpuNanos: 3_000_000_000) // delta = 2e9 ns over 2s = 100% of 1 core
+            ]
+        )
+        
+        // On 4 cores, 100% of 1 core is 25% of total system
+        let ranked = ProcessCPURanking.topProcesses(previous: previous, current: current, activeProcessorCount: 4)
+        
+        XCTAssertEqual(ranked.count, 1)
+        XCTAssertEqual(ranked[0].cpuPercent, 25.0)
     }
 }
