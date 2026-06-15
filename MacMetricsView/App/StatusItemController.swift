@@ -50,11 +50,19 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
             .store(in: &cancellables)
 
-        if let button = statusItem.button {
-            button.publisher(for: \.effectiveAppearance)
-                .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
-                .store(in: &cancellables)
-        }
+        // Re-tint on a real light↔dark flip. Observe the *application's* effective
+        // appearance, not the status-button's: AppKit briefly swaps the button into a
+        // template/vibrant appearance every time it snapshots the menu-bar replicant
+        // (`setSnapshotImage:needsInactiveTemplateStyling:`), so the button's KVO emits
+        // a constant A→B→A→B flicker. Mapping to a stable light/dark `Bool` and
+        // de-duping collapses that flicker — observing it directly (even deduped by
+        // name) re-entered updateTitle → snapshot → emit → updateTitle and pinned a core.
+        NSApplication.shared.publisher(for: \.effectiveAppearance)
+            .map { $0.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua }
+            .removeDuplicates()
+            .dropFirst()
+            .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
+            .store(in: &cancellables)
     }
 
     /// Coalesces title rebuilds: several samplers can deliver in the same run-loop
