@@ -1,0 +1,26 @@
+{
+  "$comment": "Canonical 2.0 marketing-site image manifest. The contract that docs/index.html (tablist + hero) and the OG/JSON-LD image reference. Real captures are produced by the screenshot pipeline (see scripts/capture-site-screenshots.md) from the built 2.0 .app; this file pins their final names, display dimensions, and byte budget so check-site-assets.mjs can gate them. Dimensions are LOGICAL points; a 2x (Retina) export at exactly double is also accepted.",
+  "assetsDir": "docs/assets",
+  "byteBudgetKB": { "menuBar": 80, "popover": 250 },
+  "menuBar": {
+    "file": "menu-bar-2.0.png",
+    "width": 744,
+    "height": 64,
+    "role": "hero menu-bar strip — CPU/RAM/network/temp/disk/battery glanceable"
+  },
+  "tabs": [
+    { "id": "cpu",     "light": "popover-cpu-light.png",     "dark": "popover-cpu-dark.png",     "role": "CPU tab — top processes" },
+    { "id": "ram",     "light": "popover-ram-light.png",     "dark": "popover-ram-dark.png",     "role": "RAM tab — Activity-Monitor breakdown, swap, kernel" },
+    { "id": "netdisk", "light": "popover-netdisk-light.png", "dark": "popover-netdisk-dark.png", "role": "Network/Disk tab — expandable detail + session totals" },
+    { "id": "ai",      "light": "popover-ai-light.png",      "dark": "popover-ai-dark.png",      "role": "AI tokens tab — burn rate, USD cost, projection" }
+  ],
+  "popoverWidth": 680,
+  "popoverHeight": 860,
+  "ogImage": "popover-cpu-light.png",
+  "legacyDemoAssetsForbidden": [
+    "app-popover-preview.png",
+    "token-usage-preview.png",
+    "product-preview.png",
+    "menu-bar-preview.png"
+  ]
+}
