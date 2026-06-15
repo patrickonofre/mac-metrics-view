@@ -102,7 +102,7 @@ struct MetricsTab: View {
                 kind: .ram,
                 symbol: "memorychip",
                 title: "RAM",
-                value: RAMFormatter.valueString(for: state.latestRAMSample, metric: state.ramMenuBarMetric),
+                value: state.ramCardValue,
                 sparkline: MetricTrend.ramSeries(
                     metric: state.ramMenuBarMetric,
                     pressure: state.ramHistory.samples.map(\.pressurePercent),
@@ -110,7 +110,9 @@ struct MetricsTab: View {
                 ),
                 severity: state.ramMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .ram)
-            ) { EmptyView() }
+            ) {
+                ramDetail
+            }
 
         case .network:
             MetricCard(
@@ -192,6 +194,18 @@ struct MetricsTab: View {
     }
 
     @ViewBuilder
+    private var ramDetail: some View {
+        if state.ramDetailRows.isEmpty {
+            Text(Strings.cpuSampling())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            RAMDetailRow(details: state.ramDetailRows)
+        }
+    }
+
+    @ViewBuilder
     private var batteryDetail: some View {
         if state.batteryDetailRows.isEmpty {
             Text(Strings.batteryNoBattery())
@@ -250,6 +264,30 @@ struct TopProcessRow: View {
                     Spacer(minLength: 0)
                     Text(String(format: "%.1f%%", process.cpuPercent))
                         .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+        }
+        .font(.caption2)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// Activity-Monitor-style memory breakdown, shown inside the expanded RAM card:
+/// App Memory, Wired, Compressed, Cached Files, Swap Used, and Pressure.
+struct RAMDetailRow: View {
+    let details: [(label: String, value: String)]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            ForEach(details, id: \.label) { item in
+                HStack(spacing: 6) {
+                    Text(item.label)
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
+                    Text(item.value)
+                        .foregroundStyle(.primary)
                         .monospacedDigit()
                 }
             }

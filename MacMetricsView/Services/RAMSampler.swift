@@ -33,12 +33,42 @@ final class MachRAMReader: RAMReading {
         guard result == KERN_SUCCESS else { return nil }
 
         let totalBytes = ProcessInfo.processInfo.physicalMemory
-        return MachRAMReader.makeSample(stats: stats, totalBytes: totalBytes, pageSize: pageSize)
+        return MachRAMReader.makeSample(
+            stats: stats,
+            totalBytes: totalBytes,
+            pageSize: pageSize,
+            swapUsedBytes: MachRAMReader.readSwapUsedBytes(),
+            pressureLevel: MachRAMReader.readPressureLevel()
+        )
+    }
+
+    /// Swap currently written to disk, via `vm.swapusage`. Swap is the strongest signal of
+    /// real memory stress a user feels (beachballs), so it's surfaced even when zero.
+    static func readSwapUsedBytes() -> UInt64 {
+        var usage = xsw_usage()
+        var size = MemoryLayout<xsw_usage>.stride
+        guard sysctlbyname("vm.swapusage", &usage, &size, nil, 0) == 0 else { return 0 }
+        return usage.xsu_used
+    }
+
+    /// Kernel memory pressure level, via `kern.memorystatus_vm_pressure_level`. Returns nil
+    /// when unreadable so callers can fall back to percent-of-total severity.
+    static func readPressureLevel() -> MemoryPressureLevel? {
+        var value: Int32 = 0
+        var size = MemoryLayout<Int32>.stride
+        guard sysctlbyname("kern.memorystatus_vm_pressure_level", &value, &size, nil, 0) == 0 else { return nil }
+        return MemoryPressureLevel(sysctlValue: value)
     }
 
     /// Pure derivation of a `RAMSample` from raw VM stats, isolated from the syscall so the
     /// metric math is unit-testable with synthesized `vm_statistics64` values.
-    static func makeSample(stats: vm_statistics64, totalBytes: UInt64, pageSize: vm_size_t) -> RAMSample? {
+    static func makeSample(
+        stats: vm_statistics64,
+        totalBytes: UInt64,
+        pageSize: vm_size_t,
+        swapUsedBytes: UInt64 = 0,
+        pressureLevel: MemoryPressureLevel? = nil
+    ) -> RAMSample? {
         guard totalBytes > 0 else { return nil }
 
         // Mirror Activity Monitor's "Memory Used" = App Memory + Wired + Compressed,
@@ -53,6 +83,11 @@ final class MachRAMReader: RAMReading {
         let usedBytes = usedPages * UInt64(pageSize)
         let appMemoryBytes = appMemoryPages * UInt64(pageSize)
         let pressureBytes = pressurePages * UInt64(pageSize)
+        // Breakdown components mirroring Activity Monitor. Cached Files ≈ file-backed
+        // (external) pages: reclaimable, so reported as "available" rather than used.
+        let wiredBytes = UInt64(stats.wire_count) * UInt64(pageSize)
+        let compressedBytes = UInt64(stats.compressor_page_count) * UInt64(pageSize)
+        let cachedFilesBytes = UInt64(stats.external_page_count) * UInt64(pageSize)
 
         let bytesPerGB = 1024.0 * 1024.0 * 1024.0
         let usedGB = Double(usedBytes) / bytesPerGB
@@ -61,6 +96,10 @@ final class MachRAMReader: RAMReading {
         let appMemoryGB = Double(appMemoryBytes) / bytesPerGB
         let appMemoryPercent = Double(appMemoryBytes) / Double(totalBytes) * 100
         let pressurePercent = Double(pressureBytes) / Double(totalBytes) * 100
+        let wiredGB = Double(wiredBytes) / bytesPerGB
+        let compressedGB = Double(compressedBytes) / bytesPerGB
+        let cachedFilesGB = Double(cachedFilesBytes) / bytesPerGB
+        let swapUsedGB = Double(swapUsedBytes) / bytesPerGB
 
         guard usedGB.isFinite,
               totalGB.isFinite,
@@ -77,7 +116,12 @@ final class MachRAMReader: RAMReading {
             usedPercent: usedPercent,
             appMemoryGB: appMemoryGB,
             appMemoryPercent: appMemoryPercent,
-            pressurePercent: pressurePercent
+            pressurePercent: pressurePercent,
+            wiredGB: wiredGB,
+            compressedGB: compressedGB,
+            cachedFilesGB: cachedFilesGB,
+            swapUsedGB: swapUsedGB,
+            pressureLevel: pressureLevel
         )
     }
 }

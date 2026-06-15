@@ -311,6 +311,17 @@ final class CPUState: ObservableObject {
         display.ramMenuBarMetric
     }
 
+    /// Popover RAM card headline: "Used / Total" — more honest than echoing the menu-bar
+    /// metric, since it shows how much of total memory is actually in use.
+    var ramCardValue: String {
+        RAMFormatter.usedTotalString(used: latestRAMSample?.usedGB, total: latestRAMSample?.totalGB)
+    }
+
+    /// Activity-Monitor-style breakdown rows for the expanded RAM card.
+    var ramDetailRows: [(label: String, value: String)] {
+        RAMFormatter.detailRows(for: latestRAMSample)
+    }
+
     var temperatureMenuBarTextStyle: CPUMenuBarTextStyle {
         TemperatureFormatter.menuBarTextStyle(for: latestTemperatureSample)
     }

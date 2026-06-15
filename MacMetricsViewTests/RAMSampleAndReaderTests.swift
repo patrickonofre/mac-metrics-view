@@ -11,14 +11,20 @@ final class RAMSampleAndReaderTests: XCTestCase {
         internalPages: natural_t = 0,
         purgeable: natural_t = 0,
         wire: natural_t = 0,
-        compressor: natural_t = 0
+        compressor: natural_t = 0,
+        external: natural_t = 0
     ) -> vm_statistics64 {
         var s = vm_statistics64()
         s.internal_page_count = internalPages
         s.purgeable_count = purgeable
         s.wire_count = wire
         s.compressor_page_count = compressor
+        s.external_page_count = external
         return s
+    }
+
+    private func gb(_ pages: Double) -> Double {
+        pages * Double(pageSize) / (1024 * 1024 * 1024)
     }
 
     func testDerivesAppMemoryAndPressureFromStats() {
@@ -63,5 +69,42 @@ final class RAMSampleAndReaderTests: XCTestCase {
     func testZeroTotalBytesYieldsNil() {
         let s = stats(internalPages: 1_000, wire: 1_000)
         XCTAssertNil(MachRAMReader.makeSample(stats: s, totalBytes: 0, pageSize: pageSize))
+    }
+
+    func testDerivesBreakdownComponents() {
+        let s = stats(internalPages: 2_000_000, purgeable: 500_000, wire: 400_000, compressor: 600_000, external: 800_000)
+        let r = try! XCTUnwrap(MachRAMReader.makeSample(stats: s, totalBytes: totalBytes, pageSize: pageSize))
+
+        XCTAssertEqual(r.wiredGB, gb(400_000), accuracy: 0.001)
+        XCTAssertEqual(r.compressedGB, gb(600_000), accuracy: 0.001)
+        XCTAssertEqual(r.cachedFilesGB, gb(800_000), accuracy: 0.001)
+    }
+
+    func testSwapAndPressureLevelPassThrough() {
+        let s = stats(internalPages: 1_000_000, wire: 200_000)
+        let swapBytes: UInt64 = 2 * 1024 * 1024 * 1024 // 2 GiB
+        let r = try! XCTUnwrap(MachRAMReader.makeSample(
+            stats: s, totalBytes: totalBytes, pageSize: pageSize,
+            swapUsedBytes: swapBytes, pressureLevel: .warning
+        ))
+
+        XCTAssertEqual(r.swapUsedGB, 2.0, accuracy: 0.001)
+        XCTAssertEqual(r.pressureLevel, .warning)
+    }
+
+    func testDefaultsWhenSwapAndPressureUnavailable() {
+        let s = stats(internalPages: 1_000_000)
+        let r = try! XCTUnwrap(MachRAMReader.makeSample(stats: s, totalBytes: totalBytes, pageSize: pageSize))
+
+        XCTAssertEqual(r.swapUsedGB, 0)
+        XCTAssertNil(r.pressureLevel)
+    }
+
+    func testPressureLevelMapsSysctlValues() {
+        XCTAssertEqual(MemoryPressureLevel(sysctlValue: 1), .normal)
+        XCTAssertEqual(MemoryPressureLevel(sysctlValue: 2), .warning)
+        XCTAssertEqual(MemoryPressureLevel(sysctlValue: 4), .critical)
+        XCTAssertNil(MemoryPressureLevel(sysctlValue: 0))
+        XCTAssertNil(MemoryPressureLevel(sysctlValue: 3))
     }
 }

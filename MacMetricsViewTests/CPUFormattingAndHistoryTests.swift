@@ -103,6 +103,38 @@ final class CPUFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(style(95), .highCPU)
     }
 
+    func testRAMSeverityPrefersKernelPressureLevelOverPercent() {
+        // Even with App Memory at 95% (would be red via percent), a NORMAL kernel level wins.
+        func style(_ level: MemoryPressureLevel) -> CPUMenuBarTextStyle {
+            RAMFormatter.menuBarTextStyle(
+                for: RAMSample(usedGB: 10, totalGB: 16, usedPercent: 50, appMemoryPercent: 95, pressureLevel: level),
+                metric: .appMemory
+            )
+        }
+        XCTAssertEqual(style(.normal), .normal)
+        XCTAssertEqual(style(.warning), .elevatedCPU)
+        XCTAssertEqual(style(.critical), .highCPU)
+    }
+
+    func testRAMUsedTotalString() {
+        let sample = RAMSample(usedGB: 11.24, totalGB: 16, usedPercent: 70)
+        XCTAssertEqual(RAMFormatter.usedTotalString(used: sample.usedGB, total: sample.totalGB), "11.2 / 16 GB")
+        XCTAssertEqual(RAMFormatter.usedTotalString(used: nil, total: 16), "-- GB")
+        XCTAssertEqual(RAMFormatter.usedTotalString(used: 8, total: 0), "-- GB")
+    }
+
+    func testRAMDetailRowsExposeBreakdown() {
+        let sample = RAMSample(
+            usedGB: 11, totalGB: 16, usedPercent: 70,
+            appMemoryGB: 5.2, wiredGB: 2.8, compressedGB: 1.4,
+            cachedFilesGB: 3.1, swapUsedGB: 0.5, pressureLevel: .warning
+        )
+        let rows = RAMFormatter.detailRows(for: sample, .english)
+        XCTAssertEqual(rows.map(\.label), ["App Memory", "Wired", "Compressed", "Cached Files", "Swap Used", "Pressure"])
+        XCTAssertEqual(rows.map(\.value), ["5.2 GB", "2.8 GB", "1.4 GB", "3.1 GB", "0.5 GB", "Warning"])
+        XCTAssertTrue(RAMFormatter.detailRows(for: nil).isEmpty)
+    }
+
     func testRAMPressureSeverityUsesPressureThresholds() {
         func style(_ pct: Double) -> CPUMenuBarTextStyle {
             RAMFormatter.menuBarTextStyle(
