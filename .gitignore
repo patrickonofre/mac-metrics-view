@@ -8,6 +8,7 @@ xcuserdata/
 
 # Build/packaging artifacts (produced by the README build steps)
 /build/
+/dist/
 /MacMetricsView.app/
 /MacMetricsView-beta.zip
 
