@@ -46,6 +46,10 @@ struct SettingsTab: View {
                 diskMenuBarMetric: Binding(
                     get: { state.display.diskMenuBarMetric },
                     set: { state.setDiskMenuBarMetric($0) }
+                ),
+                updateRate: Binding(
+                    get: { state.updateRate },
+                    set: { state.setUpdateRate($0) }
                 )
             )
 
@@ -242,6 +246,7 @@ struct MetricVisibilityControls: View {
     @Binding var identifierStyle: MetricDisplaySettings.IdentifierStyle
     @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
     @Binding var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric
+    @Binding var updateRate: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
@@ -266,6 +271,10 @@ struct MetricVisibilityControls: View {
                 MetricIdentifierPicker(identifierStyle: $identifierStyle)
             }
 
+            HStack(spacing: 8) {
+                UpdateRatePicker(updateRate: $updateRate)
+            }
+
             // Always visible: these choose the value shown for RAM and Disk in both the
             // popover and the menu bar, so they apply even when the metric is hidden from
             // the menu bar.
@@ -278,6 +287,29 @@ struct MetricVisibilityControls: View {
             }
         }
         .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct UpdateRatePicker: View {
+    @Binding var updateRate: Int
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Text(Strings.updateRateLabel())
+                .lineLimit(1)
+                .foregroundStyle(.primary)
+                .frame(width: 88, alignment: .leading)
+
+            Picker(Strings.updateRateLabel(), selection: $updateRate) {
+                Text(Strings.updateRateSeconds1()).tag(1)
+                Text(Strings.updateRateSeconds2()).tag(2)
+                Text(Strings.updateRateSeconds3()).tag(3)
+            }
+            .labelsHidden()
+            .pickerStyle(.menu)
+            .frame(width: 150)
+        }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

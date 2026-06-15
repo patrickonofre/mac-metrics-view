@@ -29,6 +29,7 @@ enum AccessibilityRecoveryPhase: Equatable {
 final class CPUState: ObservableObject {
     @Published private(set) var visibility: MetricVisibilitySettings
     @Published private(set) var display: MetricDisplaySettings
+    @Published private(set) var updateRate: Int
     @Published private(set) var latestSample: CPUSample?
     @Published private(set) var latestRAMSample: RAMSample?
     @Published private(set) var latestNetworkSample: NetworkSample?
@@ -128,11 +129,18 @@ final class CPUState: ObservableObject {
 
     /// Tracks if the popover is currently open. Used to lazy-load PopoverView content
     /// and completely bypass SwiftUI view graph updates when the popover is closed.
-    @Published var isPopoverOpen: Bool = false
+    @Published var isPopoverOpen: Bool = false {
+        didSet {
+            if oldValue != isPopoverOpen {
+                onPopoverOpenChange?(isPopoverOpen)
+            }
+        }
+    }
 
 
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
+    var onPopoverOpenChange: ((Bool) -> Void)?
     /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
     var onStartLock: ((TimeInterval) -> Void)?
     /// Called when the user requests a manual update check; AppDelegate forwards to the updater.
@@ -203,7 +211,9 @@ final class CPUState: ObservableObject {
         resetBaselineTracker = loadedTracker
         nudgeTracker = AccessibilityNudgeTracker.load(from: userDefaults)
         visibility = MetricVisibilitySettings.load(from: userDefaults)
-        display = MetricDisplaySettings.load(from: userDefaults)
+        let loadedDisplay = MetricDisplaySettings.load(from: userDefaults)
+        display = loadedDisplay
+        updateRate = loadedDisplay.updateRate
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
 
         // Per-provider reset times. Migrate the legacy single key into the Claude slot once
@@ -757,6 +767,14 @@ final class CPUState: ObservableObject {
 
         display.identifierStyle = identifierStyle
         display.save(to: userDefaults)
+        onDisplayChange?()
+    }
+
+    func setUpdateRate(_ rate: Int) {
+        let clamped = (rate == 1 || rate == 2 || rate == 3) ? rate : 1
+        display.updateRate = clamped
+        display.save(to: userDefaults)
+        updateRate = clamped
         onDisplayChange?()
     }
 

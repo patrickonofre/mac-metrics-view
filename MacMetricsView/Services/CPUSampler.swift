@@ -8,11 +8,13 @@ protocol CPUSamplerDelegate: AnyObject {
 @MainActor
 final class CPUSampler {
     private let reader: CPUReading
-    private let interval: TimeInterval
+    private(set) var interval: TimeInterval
     private var previousSnapshot: CPUSnapshot?
     private var timer: Timer?
 
     weak var delegate: CPUSamplerDelegate?
+
+    var isRunning: Bool { timer != nil }
 
     init(reader: CPUReading = MachCPUReader(), interval: TimeInterval = 1) {
         self.reader = reader
@@ -20,8 +22,14 @@ final class CPUSampler {
     }
 
     func start() {
+        timer?.invalidate()
         previousSnapshot = reader.readSnapshot()
         timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
+    }
+
+    func start(interval: TimeInterval) {
+        self.interval = interval
+        start()
     }
 
     func stop() {

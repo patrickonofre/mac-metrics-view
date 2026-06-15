@@ -126,4 +126,29 @@ final class TemperatureSamplerTests: XCTestCase {
         XCTAssertNil(sample?.celsius)
         XCTAssertNotNil(sample?.state)
     }
+
+    func testStartWithIntervalChangesIntervalAndReschedulesIfRunning() {
+        let reader = FakeReader()
+        let center = NotificationCenter()
+        let scheduler = FakeScheduler()
+        let (sampler, _) = makeSampler(reader: reader, center: center, scheduler: scheduler)
+
+        sampler.start()
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+
+        sampler.start(interval: 5)
+        XCTAssertEqual(scheduler.cancelCount, 1)
+        XCTAssertEqual(scheduler.scheduleCount, 2)
+    }
+
+    func testStartWithIntervalWhenNotRunningDoesNotRescheduleTwice() {
+        let reader = FakeReader()
+        let center = NotificationCenter()
+        let scheduler = FakeScheduler()
+        let (sampler, _) = makeSampler(reader: reader, center: center, scheduler: scheduler)
+
+        sampler.start(interval: 5)
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(scheduler.cancelCount, 0)
+    }
 }

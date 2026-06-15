@@ -14,9 +14,17 @@ final class BatterySamplerTests: XCTestCase {
     }
 
     private final class FakeScheduler: BatteryPollScheduler {
+        private(set) var scheduleCount = 0
+        private(set) var cancelCount = 0
         private var action: (@MainActor () -> Void)?
-        func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void) { self.action = action }
-        func cancel() { action = nil }
+        func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void) {
+            scheduleCount += 1
+            self.action = action
+        }
+        func cancel() {
+            cancelCount += 1
+            action = nil
+        }
         func fire() { action?() }
     }
 
@@ -94,5 +102,30 @@ final class BatterySamplerTests: XCTestCase {
         scheduler.fire()   // scheduler cancelled → no-op
 
         XCTAssertEqual(delegate.samples.count, 1)   // only the start-time emission
+    }
+
+    func testStartWithIntervalChangesIntervalAndReschedulesIfRunning() {
+        let reader = FakeReader(sample: sample())
+        let scheduler = FakeScheduler()
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+
+        sampler.start()
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+
+        sampler.start(interval: 50)
+        XCTAssertEqual(scheduler.cancelCount, 1)
+        XCTAssertEqual(scheduler.scheduleCount, 2)
+        sampler.stop()
+    }
+
+    func testStartWithIntervalWhenNotRunningDoesNotRescheduleTwice() {
+        let reader = FakeReader(sample: sample())
+        let scheduler = FakeScheduler()
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+
+        sampler.start(interval: 50)
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(scheduler.cancelCount, 0)
+        sampler.stop()
     }
 }

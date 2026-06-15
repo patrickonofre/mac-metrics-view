@@ -7,11 +7,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     // wiring tests can observe the published state after a delegate callback.
     lazy var state = CPUState()
     private let launchAtLoginSettings = LaunchAtLoginSettings()
-    private let cpuSampler = CPUSampler()
-    private let ramSampler = RAMSampler()
-    private let networkSampler = NetworkSampler()
-    private let temperatureSampler = TemperatureSampler()
-    private let diskSampler = DiskSampler()
+    let cpuSampler = CPUSampler()
+    let ramSampler = RAMSampler()
+    let networkSampler = NetworkSampler()
+    let temperatureSampler = TemperatureSampler()
+    let diskSampler = DiskSampler()
     // Internal so wiring tests can drive the gated lifecycle and assert routing.
     let batterySampler = BatterySampler()
     // Internal (not private) so wiring tests can drive the delegate with the exact sampler
@@ -37,20 +37,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
 
         state.onVisibilityChange = { [weak self] metric, isVisible in
             guard let self else { return }
-            // Most samplers always run (visibility only curates the menu bar). Battery is
-            // the exception: it runs only while visible AND a battery is present, to honor
-            // the zero-cost-when-hidden rule and desktop behavior (ADR-003).
-            if metric == .battery {
-                if isVisible, BatterySampler.batteryIsPresent() {
-                    self.batterySampler.start()
-                } else {
-                    self.batterySampler.stop()
-                }
-            }
+            self.reevaluateSamplers()
             self.statusItemController?.setNeedsTitleUpdate()
         }
         state.onDisplayChange = { [weak self] in
-            self?.statusItemController?.setNeedsTitleUpdate()
+            guard let self else { return }
+            self.reevaluateSamplers()
+            self.statusItemController?.setNeedsTitleUpdate()
+        }
+        state.onPopoverOpenChange = { [weak self] isOpen in
+            guard let self else { return }
+            self.reevaluateSamplers()
         }
 
         // Wire cleaning lock: state fires onStartLock → we start the service + overlay.
@@ -104,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         tokenSampler.delegate = self
         codexTokenSampler.delegate = self
         geminiTokenSampler.delegate = self
-        startAllSamplers()
+        reevaluateSamplers()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -228,22 +225,76 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
-    private func startAllSamplers() {
-        // Every metric is sampled so the popover always shows live data; menu-bar
-        // visibility is applied when the title is built, not at the sampler.
-        cpuSampler.start()
-        ramSampler.start()
-        networkSampler.start()
-        temperatureSampler.start()
-        diskSampler.start()
-        tokenSampler.start()
-        codexTokenSampler.start()
-        geminiTokenSampler.start()
-        // Battery diverges from the always-run convention: start it only when the metric
-        // is visible and a battery exists (ADR-003). Visibility toggles re-evaluate this
-        // in onVisibilityChange.
-        if state.visibility.showBattery, BatterySampler.batteryIsPresent() {
-            batterySampler.start()
+    func reevaluateSamplers() {
+        let isPopoverOpen = state.isPopoverOpen
+        let bgInterval = TimeInterval(state.display.updateRate)
+        
+        if isPopoverOpen {
+            // All samplers active at 1s for fluid real-time updates in popover
+            cpuSampler.start(interval: 1.0)
+            ramSampler.start(interval: 1.0)
+            networkSampler.start(interval: 1.0)
+            temperatureSampler.start(interval: 1.0)
+            diskSampler.start(interval: 1.0)
+            tokenSampler.start(interval: 1.0)
+            codexTokenSampler.start(interval: 1.0)
+            geminiTokenSampler.start(interval: 1.0)
+            
+            if BatterySampler.batteryIsPresent() {
+                batterySampler.start(interval: 1.0)
+            } else {
+                batterySampler.stop()
+            }
+        } else {
+            // Popover is closed: only run samplers for visible menu bar metrics at the background rate.
+            // Hidden metrics are completely stopped (suspended).
+            
+            if state.visibility.showCPU {
+                cpuSampler.start(interval: bgInterval)
+            } else {
+                cpuSampler.stop()
+            }
+            
+            if state.visibility.showRAM {
+                ramSampler.start(interval: bgInterval)
+            } else {
+                ramSampler.stop()
+            }
+            
+            if state.visibility.showNetwork {
+                networkSampler.start(interval: bgInterval)
+            } else {
+                networkSampler.stop()
+            }
+            
+            if state.visibility.showTemperature {
+                temperatureSampler.start(interval: bgInterval)
+            } else {
+                temperatureSampler.stop()
+            }
+            
+            if state.visibility.showDisk {
+                diskSampler.start(interval: bgInterval)
+            } else {
+                diskSampler.stop()
+            }
+            
+            if state.visibility.showTokens {
+                let tokenBgInterval = bgInterval * 5.0
+                tokenSampler.start(interval: tokenBgInterval)
+                codexTokenSampler.start(interval: tokenBgInterval)
+                geminiTokenSampler.start(interval: tokenBgInterval)
+            } else {
+                tokenSampler.stop()
+                codexTokenSampler.stop()
+                geminiTokenSampler.stop()
+            }
+            
+            if state.visibility.showBattery && BatterySampler.batteryIsPresent() {
+                batterySampler.start(interval: bgInterval)
+            } else {
+                batterySampler.stop()
+            }
         }
     }
 }

@@ -32,10 +32,10 @@ final class RunLoopDiskPollScheduler: DiskPollScheduler {
 @MainActor
 final class DiskSampler {
     private let reader: DiskReading
-    private let interval: TimeInterval
+    private(set) var interval: TimeInterval
     private let pollScheduler: DiskPollScheduler
     private var previousSnapshot: DiskCounterSnapshot?
-    private var isRunning = false
+    private(set) var isRunning = false
 
     weak var delegate: DiskSamplerDelegate?
 
@@ -55,6 +55,18 @@ final class DiskSampler {
         previousSnapshot = reader.readSnapshot()
         pollScheduler.schedule(interval: interval) { [weak self] in
             self?.collect()
+        }
+    }
+
+    func start(interval: TimeInterval) {
+        self.interval = interval
+        if isRunning {
+            pollScheduler.cancel()
+            pollScheduler.schedule(interval: self.interval) { [weak self] in
+                self?.collect()
+            }
+        } else {
+            start()
         }
     }
 

@@ -85,6 +85,26 @@ final class MetricDisplaySettingsTests: XCTestCase {
         XCTAssertEqual(reloaded.tokenSessionBudget, 2_000_000)
         XCTAssertEqual(reloaded.tokenWeeklyBudget, 10_000_000)
     }
+    
+    func testUpdateRateRoundTripThroughUserDefaults() {
+        var settings = MetricDisplaySettings()
+        settings.updateRate = 3
+        
+        settings.save(to: userDefaults)
+        let reloaded = MetricDisplaySettings.load(from: userDefaults)
+        
+        XCTAssertEqual(reloaded.updateRate, 3)
+    }
+    
+    func testInvalidUpdateRateClampsToDefault() {
+        userDefaults.set(5, forKey: "MetricDisplaySettings.updateRate")
+        let reloaded = MetricDisplaySettings.load(from: userDefaults)
+        XCTAssertEqual(reloaded.updateRate, 1)
+        
+        userDefaults.set(0, forKey: "MetricDisplaySettings.updateRate")
+        let reloadedZero = MetricDisplaySettings.load(from: userDefaults)
+        XCTAssertEqual(reloadedZero.updateRate, 1)
+    }
 
     func testNegativeOrNonNumericStoredBudgetLoadsAsZero() {
         userDefaults.set(-5, forKey: "MetricDisplaySettings.tokenSessionBudget")

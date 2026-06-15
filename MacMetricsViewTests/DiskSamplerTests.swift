@@ -126,4 +126,30 @@ final class DiskSamplerTests: XCTestCase {
 
         XCTAssertEqual(scheduler.scheduleCount, 1)
     }
+
+    func testStartWithIntervalChangesIntervalAndReschedulesIfRunning() {
+        let reader = ScriptedDiskReader(snapshots: [
+            DiskCounterSnapshot(timestamp: Date(timeIntervalSince1970: 0), bytesRead: 1_000, bytesWritten: 2_000),
+            DiskCounterSnapshot(timestamp: Date(timeIntervalSince1970: 1), bytesRead: 2_024, bytesWritten: 2_256)
+        ])
+        let scheduler = FakeScheduler()
+        let (sampler, _) = makeSampler(reader: reader, scheduler: scheduler)
+
+        sampler.start()
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+
+        sampler.start(interval: 3)
+        XCTAssertEqual(scheduler.cancelCount, 1)
+        XCTAssertEqual(scheduler.scheduleCount, 2)
+    }
+
+    func testStartWithIntervalWhenNotRunningDoesNotRescheduleTwice() {
+        let reader = ScriptedDiskReader(snapshots: [])
+        let scheduler = FakeScheduler()
+        let (sampler, _) = makeSampler(reader: reader, scheduler: scheduler)
+
+        sampler.start(interval: 3)
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(scheduler.cancelCount, 0)
+    }
 }

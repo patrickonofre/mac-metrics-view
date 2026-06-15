@@ -28,6 +28,7 @@ struct MetricDisplaySettings: Equatable {
         static let tokenProvider = "MetricDisplaySettings.tokenProvider"
         static let tokenSessionBudget = "MetricDisplaySettings.tokenSessionBudget"
         static let tokenWeeklyBudget = "MetricDisplaySettings.tokenWeeklyBudget"
+        static let updateRate = "MetricDisplaySettings.updateRate"
     }
 
     var identifierStyle: IdentifierStyle
@@ -45,6 +46,7 @@ struct MetricDisplaySettings: Equatable {
     var tokenSessionBudget: Int
     /// Optional token budget for the rolling 7-day window, in tokens; 0 = off.
     var tokenWeeklyBudget: Int
+    var updateRate: Int
 
     init(
         identifierStyle: IdentifierStyle = .icons,
@@ -54,7 +56,8 @@ struct MetricDisplaySettings: Equatable {
         tokenScope: TokenScope = .global,
         tokenProvider: TokenProviderSelection = .combined,
         tokenSessionBudget: Int = 0,
-        tokenWeeklyBudget: Int = 0
+        tokenWeeklyBudget: Int = 0,
+        updateRate: Int = 1
     ) {
         self.identifierStyle = identifierStyle
         self.ramMenuBarMetric = ramMenuBarMetric
@@ -64,6 +67,7 @@ struct MetricDisplaySettings: Equatable {
         self.tokenProvider = tokenProvider
         self.tokenSessionBudget = max(0, tokenSessionBudget)
         self.tokenWeeklyBudget = max(0, tokenWeeklyBudget)
+        self.updateRate = (updateRate == 1 || updateRate == 2 || updateRate == 3) ? updateRate : 1
     }
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricDisplaySettings {
@@ -88,6 +92,9 @@ struct MetricDisplaySettings: Equatable {
         // clamp to 0 (off) — a stored budget can never propagate as negative.
         let sessionBudget = max(0, userDefaults.integer(forKey: Keys.tokenSessionBudget))
         let weeklyBudget = max(0, userDefaults.integer(forKey: Keys.tokenWeeklyBudget))
+        
+        let storedRate = userDefaults.integer(forKey: Keys.updateRate)
+        let updateRate = (storedRate == 1 || storedRate == 2 || storedRate == 3) ? storedRate : 1
 
         if let rawIdentifierStyle = userDefaults.string(forKey: Keys.identifierStyle),
            let identifierStyle = IdentifierStyle(rawValue: rawIdentifierStyle) {
@@ -99,7 +106,8 @@ struct MetricDisplaySettings: Equatable {
                 tokenScope: tokenScope,
                 tokenProvider: tokenProvider,
                 tokenSessionBudget: sessionBudget,
-                tokenWeeklyBudget: weeklyBudget
+                tokenWeeklyBudget: weeklyBudget,
+                updateRate: updateRate
             )
         }
 
@@ -112,7 +120,8 @@ struct MetricDisplaySettings: Equatable {
                 tokenScope: tokenScope,
                 tokenProvider: tokenProvider,
                 tokenSessionBudget: sessionBudget,
-                tokenWeeklyBudget: weeklyBudget
+                tokenWeeklyBudget: weeklyBudget,
+                updateRate: updateRate
             )
         }
 
@@ -123,7 +132,8 @@ struct MetricDisplaySettings: Equatable {
             tokenScope: tokenScope,
             tokenProvider: tokenProvider,
             tokenSessionBudget: sessionBudget,
-            tokenWeeklyBudget: weeklyBudget
+            tokenWeeklyBudget: weeklyBudget,
+            updateRate: updateRate
         )
     }
 
@@ -137,5 +147,6 @@ struct MetricDisplaySettings: Equatable {
         userDefaults.set(tokenProvider.rawValue, forKey: Keys.tokenProvider)
         userDefaults.set(max(0, tokenSessionBudget), forKey: Keys.tokenSessionBudget)
         userDefaults.set(max(0, tokenWeeklyBudget), forKey: Keys.tokenWeeklyBudget)
+        userDefaults.set(updateRate, forKey: Keys.updateRate)
     }
 }

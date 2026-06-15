@@ -12,11 +12,13 @@ protocol NetworkSamplerDelegate: AnyObject {
 @MainActor
 final class NetworkSampler {
     private let reader: NetworkReading
-    private let interval: TimeInterval
+    private(set) var interval: TimeInterval
     private var previousSnapshot: NetworkCounterSnapshot?
     private var timer: Timer?
 
     weak var delegate: NetworkSamplerDelegate?
+
+    var isRunning: Bool { timer != nil }
 
     init(reader: NetworkReading = DarwinNetworkReader(), interval: TimeInterval = 1) {
         self.reader = reader
@@ -24,8 +26,14 @@ final class NetworkSampler {
     }
 
     func start() {
+        timer?.invalidate()
         previousSnapshot = reader.readSnapshot()
         timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
+    }
+
+    func start(interval: TimeInterval) {
+        self.interval = interval
+        start()
     }
 
     func stop() {

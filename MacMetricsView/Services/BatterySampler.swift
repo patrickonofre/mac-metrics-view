@@ -44,10 +44,10 @@ final class RunLoopBatteryPollScheduler: BatteryPollScheduler {
 @MainActor
 final class BatterySampler {
     private let reader: BatteryReading
-    private let pollInterval: TimeInterval
+    private(set) var pollInterval: TimeInterval
     private let pollScheduler: BatteryPollScheduler
     private var runLoopSource: CFRunLoopSource?
-    private var isRunning = false
+    private(set) var isRunning = false
 
     weak var delegate: BatterySamplerDelegate?
 
@@ -107,6 +107,18 @@ final class BatterySampler {
 
         pollScheduler.schedule(interval: pollInterval) { [weak self] in
             self?.collect()
+        }
+    }
+
+    func start(interval: TimeInterval) {
+        self.pollInterval = interval
+        if isRunning {
+            pollScheduler.cancel()
+            pollScheduler.schedule(interval: pollInterval) { [weak self] in
+                self?.collect()
+            }
+        } else {
+            start()
         }
     }
 

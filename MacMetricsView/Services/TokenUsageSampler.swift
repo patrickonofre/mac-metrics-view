@@ -35,9 +35,9 @@ final class RunLoopTokenPollScheduler: TokenPollScheduler {
 @MainActor
 final class TokenUsageSampler {
     private let reader: TokenUsageReading
-    private let interval: TimeInterval
+    private(set) var interval: TimeInterval
     private let pollScheduler: TokenPollScheduler
-    private var isRunning = false
+    private(set) var isRunning = false
 
     weak var delegate: TokenUsageSamplerDelegate?
 
@@ -56,6 +56,18 @@ final class TokenUsageSampler {
         isRunning = true
         pollScheduler.schedule(interval: interval) { [weak self] in
             self?.poll()
+        }
+    }
+
+    func start(interval: TimeInterval) {
+        self.interval = interval
+        if isRunning {
+            pollScheduler.cancel()
+            pollScheduler.schedule(interval: self.interval) { [weak self] in
+                self?.poll()
+            }
+        } else {
+            start()
         }
     }
 

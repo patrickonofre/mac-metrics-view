@@ -134,4 +134,27 @@ final class TokenUsageSamplerTests: XCTestCase {
         XCTAssertEqual(delegate.batches.count, 2)
         XCTAssertEqual(delegate.batches.map { $0.map(\.inputTokens) }, [[1, 2], [3]])
     }
+
+    func testStartWithIntervalChangesIntervalAndReschedulesIfRunning() {
+        let reader = ScriptedReader(batches: [])
+        let scheduler = FakeScheduler()
+        let (sampler, _) = makeSampler(reader: reader, scheduler: scheduler)
+
+        sampler.start()
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+
+        sampler.start(interval: 10)
+        XCTAssertEqual(scheduler.cancelCount, 1)
+        XCTAssertEqual(scheduler.scheduleCount, 2)
+    }
+
+    func testStartWithIntervalWhenNotRunningDoesNotRescheduleTwice() {
+        let reader = ScriptedReader(batches: [])
+        let scheduler = FakeScheduler()
+        let (sampler, _) = makeSampler(reader: reader, scheduler: scheduler)
+
+        sampler.start(interval: 10)
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(scheduler.cancelCount, 0)
+    }
 }

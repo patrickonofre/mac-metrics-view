@@ -90,10 +90,12 @@ protocol RAMSamplerDelegate: AnyObject {
 @MainActor
 final class RAMSampler {
     private let reader: RAMReading
-    private let interval: TimeInterval
+    private(set) var interval: TimeInterval
     private var timer: Timer?
 
     weak var delegate: RAMSamplerDelegate?
+
+    var isRunning: Bool { timer != nil }
 
     init(reader: RAMReading = MachRAMReader(), interval: TimeInterval = 1) {
         self.reader = reader
@@ -101,8 +103,14 @@ final class RAMSampler {
     }
 
     func start() {
+        timer?.invalidate()
         collect()
         timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
+    }
+
+    func start(interval: TimeInterval) {
+        self.interval = interval
+        start()
     }
 
     func stop() {
