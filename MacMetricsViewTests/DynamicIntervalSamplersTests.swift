@@ -24,7 +24,14 @@ final class DynamicIntervalSamplersTests: XCTestCase {
         
         sampler.start(interval: 3.0)
         XCTAssertEqual(sampler.interval, 3.0)
-        
+        // No tolerance argument defaults to 0 (exact cadence).
+        XCTAssertEqual(sampler.tolerance, 0)
+
+        // Background start carries the coalescing tolerance.
+        sampler.start(interval: 3.0, tolerance: 0.75)
+        XCTAssertEqual(sampler.interval, 3.0)
+        XCTAssertEqual(sampler.tolerance, 0.75)
+
         sampler.stop()
         // verify calling stop again is safe
         sampler.stop()

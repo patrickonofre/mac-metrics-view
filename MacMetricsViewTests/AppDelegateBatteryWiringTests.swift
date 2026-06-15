@@ -59,7 +59,7 @@ final class AppDelegateBatteryWiringTests: XCTestCase {
 
     private final class ManualBatteryPollScheduler: BatteryPollScheduler {
         private var action: (@MainActor () -> Void)?
-        func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void) { self.action = action }
+        func schedule(interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) { self.action = action }
         func cancel() { action = nil }
         func fire() { action?() }
     }

@@ -228,70 +228,75 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     func reevaluateSamplers() {
         let isPopoverOpen = state.isPopoverOpen
         let bgInterval = TimeInterval(state.display.updateRate)
-        
+        // Background ticks get 25% tolerance so the kernel coalesces all active samplers
+        // into a single wakeup (ADR-002). The open popover keeps an exact 1s cadence
+        // (tolerance 0) for fluid real-time graphs.
+        let bgTolerance = bgInterval * 0.25
+
         if isPopoverOpen {
             // All samplers active at 1s for fluid real-time updates in popover
-            cpuSampler.start(interval: 1.0)
-            ramSampler.start(interval: 1.0)
-            networkSampler.start(interval: 1.0)
-            temperatureSampler.start(interval: 1.0)
-            diskSampler.start(interval: 1.0)
-            tokenSampler.start(interval: 1.0)
-            codexTokenSampler.start(interval: 1.0)
-            geminiTokenSampler.start(interval: 1.0)
-            
+            cpuSampler.start(interval: 1.0, tolerance: 0)
+            ramSampler.start(interval: 1.0, tolerance: 0)
+            networkSampler.start(interval: 1.0, tolerance: 0)
+            temperatureSampler.start(interval: 1.0, tolerance: 0)
+            diskSampler.start(interval: 1.0, tolerance: 0)
+            tokenSampler.start(interval: 1.0, tolerance: 0)
+            codexTokenSampler.start(interval: 1.0, tolerance: 0)
+            geminiTokenSampler.start(interval: 1.0, tolerance: 0)
+
             if BatterySampler.batteryIsPresent() {
-                batterySampler.start(interval: 1.0)
+                batterySampler.start(interval: 1.0, tolerance: 0)
             } else {
                 batterySampler.stop()
             }
         } else {
             // Popover is closed: only run samplers for visible menu bar metrics at the background rate.
             // Hidden metrics are completely stopped (suspended).
-            
+
             if state.visibility.showCPU {
-                cpuSampler.start(interval: bgInterval)
+                cpuSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 cpuSampler.stop()
             }
-            
+
             if state.visibility.showRAM {
-                ramSampler.start(interval: bgInterval)
+                ramSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 ramSampler.stop()
             }
-            
+
             if state.visibility.showNetwork {
-                networkSampler.start(interval: bgInterval)
+                networkSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 networkSampler.stop()
             }
-            
+
             if state.visibility.showTemperature {
-                temperatureSampler.start(interval: bgInterval)
+                temperatureSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 temperatureSampler.stop()
             }
-            
+
             if state.visibility.showDisk {
-                diskSampler.start(interval: bgInterval)
+                diskSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 diskSampler.stop()
             }
-            
+
             if state.visibility.showTokens {
                 let tokenBgInterval = bgInterval * 5.0
-                tokenSampler.start(interval: tokenBgInterval)
-                codexTokenSampler.start(interval: tokenBgInterval)
-                geminiTokenSampler.start(interval: tokenBgInterval)
+                let tokenTolerance = tokenBgInterval * 0.25
+                tokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
+                codexTokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
+                geminiTokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
             } else {
                 tokenSampler.stop()
                 codexTokenSampler.stop()
                 geminiTokenSampler.stop()
             }
-            
+
             if state.visibility.showBattery && BatterySampler.batteryIsPresent() {
-                batterySampler.start(interval: bgInterval)
+                batterySampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 batterySampler.stop()
             }

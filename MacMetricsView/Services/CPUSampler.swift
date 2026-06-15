@@ -9,6 +9,7 @@ protocol CPUSamplerDelegate: AnyObject {
 final class CPUSampler {
     private let reader: CPUReading
     private(set) var interval: TimeInterval
+    private(set) var tolerance: TimeInterval = 0
     private var previousSnapshot: CPUSnapshot?
     private var timer: Timer?
 
@@ -24,11 +25,12 @@ final class CPUSampler {
     func start() {
         timer?.invalidate()
         previousSnapshot = reader.readSnapshot()
-        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
+        timer = MainRunLoopTimer.repeating(every: interval, tolerance: tolerance) { [weak self] in self?.collect() }
     }
 
-    func start(interval: TimeInterval) {
+    func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
         self.interval = interval
+        self.tolerance = tolerance
         start()
     }
 

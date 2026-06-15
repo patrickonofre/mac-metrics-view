@@ -17,7 +17,7 @@ protocol BatterySamplerDelegate: AnyObject {
 /// `TemperaturePollScheduler`).
 @MainActor
 protocol BatteryPollScheduler {
-    func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void)
+    func schedule(interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void)
     func cancel()
 }
 
@@ -27,8 +27,8 @@ final class RunLoopBatteryPollScheduler: BatteryPollScheduler {
 
     nonisolated init() {}
 
-    func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void) {
-        timer = MainRunLoopTimer.repeating(every: interval, action)
+    func schedule(interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) {
+        timer = MainRunLoopTimer.repeating(every: interval, tolerance: tolerance, action)
     }
 
     func cancel() {
@@ -45,6 +45,7 @@ final class RunLoopBatteryPollScheduler: BatteryPollScheduler {
 final class BatterySampler {
     private let reader: BatteryReading
     private(set) var pollInterval: TimeInterval
+    private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: BatteryPollScheduler
     private var runLoopSource: CFRunLoopSource?
     private(set) var isRunning = false
@@ -105,16 +106,17 @@ final class BatterySampler {
             CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
         }
 
-        pollScheduler.schedule(interval: pollInterval) { [weak self] in
+        pollScheduler.schedule(interval: pollInterval, tolerance: tolerance) { [weak self] in
             self?.collect()
         }
     }
 
-    func start(interval: TimeInterval) {
+    func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
         self.pollInterval = interval
+        self.tolerance = tolerance
         if isRunning {
             pollScheduler.cancel()
-            pollScheduler.schedule(interval: pollInterval) { [weak self] in
+            pollScheduler.schedule(interval: pollInterval, tolerance: self.tolerance) { [weak self] in
                 self?.collect()
             }
         } else {

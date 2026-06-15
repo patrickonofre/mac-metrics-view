@@ -13,6 +13,7 @@ protocol NetworkSamplerDelegate: AnyObject {
 final class NetworkSampler {
     private let reader: NetworkReading
     private(set) var interval: TimeInterval
+    private(set) var tolerance: TimeInterval = 0
     private var previousSnapshot: NetworkCounterSnapshot?
     private var timer: Timer?
 
@@ -28,11 +29,12 @@ final class NetworkSampler {
     func start() {
         timer?.invalidate()
         previousSnapshot = reader.readSnapshot()
-        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
+        timer = MainRunLoopTimer.repeating(every: interval, tolerance: tolerance) { [weak self] in self?.collect() }
     }
 
-    func start(interval: TimeInterval) {
+    func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
         self.interval = interval
+        self.tolerance = tolerance
         start()
     }
 

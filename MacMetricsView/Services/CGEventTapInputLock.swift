@@ -52,7 +52,10 @@ final class CGEventTapInputLock: InputLockServiceProtocol {
         remaining = duration
         phase = .locked
 
-        countdownTimer = MainRunLoopTimer.repeating(every: 1) { [weak self] in
+        // Anchor to the session start (not the shared epoch grid) so the first tick fires
+        // exactly 1s after the lock begins. The countdown decrements per tick, so an
+        // early first tick would shorten the visible countdown by up to a second.
+        countdownTimer = MainRunLoopTimer.repeating(every: 1, anchor: Date()) { [weak self] in
             self?.tick()
         }
     }

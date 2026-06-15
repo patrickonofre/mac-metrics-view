@@ -44,7 +44,7 @@ final class TokenUsageSamplerTests: XCTestCase {
         private(set) var cancelCount = 0
         private var action: (@MainActor () -> Void)?
 
-        func schedule(interval: TimeInterval, _ action: @escaping @MainActor () -> Void) {
+        func schedule(interval: TimeInterval, tolerance: TimeInterval, _ action: @escaping @MainActor () -> Void) {
             scheduleCount += 1
             self.action = action
         }

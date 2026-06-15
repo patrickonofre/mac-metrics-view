@@ -43,10 +43,14 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         
         XCTAssertTrue(appDelegate.cpuSampler.isRunning)
         XCTAssertEqual(appDelegate.cpuSampler.interval, 1.0)
-        
+        // Open popover runs at an exact 1s cadence: tolerance must be 0.
+        XCTAssertEqual(appDelegate.cpuSampler.tolerance, 0)
+        XCTAssertEqual(appDelegate.diskSampler.tolerance, 0)
+        XCTAssertEqual(appDelegate.tokenSampler.tolerance, 0)
+
         XCTAssertTrue(appDelegate.ramSampler.isRunning)
         XCTAssertEqual(appDelegate.ramSampler.interval, 1.0)
-        
+
         XCTAssertTrue(appDelegate.networkSampler.isRunning)
         XCTAssertEqual(appDelegate.networkSampler.interval, 1.0)
         
@@ -89,15 +93,18 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         // Close popover
         appDelegate.state.isPopoverOpen = false
         
-        // Visible metrics: running at 3s background interval
+        // Visible metrics: running at 3s background interval with 25% tolerance.
         XCTAssertTrue(appDelegate.cpuSampler.isRunning)
         XCTAssertEqual(appDelegate.cpuSampler.interval, 3.0)
-        
+        XCTAssertEqual(appDelegate.cpuSampler.tolerance, 0.75)
+
         XCTAssertTrue(appDelegate.networkSampler.isRunning)
         XCTAssertEqual(appDelegate.networkSampler.interval, 3.0)
-        
+        XCTAssertEqual(appDelegate.networkSampler.tolerance, 0.75)
+
         XCTAssertTrue(appDelegate.diskSampler.isRunning)
         XCTAssertEqual(appDelegate.diskSampler.interval, 3.0)
+        XCTAssertEqual(appDelegate.diskSampler.tolerance, 0.75)
         
         // Hidden metrics: stopped
         XCTAssertFalse(appDelegate.ramSampler.isRunning)
@@ -116,15 +123,19 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         appDelegate.state.setCPUVisible(true)
         XCTAssertTrue(appDelegate.cpuSampler.isRunning)
         XCTAssertEqual(appDelegate.cpuSampler.interval, 2.0)
-        
+        // 2s background interval -> 25% tolerance = 0.5.
+        XCTAssertEqual(appDelegate.cpuSampler.tolerance, 0.5)
+
         // Hide CPU
         appDelegate.state.setCPUVisible(false)
         XCTAssertFalse(appDelegate.cpuSampler.isRunning)
-        
+
         // Start showing Tokens (which run at 5 * background rate in background)
         appDelegate.state.setTokenVisible(true)
         XCTAssertTrue(appDelegate.tokenSampler.isRunning)
         XCTAssertEqual(appDelegate.tokenSampler.interval, 10.0)
+        // Token interval is 10s -> 25% tolerance = 2.5.
+        XCTAssertEqual(appDelegate.tokenSampler.tolerance, 2.5)
         XCTAssertTrue(appDelegate.codexTokenSampler.isRunning)
         XCTAssertEqual(appDelegate.codexTokenSampler.interval, 10.0)
         XCTAssertTrue(appDelegate.geminiTokenSampler.isRunning)

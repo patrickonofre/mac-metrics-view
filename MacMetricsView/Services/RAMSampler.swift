@@ -135,6 +135,7 @@ protocol RAMSamplerDelegate: AnyObject {
 final class RAMSampler {
     private let reader: RAMReading
     private(set) var interval: TimeInterval
+    private(set) var tolerance: TimeInterval = 0
     private var timer: Timer?
 
     weak var delegate: RAMSamplerDelegate?
@@ -149,11 +150,12 @@ final class RAMSampler {
     func start() {
         timer?.invalidate()
         collect()
-        timer = MainRunLoopTimer.repeating(every: interval) { [weak self] in self?.collect() }
+        timer = MainRunLoopTimer.repeating(every: interval, tolerance: tolerance) { [weak self] in self?.collect() }
     }
 
-    func start(interval: TimeInterval) {
+    func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
         self.interval = interval
+        self.tolerance = tolerance
         start()
     }
 
