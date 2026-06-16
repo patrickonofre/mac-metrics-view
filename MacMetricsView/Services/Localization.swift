@@ -107,11 +107,17 @@ enum Strings {
     static let ramPressureWarning = LocalizedText(en: "Warning", pt: "Atenção")
     static let ramPressureCritical = LocalizedText(en: "Critical", pt: "Crítica")
     static let ramMenuBarMetric = LocalizedText(en: "RAM value", pt: "Valor RAM")
+    static let ramMetricUsedTotalShort = LocalizedText(en: "Used / Total", pt: "Usado / Total")
     static let ramMetricAppMemoryShort = LocalizedText(en: "App", pt: "Apps")
     static let ramMetricPressureShort = LocalizedText(en: "Pressure", pt: "Pressão")
     static let ramMenuBarMetricHelpTitle = LocalizedText(
         en: "Which RAM value is shown",
         pt: "Qual valor de RAM é exibido"
+    )
+    static let ramUsedTotal = LocalizedText(en: "Used / Total", pt: "Usado / Total")
+    static let ramUsedTotalHelp = LocalizedText(
+        en: "Memory used vs. your Mac's total (GB). The color still reflects memory pressure, not how full memory is.",
+        pt: "Memória usada vs. o total do seu Mac (GB). A cor ainda reflete a pressão de memória, não o quanto está cheia."
     )
     static let ramAppMemoryHelp = LocalizedText(
         en: "Memory actively used by apps (GB). Rises and falls as you open and close apps.",

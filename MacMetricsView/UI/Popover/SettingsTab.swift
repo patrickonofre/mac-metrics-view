@@ -362,17 +362,21 @@ struct RAMMenuBarMetricPicker: View {
                 }
                 .frame(width: 88, alignment: .leading)
 
+                // A `.menu` dropdown (not segmented) so three full-length labels fit at the
+                // fixed 150pt control width without truncation (ADR-002).
                 Picker(Strings.ramMenuBarMetric(), selection: $ramMenuBarMetric) {
-                    Text(Strings.ramMetricAppMemoryShort()).tag(MetricDisplaySettings.RAMMenuBarMetric.appMemory)
-                    Text(Strings.ramMetricPressureShort()).tag(MetricDisplaySettings.RAMMenuBarMetric.pressure)
+                    ForEach(MetricDisplaySettings.RAMMenuBarMetric.menuBarPickerOrder, id: \.self) { mode in
+                        Text(mode.menuBarPickerLabel()).tag(mode)
+                    }
                 }
                 .labelsHidden()
-                .pickerStyle(.segmented)
+                .pickerStyle(.menu)
                 .frame(width: 150)
             }
 
             if showHelp {
                 VStack(alignment: .leading, spacing: 7) {
+                    helpRow(term: Strings.ramUsedTotal(), detail: Strings.ramUsedTotalHelp())
                     helpRow(term: Strings.ramAppMemory(), detail: Strings.ramAppMemoryHelp())
                     helpRow(term: Strings.ramPressure(), detail: Strings.ramPressureHelp())
                 }

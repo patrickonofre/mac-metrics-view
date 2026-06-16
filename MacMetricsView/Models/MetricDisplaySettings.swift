@@ -6,9 +6,12 @@ struct MetricDisplaySettings: Equatable {
         case icons
     }
 
-    /// Which RAM metric the menu bar shows. App Memory is the default because it tracks
-    /// app open/close, unlike the sticky "Used" value (see plan-ram-app-memory-and-pressure).
+    /// Which RAM metric the menu bar shows. `usedTotal` ("Used / Total GB") is the default
+    /// (ADR-001/002): it answers "how much of *my* Mac's RAM is in use" at a glance, where
+    /// Used = Memory Used (App + Wired + Compressed). App Memory and Pressure remain as
+    /// narrower alternatives.
     enum RAMMenuBarMetric: String {
+        case usedTotal
         case appMemory
         case pressure
     }
@@ -29,6 +32,7 @@ struct MetricDisplaySettings: Equatable {
         static let tokenSessionBudget = "MetricDisplaySettings.tokenSessionBudget"
         static let tokenWeeklyBudget = "MetricDisplaySettings.tokenWeeklyBudget"
         static let updateRate = "MetricDisplaySettings.updateRate"
+        static let usedTotalMigrationApplied = "MetricDisplaySettings.usedTotalMigrationApplied"
     }
 
     var identifierStyle: IdentifierStyle
@@ -50,7 +54,7 @@ struct MetricDisplaySettings: Equatable {
 
     init(
         identifierStyle: IdentifierStyle = .icons,
-        ramMenuBarMetric: RAMMenuBarMetric = .appMemory,
+        ramMenuBarMetric: RAMMenuBarMetric = .usedTotal,
         diskMenuBarMetric: DiskMenuBarMetric = .combined,
         tokenMenuBarWindow: TokenWindow = .today,
         tokenScope: TokenScope = .global,
@@ -72,7 +76,7 @@ struct MetricDisplaySettings: Equatable {
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricDisplaySettings {
         let ramMetric = userDefaults.string(forKey: Keys.ramMenuBarMetric)
-            .flatMap(RAMMenuBarMetric.init(rawValue:)) ?? .appMemory
+            .flatMap(RAMMenuBarMetric.init(rawValue:)) ?? .usedTotal
 
         let diskMetric = userDefaults.string(forKey: Keys.diskMenuBarMetric)
             .flatMap(DiskMenuBarMetric.init(rawValue:)) ?? .combined
@@ -137,6 +141,30 @@ struct MetricDisplaySettings: Equatable {
         )
     }
 
+    /// Resolves the display settings to use at launch, applying the one-time
+    /// `usedTotal` migration exactly once (ADR-002).
+    ///
+    /// `display.save()` persists the *whole* struct whenever any setting changes, so an
+    /// existing install that ever touched Settings has the old `appMemory` RAM default
+    /// stored even if the user never picked it for RAM. A plain default flip would never
+    /// reach them. This migration flips a stored `appMemory` to `usedTotal` once, then
+    /// guards itself so it runs only on the first launch of the new version. A genuine
+    /// `appMemory` choice is flipped too, but the RAM picker makes reverting trivial.
+    /// `pressure` is left untouched (an explicit, distinct choice).
+    static func resolved(from userDefaults: UserDefaults = .standard) -> MetricDisplaySettings {
+        var settings = load(from: userDefaults)
+
+        if !userDefaults.bool(forKey: Keys.usedTotalMigrationApplied) {
+            if settings.ramMenuBarMetric == .appMemory {
+                settings.ramMenuBarMetric = .usedTotal
+                settings.save(to: userDefaults)
+            }
+            userDefaults.set(true, forKey: Keys.usedTotalMigrationApplied)
+        }
+
+        return settings
+    }
+
     func save(to userDefaults: UserDefaults = .standard) {
         userDefaults.set(identifierStyle.rawValue, forKey: Keys.identifierStyle)
         userDefaults.set(identifierStyle == .labels, forKey: Keys.showMetricLabels)
@@ -148,5 +176,23 @@ struct MetricDisplaySettings: Equatable {
         userDefaults.set(max(0, tokenSessionBudget), forKey: Keys.tokenSessionBudget)
         userDefaults.set(max(0, tokenWeeklyBudget), forKey: Keys.tokenWeeklyBudget)
         userDefaults.set(updateRate, forKey: Keys.updateRate)
+    }
+}
+
+extension MetricDisplaySettings.RAMMenuBarMetric {
+    /// Order the settings picker presents the modes, default (`usedTotal`) first.
+    /// Defined here (not inferred from the enum) so the picker rendering stays
+    /// unit-testable without constructing the SwiftUI view (ADR-002).
+    static let menuBarPickerOrder: [MetricDisplaySettings.RAMMenuBarMetric] = [
+        .usedTotal, .appMemory, .pressure
+    ]
+
+    /// Short label shown for this mode in the settings picker.
+    func menuBarPickerLabel(_ language: AppLanguage = .current) -> String {
+        switch self {
+        case .usedTotal: return Strings.ramMetricUsedTotalShort(language)
+        case .appMemory: return Strings.ramMetricAppMemoryShort(language)
+        case .pressure: return Strings.ramMetricPressureShort(language)
+        }
     }
 }

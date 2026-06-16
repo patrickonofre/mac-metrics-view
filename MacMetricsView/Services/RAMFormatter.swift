@@ -14,14 +14,27 @@ enum RAMFormatter {
         return showLabel ? "RAM \(value)" : value
     }
 
-    /// Raw value string for the selected metric: App Memory as `N.N GB`, Pressure as `NN%`.
+    /// Raw value string for the selected metric: Used/Total as `N.N/NN GB`, App Memory as
+    /// `N.N GB`, Pressure as `NN%`.
     static func valueString(for sample: RAMSample?, metric: MetricDisplaySettings.RAMMenuBarMetric) -> String {
         switch metric {
+        case .usedTotal:
+            return menuBarUsedTotalString(used: sample?.usedGB, total: sample?.totalGB)
         case .appMemory:
             return fixedWidthUsedGBString(sample?.appMemoryGB)
         case .pressure:
             return CPUFormatter.percentageString(sample?.pressurePercent)
         }
+    }
+
+    /// Compact menu-bar ratio, e.g. `11.2/16 GB` (Memory Used over physical total).
+    /// Deliberately tighter than the popover headline's spaced `usedTotalString`
+    /// (`11.2 / 16 GB`) to conserve menu-bar width (ADR-002). Total is whole since
+    /// physical memory is a round figure; used is clamped like the App Memory path.
+    static func menuBarUsedTotalString(used: Double?, total: Double?) -> String {
+        guard let used, used.isFinite, used >= 0,
+              let total, total.isFinite, total > 0 else { return "--/-- GB" }
+        return String(format: "%.1f/%.0f GB", min(used, 999.9), total)
     }
 
     static func usedGBString(_ value: Double?) -> String {
@@ -84,6 +97,14 @@ enum RAMFormatter {
         }
 
         switch metric {
+        case .usedTotal:
+            // Color means "memory pressure", never "memory fullness": Memory Used runs high
+            // on healthy Macs by design, so coloring by it would false-alarm (ADR-003).
+            return severity(
+                for: sample.pressurePercent,
+                elevated: elevatedPressureThreshold,
+                high: highPressureThreshold
+            )
         case .appMemory:
             return severity(
                 for: sample.appMemoryPercent,

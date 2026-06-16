@@ -14,9 +14,11 @@ enum MetricTrend {
     static func ramSeries(
         metric: MetricDisplaySettings.RAMMenuBarMetric,
         pressure: [Double],
-        appMemory: [Double]
+        appMemory: [Double],
+        usedTotal: [Double]
     ) -> [Double] {
         switch metric {
+        case .usedTotal: return usedTotal
         case .pressure: return pressure
         case .appMemory: return appMemory
         }
@@ -106,7 +108,8 @@ struct MetricsTab: View {
                 sparkline: MetricTrend.ramSeries(
                     metric: state.ramMenuBarMetric,
                     pressure: state.ramHistory.samples.map(\.pressurePercent),
-                    appMemory: state.ramHistory.samples.map(\.appMemoryPercent)
+                    appMemory: state.ramHistory.samples.map(\.appMemoryPercent),
+                    usedTotal: state.ramHistory.samples.map(\.usedPercent)
                 ),
                 severity: state.ramMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .ram)

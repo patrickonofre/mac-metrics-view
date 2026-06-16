@@ -24,13 +24,18 @@ final class MetricsTabLayoutTests: XCTestCase {
     // MARK: - MetricTrend.ramSeries
 
     func testRamSeriesSelectsPressure() {
-        let result = MetricTrend.ramSeries(metric: .pressure, pressure: [1, 2], appMemory: [9, 8])
+        let result = MetricTrend.ramSeries(metric: .pressure, pressure: [1, 2], appMemory: [9, 8], usedTotal: [5, 6])
         XCTAssertEqual(result, [1, 2])
     }
 
     func testRamSeriesSelectsAppMemory() {
-        let result = MetricTrend.ramSeries(metric: .appMemory, pressure: [1, 2], appMemory: [9, 8])
+        let result = MetricTrend.ramSeries(metric: .appMemory, pressure: [1, 2], appMemory: [9, 8], usedTotal: [5, 6])
         XCTAssertEqual(result, [9, 8])
+    }
+
+    func testRamSeriesSelectsUsedTotal() {
+        let result = MetricTrend.ramSeries(metric: .usedTotal, pressure: [1, 2], appMemory: [9, 8], usedTotal: [5, 6])
+        XCTAssertEqual(result, [5, 6])
     }
 
     // MARK: - MetricGridLayout.rows

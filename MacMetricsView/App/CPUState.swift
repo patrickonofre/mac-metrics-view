@@ -219,7 +219,7 @@ final class CPUState: ObservableObject {
         resetBaselineTracker = loadedTracker
         nudgeTracker = AccessibilityNudgeTracker.load(from: userDefaults)
         visibility = MetricVisibilitySettings.load(from: userDefaults)
-        let loadedDisplay = MetricDisplaySettings.load(from: userDefaults)
+        let loadedDisplay = MetricDisplaySettings.resolved(from: userDefaults)
         display = loadedDisplay
         updateRate = loadedDisplay.updateRate
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
