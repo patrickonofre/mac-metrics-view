@@ -13,15 +13,15 @@
       "nav.privacy": "Privacidade",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 2.0 para macOS",
+      "hero.eyebrow": "Versão 2.1 para macOS",
       "hero.title": "Seu Mac inteiro, na barra de menus.",
       "hero.lede": "CPU, memória, rede, temperatura, disco, bateria e tokens de IA — tudo glanceável, sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 2.0",
+      "hero.cta": "Baixar 2.1",
       "hero.secondary": "Ver o que há de novo",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View na barra de menus do macOS mostrando CPU, RAM, rede, temperatura, disco e bateria",
 
-      "sticky.label": "Mac Metrics View 2.0",
+      "sticky.label": "Mac Metrics View 2.1",
       "sticky.cta": "Baixar",
 
       "metric.cpu": "uso e processos",
@@ -32,9 +32,13 @@
       "metric.bat": "carga e energia",
       "metric.ai": "tokens e custo",
 
-      "highlights.eyebrow": "Novo na 2.0",
+      "highlights.eyebrow": "Novo na 2.1",
       "highlights.title": "Uma atualização que muda o jogo.",
-      "highlights.lede": "O salto mais completo do app: um popover repensado e métricas novas de ponta a ponta.",
+      "highlights.lede": "RAM usado/total num relance e valores monocromáticos no estilo nativo, somados ao popover repensado e às métricas de ponta a ponta.",
+      "highlights.usedtotalTitle": "Memória usado/total",
+      "highlights.usedtotalBody": "A barra mostra a memória usada sobre o total do seu Mac, colorida pela pressão — App Memory e Pressão continuam como opções.",
+      "highlights.monoTitle": "Barra monocromática",
+      "highlights.monoBody": "Valores no estilo nativo do macOS: a cor padrão do sistema, com vermelho reservado só para o estado crítico.",
       "highlights.popoverTitle": "Popover em abas",
       "highlights.popoverBody": "Um popover redesenhado, em cartões e abas — CPU, memória, rede/disco e tokens, cada um com seus detalhes.",
       "highlights.tokensTitle": "Tokens de IA",
@@ -54,7 +58,7 @@
 
       "demo.eyebrow": "Experimente",
       "demo.title": "Explore o popover, aba por aba.",
-      "demo.lede": "Clique nas abas para ver o detalhe de cada métrica — é o popover real da versão 2.0.",
+      "demo.lede": "Clique nas abas para ver o detalhe de cada métrica — é o popover real da versão 2.1.",
       "demo.tabCPU": "CPU",
       "demo.tabRAM": "Memória",
       "demo.tabNet": "Rede/Disco",
@@ -93,7 +97,7 @@
       "privacy.li3": "Leitura 100% local — nada sai pela rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 2.0.",
+      "download.title": "Baixe a versão 2.1.",
       "download.body": "Para macOS 14 ou superior. Na primeira abertura o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, ele se mantém atualizado sozinho.",
       "download.cta": "Baixar MacMetricsView-2.1.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · grátis e de código aberto",
@@ -111,8 +115,10 @@
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
       "timeline.eyebrow": "Linha do tempo",
-      "timeline.title": "De 1.0 a 2.0.",
-      "timeline.lede": "O caminho até a versão 2.0, em resumo.",
+      "timeline.title": "De 1.0 a 2.1.",
+      "timeline.lede": "O caminho até a versão 2.1, em resumo.",
+      "timeline.v21Title": "2.1 — Memória usado/total e barra monocromática",
+      "timeline.v21Body": "RAM na barra agora mostra usado/total com cor por pressão; valores monocromáticos no estilo nativo, vermelho só no crítico.",
       "timeline.v20Title": "2.0 — Popover em abas e suite completa",
       "timeline.v20Body": "Popover redesenhado, tokens de IA (Claude, Codex e Gemini), memória detalhada, rede/disco, bateria e temperatura.",
       "timeline.v18Title": "1.8 — Ritmo de tokens",
@@ -130,7 +136,7 @@
       "timeline.v10Title": "1.0 — Primeira versão estável",
       "timeline.v10Body": "Modo limpeza, abrir ao iniciar e interface em PT/EN.",
 
-      "footer.tagline": "Versão 2.0 para macOS",
+      "footer.tagline": "Versão 2.1 para macOS",
       "footer.rights": "Código aberto · Licença MIT",
       "footer.github": "GitHub"
     },
@@ -141,15 +147,15 @@
       "nav.privacy": "Privacy",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 2.0 for macOS",
+      "hero.eyebrow": "Version 2.1 for macOS",
       "hero.title": "Your whole Mac, in the menu bar.",
       "hero.lede": "CPU, memory, network, temperature, disk, battery, and AI tokens — all glanceable, without opening Activity Monitor.",
-      "hero.cta": "Download 2.0",
+      "hero.cta": "Download 2.1",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View in the macOS menu bar showing CPU, RAM, network, temperature, disk, and battery",
 
-      "sticky.label": "Mac Metrics View 2.0",
+      "sticky.label": "Mac Metrics View 2.1",
       "sticky.cta": "Download",
 
       "metric.cpu": "usage and processes",
@@ -160,9 +166,13 @@
       "metric.bat": "charge and power",
       "metric.ai": "tokens and cost",
 
-      "highlights.eyebrow": "New in 2.0",
+      "highlights.eyebrow": "New in 2.1",
       "highlights.title": "An update that changes the game.",
-      "highlights.lede": "The app's most complete leap yet: a rethought popover and new metrics end to end.",
+      "highlights.lede": "Used/total memory at a glance and native monochrome values, on top of the rethought popover and end-to-end metrics.",
+      "highlights.usedtotalTitle": "Used/total memory",
+      "highlights.usedtotalBody": "The menu bar shows memory used over your Mac's total, tinted by pressure — App Memory and Pressure stay as options.",
+      "highlights.monoTitle": "Monochrome menu bar",
+      "highlights.monoBody": "Native macOS values: the standard system color, with red reserved for the critical state only.",
       "highlights.popoverTitle": "Tabbed popover",
       "highlights.popoverBody": "A redesigned popover in cards and tabs — CPU, memory, network/disk, and tokens, each with its own detail.",
       "highlights.tokensTitle": "AI tokens",
@@ -182,7 +192,7 @@
 
       "demo.eyebrow": "Try it",
       "demo.title": "Explore the popover, tab by tab.",
-      "demo.lede": "Click the tabs to see each metric's detail — it's the real 2.0 popover.",
+      "demo.lede": "Click the tabs to see each metric's detail — it's the real 2.1 popover.",
       "demo.tabCPU": "CPU",
       "demo.tabRAM": "Memory",
       "demo.tabNet": "Network/Disk",
@@ -221,7 +231,7 @@
       "privacy.li3": "100% local reads — nothing leaves over the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 2.0.",
+      "download.title": "Download version 2.1.",
       "download.body": "For macOS 14 or later. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.",
       "download.cta": "Download MacMetricsView-2.1.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · free and open source",
@@ -239,8 +249,10 @@
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
       "timeline.eyebrow": "Timeline",
-      "timeline.title": "From 1.0 to 2.0.",
-      "timeline.lede": "The road to version 2.0, in brief.",
+      "timeline.title": "From 1.0 to 2.1.",
+      "timeline.lede": "The road to version 2.1, in brief.",
+      "timeline.v21Title": "2.1 — Used/total memory and a monochrome menu bar",
+      "timeline.v21Body": "Menu-bar RAM now shows used/total tinted by memory pressure; values are native monochrome, with red reserved for the critical state.",
       "timeline.v20Title": "2.0 — Tabbed popover and a complete suite",
       "timeline.v20Body": "Redesigned popover, AI tokens (Claude, Codex, and Gemini), detailed memory, network/disk, battery, and temperature.",
       "timeline.v18Title": "1.8 — Token pace",
@@ -258,7 +270,7 @@
       "timeline.v10Title": "1.0 — First stable release",
       "timeline.v10Body": "Cleaning mode, open at login, and a PT/EN interface.",
 
-      "footer.tagline": "Version 2.0 for macOS",
+      "footer.tagline": "Version 2.1 for macOS",
       "footer.rights": "Open source · MIT License",
       "footer.github": "GitHub"
     }
