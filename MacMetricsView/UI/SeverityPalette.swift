@@ -56,6 +56,20 @@ struct SeverityPalette {
         }
     }
 
+    /// Monochrome menu-bar value color (ADR-002): the standard `labelColor` for normal
+    /// and elevated — Apple's native menu-bar look, adapting to the light/dark menu bar
+    /// at draw time — and the shared `criticalColor` (red) for high, so genuine danger
+    /// still stands out. No accent, appearance, or contrast guard: `labelColor` is always
+    /// legible and `criticalColor` is appearance-independent.
+    func menuBarColor(role: SeverityColorRole) -> NSColor {
+        switch role {
+        case .normal, .elevated:
+            return .labelColor
+        case .high:
+            return criticalColor
+        }
+    }
+
     /// Falls back to the always-legible semantic `labelColor` when `color` lacks
     /// enough luminance contrast against the menu bar background for `appearance`,
     /// or cannot be expressed in sRGB.

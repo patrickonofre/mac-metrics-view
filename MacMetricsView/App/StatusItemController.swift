@@ -251,17 +251,12 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         ]
     }
 
-    /// Resolves the value color through the shared `SeverityPalette`: normal follows
-    /// the live system accent, elevated is an accent-derived amber, high is always red,
-    /// with a contrast guard against the current menu bar appearance (ADR-001, ADR-002).
-    /// The accent is read fresh every render so an accent change is reflected immediately.
+    /// Resolves the value color through `SeverityPalette.menuBarColor`: monochrome
+    /// `labelColor` for normal/elevated and red only for critical, for an Apple-native
+    /// menu bar (ADR-001, ADR-002). No accent or appearance read — `labelColor` adapts to
+    /// the menu bar at draw time. The popover keeps the colored `color(role:accent:...)`.
     private func color(for style: CPUMenuBarTextStyle) -> NSColor {
-        let appearance = statusItem.button?.effectiveAppearance ?? NSApp.effectiveAppearance
-        return SeverityPalette.default.color(
-            role: PopoverTabPresentation.colorRole(for: style),
-            accent: .controlAccentColor,
-            appearance: appearance
-        )
+        SeverityPalette.default.menuBarColor(role: PopoverTabPresentation.colorRole(for: style))
     }
 
     private func iconAttachment(for metric: MenuBarMetric, color: NSColor, symbolOverride: String? = nil) -> NSAttributedString {

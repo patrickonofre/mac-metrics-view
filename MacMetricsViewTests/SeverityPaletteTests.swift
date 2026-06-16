@@ -96,4 +96,20 @@ final class SeverityPaletteTests: XCTestCase {
         XCTAssertEqual(palette.color(role: .normal, accent: pattern, appearance: light),
                        NSColor.labelColor)
     }
+
+    // MARK: - Monochrome menu-bar resolver (ADR-002)
+
+    func testMenuBarColorNormalIsLabelColor() {
+        XCTAssertEqual(palette.menuBarColor(role: .normal), NSColor.labelColor)
+    }
+
+    func testMenuBarColorElevatedIsLabelColorNotAmber() {
+        XCTAssertEqual(palette.menuBarColor(role: .elevated), NSColor.labelColor)
+        // Elevated collapses to monochrome — it must not be the amber blend.
+        XCTAssertNotEqual(palette.menuBarColor(role: .elevated), palette.amberAnchor)
+    }
+
+    func testMenuBarColorHighIsCriticalColor() {
+        XCTAssertEqual(palette.menuBarColor(role: .high), palette.criticalColor)
+    }
 }
