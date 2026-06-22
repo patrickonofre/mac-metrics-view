@@ -99,7 +99,7 @@
       "download.eyebrow": "Download",
       "download.title": "Baixe a versão 2.1.",
       "download.body": "Para macOS 14 ou superior. Na primeira abertura o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, ele se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-2.1.0.zip",
+      "download.cta": "Baixar MacMetricsView-2.1.1.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · grátis e de código aberto",
 
       "firstrun.eyebrow": "Primeira abertura",
@@ -233,7 +233,7 @@
       "download.eyebrow": "Download",
       "download.title": "Download version 2.1.",
       "download.body": "For macOS 14 or later. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-2.1.0.zip",
+      "download.cta": "Download MacMetricsView-2.1.1.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · free and open source",
 
       "firstrun.eyebrow": "First launch",
