@@ -8,8 +8,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     private let launchAtLoginSettings: LaunchAtLoginSettings
     private let statusItem: NSStatusItem
     private let popover: NSPopover
-    // Tinted SF Symbols only change with metric, severity style, and appearance.
-    // Caching them keeps the per-tick title rebuild from re-rendering images.
+    // Template SF Symbols are appearance- and background-independent (the system tints
+    // them at draw time), so caching by symbol name alone is enough to keep the per-tick
+    // title rebuild from re-rendering images.
     private var iconCache: [String: NSImage] = [:]
     private var titleUpdateScheduled = false
     private var cancellables: Set<AnyCancellable> = []
@@ -191,12 +192,12 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         // then the new version update badge.
         if MenuBarTitleComposer.showsAccessibilityWarning(isAccessibilityGranted: state.isAccessibilityGranted) {
             attributedTitle.append(separator)
-            attributedTitle.append(warningGlyphAttachment(color: .secondaryLabelColor))
+            attributedTitle.append(warningGlyphAttachment(color: .labelColor))
         }
 
         if MenuBarTitleComposer.showsUpdateBadge(availableVersion: state.availableUpdateVersion) {
             attributedTitle.append(separator)
-            attributedTitle.append(updateBadgeGlyphAttachment(color: .secondaryLabelColor))
+            attributedTitle.append(updateBadgeGlyphAttachment(color: .labelColor))
         }
 
         button.attributedTitle = attributedTitle
@@ -210,11 +211,12 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         labelOverride: String? = nil,
         symbolOverride: String? = nil
     ) -> NSAttributedString {
-        // Hierarchy: the identifier (icon or label) is always secondary; only the value
-        // carries severity color. This keeps severity an accent on the number the user
-        // reads, not a tint over the whole chunk.
+        // Only the value carries severity color, never the identifier. Both identifier
+        // styles render in the value's foreground tone — the icon as a full-strength
+        // template, the text label in `labelColor` — so every segment is one uniform
+        // color, light or dark, with no dimmed glyph competing for attention.
         let valueColor = color(for: style)
-        let identifierColor = NSColor.secondaryLabelColor
+        let identifierColor = NSColor.labelColor
         let segment = NSMutableAttributedString()
 
         switch state.display.identifierStyle {
@@ -280,7 +282,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 )
             }
 
-            image = symbol.tinted(with: color)
+            image = symbol.menuBarTemplate()
             iconCache[cacheKey] = image
         }
 
@@ -295,8 +297,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     /// permission is missing. Cached per appearance like the metric icons, so the
     /// per-tick title rebuild does not re-render it.
     private func warningGlyphAttachment(color: NSColor) -> NSAttributedString {
-        let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
-        let cacheKey = "ax-warning|\(appearance)"
+        let cacheKey = "ax-warning"
         let image: NSImage
         if let cached = iconCache[cacheKey] {
             image = cached
@@ -312,7 +313,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 return NSAttributedString(string: "!", attributes: baseAttributes(color: color))
             }
 
-            image = symbol.tinted(with: color)
+            image = symbol.menuBarTemplate()
             iconCache[cacheKey] = image
         }
 
@@ -327,8 +328,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     /// is available. Cached per appearance like the warning glyph, so the per-tick
     /// title rebuild does not re-render it.
     private func updateBadgeGlyphAttachment(color: NSColor) -> NSAttributedString {
-        let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
-        let cacheKey = "update-badge|\(appearance)"
+        let cacheKey = "update-badge"
         let image: NSImage
         if let cached = iconCache[cacheKey] {
             image = cached
@@ -344,7 +344,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                 return NSAttributedString(string: "↓", attributes: baseAttributes(color: color))
             }
 
-            image = symbol.tinted(with: color)
+            image = symbol.menuBarTemplate()
             iconCache[cacheKey] = image
         }
 
@@ -356,12 +356,11 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     private func iconCacheKey(for metric: MenuBarMetric, symbolOverride: String? = nil) -> String {
-        // Icons are now severity-independent (always secondary), so the key is just the
-        // symbol and appearance. Appearance keeps a light/dark switch re-tinting once
-        // instead of baking a stale dynamic color forever. The override (e.g. the battery
-        // charge-level glyph) is part of the key so each charge bucket caches separately.
-        let appearance = statusItem.button?.effectiveAppearance.name.rawValue ?? ""
-        return "\(symbolOverride ?? metric.symbolName)|\(appearance)"
+        // Icons are now severity- and appearance-independent: a template glyph is tinted
+        // by the menu bar at draw time, so a light/dark flip re-tints the same cached
+        // image without a rebuild. The key is just the symbol; the override (e.g. the
+        // battery charge-level glyph) is part of it so each charge bucket caches separately.
+        symbolOverride ?? metric.symbolName
     }
 
     private func configureStatusItem() {
@@ -510,15 +509,20 @@ private enum MenuBarMetric {
 }
 
 private extension NSImage {
-    func tinted(with color: NSColor) -> NSImage {
-        let image = NSImage(size: size)
-        image.lockFocus()
-        color.set()
-        let rect = NSRect(origin: .zero, size: size)
-        rect.fill()
-        draw(in: rect, from: .zero, operation: .destinationIn, fraction: 1)
-        image.unlockFocus()
-        image.isTemplate = false
-        return image
+    /// Marks the glyph as a *template* and returns it. `isTemplate = true` is what fixes
+    /// icons vanishing on some backgrounds: the menu bar tints a template with its live
+    /// foreground material, so the glyph adapts to any wallpaper/translucency and inverts
+    /// under the selection highlight (popover open) — exactly like the `labelColor` value
+    /// text. The old path baked a frozen color with `isTemplate = false`, which got
+    /// neither treatment and washed out on bright or highlighted bars.
+    ///
+    /// Returns the vector symbol itself — it is NOT pre-rasterized into a bitmap. The
+    /// status button rasterizes it at device resolution, so the glyph stays crisp and
+    /// renders in the same full-strength tone as the value. Pre-rasterizing here (an
+    /// `NSImage` + `lockFocus` at the main screen's 1x backing) softened the edges into a
+    /// grayer glyph that read as a different color from the device-resolution text.
+    func menuBarTemplate() -> NSImage {
+        isTemplate = true
+        return self
     }
 }
