@@ -73,7 +73,7 @@ final class AppDelegateTokenWiringTests: XCTestCase {
 
         let reader = ScriptedReader(batches: [[event(input: 1_200)]])
         let scheduler = FakeScheduler()
-        let sampler = TokenUsageSampler(reader: reader, pollScheduler: scheduler)
+        let sampler = TokenUsageSampler(reader: reader, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         sampler.delegate = appDelegate
 
         sampler.start()

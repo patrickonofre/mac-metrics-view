@@ -24,7 +24,8 @@ final class CPUStateProcessSamplingTests: XCTestCase {
         return CPUState(
             userDefaults: ud,
             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
-            processReader: processReader
+            processReader: processReader,
+            samplingExecutor: InlineSamplingExecutor()
         )
     }
     

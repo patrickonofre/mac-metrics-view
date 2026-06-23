@@ -62,7 +62,7 @@ final class TokenUsageSamplerTests: XCTestCase {
         scheduler: FakeScheduler
     ) -> (TokenUsageSampler, SpyDelegate) {
         let delegate = SpyDelegate()
-        let sampler = TokenUsageSampler(reader: reader, interval: 5, pollScheduler: scheduler)
+        let sampler = TokenUsageSampler(reader: reader, interval: 5, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         sampler.delegate = delegate
         return (sampler, delegate)
     }
