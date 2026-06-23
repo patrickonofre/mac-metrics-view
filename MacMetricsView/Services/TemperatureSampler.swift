@@ -47,6 +47,7 @@ final class TemperatureSampler {
     private(set) var pollInterval: TimeInterval
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: TemperaturePollScheduler
+    private let executor: SamplingExecutor
     private var observer: NSObjectProtocol?
     private(set) var isRunning = false
 
@@ -57,13 +58,15 @@ final class TemperatureSampler {
         notificationCenter: NotificationCenter = .default,
         deliveryQueue: OperationQueue? = .main,
         pollInterval: TimeInterval = 3,
-        pollScheduler: TemperaturePollScheduler = RunLoopTemperaturePollScheduler()
+        pollScheduler: TemperaturePollScheduler = RunLoopTemperaturePollScheduler(),
+        executor: SamplingExecutor = BackgroundSamplingExecutor()
     ) {
         self.reader = reader
         self.notificationCenter = notificationCenter
         self.deliveryQueue = deliveryQueue
         self.pollInterval = pollInterval
         self.pollScheduler = pollScheduler
+        self.executor = executor
     }
 
     func start() {
@@ -113,8 +116,12 @@ final class TemperatureSampler {
     }
 
     private func collect() {
-        guard let sample = reader.readSample() else { return }
-        delegate?.temperatureSampler(self, didProduce: sample)
+        // The numeric SMC/IOKit read runs off the main thread (PERF-01); the sample is
+        // delivered on the main actor. A nil read never notifies the delegate.
+        executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
+            guard let self, let sample else { return }
+            self.delegate?.temperatureSampler(self, didProduce: sample)
+        }
     }
 }
 

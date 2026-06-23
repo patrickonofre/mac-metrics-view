@@ -48,7 +48,8 @@ final class TemperatureSamplerTests: XCTestCase {
             reader: reader,
             notificationCenter: center,
             deliveryQueue: nil,
-            pollScheduler: scheduler
+            pollScheduler: scheduler,
+            executor: InlineSamplingExecutor()
         )
         sampler.delegate = delegate
         return (sampler, delegate)

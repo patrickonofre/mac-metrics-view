@@ -41,3 +41,47 @@ enum MainRunLoopTimer {
         return anchor.addingTimeInterval(steps * interval)
     }
 }
+
+/// Runs a sampler's blocking read off the main thread, then delivers the result back on the
+/// main actor (PERF-01). Lets the I/O-bound readers (token logs, SMC temperature, process
+/// enumeration) leave the main run loop without changing the `@MainActor` delegate contract.
+///
+/// The read closure captures a reader whose mutable state must therefore be touched *only*
+/// from the executor — a serial queue guarantees that confinement. CPU/RAM/network readers
+/// stay on the main thread: their Mach calls are sub-microsecond, so a thread hop would cost
+/// more than the work.
+protocol SamplingExecutor {
+    func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void)
+}
+
+/// Production executor: reads on a shared serial `.utility` queue (lands on E-cores on Apple
+/// Silicon) and hops back to the main queue, preserving FIFO delivery order across ticks.
+final class BackgroundSamplingExecutor: SamplingExecutor {
+    /// One serial queue shared by every heavy sampler, so each reader's state is confined to a
+    /// single thread (no concurrent access) while still coalescing onto one background context.
+    static let sharedQueue = DispatchQueue(label: "com.macmetricsview.sampling", qos: .utility)
+
+    private let queue: DispatchQueue
+
+    init(queue: DispatchQueue = BackgroundSamplingExecutor.sharedQueue) {
+        self.queue = queue
+    }
+
+    func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+        queue.async {
+            let value = read()
+            DispatchQueue.main.async {
+                MainActor.assumeIsolated { deliver(value) }
+            }
+        }
+    }
+}
+
+/// Test executor: runs the read and delivery inline on the caller's thread, preserving the
+/// synchronous contract the existing sampler tests rely on (fire → assert in the same turn).
+struct InlineSamplingExecutor: SamplingExecutor {
+    func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+        let value = read()
+        MainActor.assumeIsolated { deliver(value) }
+    }
+}

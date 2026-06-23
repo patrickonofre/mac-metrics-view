@@ -38,6 +38,7 @@ final class TokenUsageSampler {
     private(set) var interval: TimeInterval
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: TokenPollScheduler
+    private let executor: SamplingExecutor
     private(set) var isRunning = false
 
     weak var delegate: TokenUsageSamplerDelegate?
@@ -45,11 +46,13 @@ final class TokenUsageSampler {
     init(
         reader: TokenUsageReading = ClaudeCodeLogReader(),
         interval: TimeInterval = 5,
-        pollScheduler: TokenPollScheduler = RunLoopTokenPollScheduler()
+        pollScheduler: TokenPollScheduler = RunLoopTokenPollScheduler(),
+        executor: SamplingExecutor = BackgroundSamplingExecutor()
     ) {
         self.reader = reader
         self.interval = interval
         self.pollScheduler = pollScheduler
+        self.executor = executor
     }
 
     func start() {
@@ -78,11 +81,13 @@ final class TokenUsageSampler {
         isRunning = false
     }
 
-    /// One read cycle. Exposed for deterministic test driving; an empty read never
-    /// notifies the delegate.
+    /// One read cycle. The log scan/parse runs off the main thread (PERF-01) and the resulting
+    /// batch is delivered on the main actor; an empty read never notifies the delegate. The
+    /// reader's per-file state is touched only inside the executor's serial queue.
     func poll() {
-        let events = reader.readNewEvents()
-        guard !events.isEmpty else { return }
-        delegate?.tokenUsageSampler(self, didProduce: events)
+        executor.run({ [reader] in reader.readNewEvents() }) { [weak self] events in
+            guard let self, !events.isEmpty else { return }
+            self.delegate?.tokenUsageSampler(self, didProduce: events)
+        }
     }
 }

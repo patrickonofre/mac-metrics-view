@@ -176,6 +176,10 @@ final class CPUState: ObservableObject {
     /// window moves visibly, slow enough to be free (ADR-005). Not configurable.
     private let tokenAutoRefreshInterval: TimeInterval = 30
     private let processReader: ProcessReading
+    /// Runs the all-PID process enumeration off the main thread (PERF-01). The reader's mutable
+    /// state (its PID→name cache) is touched only inside the executor; `previousProcessSnapshot`
+    /// stays main-confined and is read/written only in the main-actor delivery closure.
+    private let samplingExecutor: SamplingExecutor
     private var previousProcessSnapshot: ProcessCPUSnapshot?
     private var processSamplingTimer: Timer?
     /// Probe cadence during recovery. Slow enough to stay cheap (a process spawn per
@@ -203,9 +207,11 @@ final class CPUState: ObservableObject {
         accessibilityProbe: AccessibilityProbing? = nil,
         batteryReader: BatteryReading = IOKitBatteryReader(),
         processReader: ProcessReading = LibprocProcessReader(),
+        samplingExecutor: SamplingExecutor = BackgroundSamplingExecutor(),
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
         self.processReader = processReader
+        self.samplingExecutor = samplingExecutor
         self.userDefaults = userDefaults
         self.batteryReader = batteryReader
         self.accessibilityAuthorization = accessibilityAuthorization
@@ -879,7 +885,11 @@ final class CPUState: ObservableObject {
 
     func beginProcessSampling() {
         guard processSamplingTimer == nil else { return } // idempotent
-        previousProcessSnapshot = processReader.readSnapshot() // baseline
+        // Baseline read runs off the main thread (PERF-01); the snapshot is stored on the
+        // main actor. The first tick is a no-op until it lands (guarded on a nil baseline).
+        samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] snapshot in
+            self?.previousProcessSnapshot = snapshot
+        }
         processSamplingTimer = MainRunLoopTimer.repeating(every: 2) { [weak self] in
             self?.processSamplingTick()
         }
@@ -892,14 +902,15 @@ final class CPUState: ObservableObject {
     }
 
     func processSamplingTick(now: Date = Date()) {
-        guard processSamplingTimer != nil,
-              let prev = previousProcessSnapshot,
-              let cur = processReader.readSnapshot()
-        else {
-            return
+        guard processSamplingTimer != nil, let prev = previousProcessSnapshot else { return }
+        // Enumerate all PIDs off the main thread (PERF-01); rank and publish on the main actor.
+        // Re-check the timer in the delivery closure so a stop() between read and delivery
+        // cannot publish a late ranking.
+        samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] cur in
+            guard let self, self.processSamplingTimer != nil, let cur else { return }
+            self.topCPUProcesses = ProcessCPURanking.topProcesses(previous: prev, current: cur)
+            self.previousProcessSnapshot = cur
         }
-        topCPUProcesses = ProcessCPURanking.topProcesses(previous: prev, current: cur)
-        previousProcessSnapshot = cur
     }
 
     // MARK: - Cleaning lock

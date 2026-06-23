@@ -36,7 +36,8 @@ final class CPUStatePopoverTests: XCTestCase {
         let state = CPUState(
             userDefaults: ud,
             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
-            processReader: processReader
+            processReader: processReader,
+            samplingExecutor: InlineSamplingExecutor()
         )
         
         // Simulating PopoverView.onAppear
