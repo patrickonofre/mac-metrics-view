@@ -62,12 +62,6 @@ enum Strings {
     static let batteryServiceRecommended = LocalizedText(en: "Service Recommended", pt: "Serviço recomendado")
     static let batteryCycles = LocalizedText(en: "Cycles", pt: "Ciclos")
     static let batteryNoBattery = LocalizedText(en: "No battery", pt: "Sem bateria")
-    /// VoiceOver description for the menu-bar warning glyph shown while the cleaning
-    /// permission is missing.
-    static let accessibilityWarningBadge = LocalizedText(
-        en: "Cleaning permission needs attention",
-        pt: "Permissão de limpeza precisa de atenção"
-    )
 
     // Popover header / footer
     /// Reads `CFBundleShortVersionString` so the popover always reflects the shipped
