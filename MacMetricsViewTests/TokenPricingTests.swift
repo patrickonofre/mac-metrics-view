@@ -104,33 +104,6 @@ final class TokenPricingTests: XCTestCase {
         XCTAssertEqual(rates.cacheWritePerMTok, rates.inputPerMTok)
     }
 
-    // MARK: - Google (Gemini) entries — flat ≤200k tier (ADR-011)
-
-    func testGeminiProResolvesToFlatTier() {
-        let rates = TokenPricing.rates(for: "gemini-2.5-pro")
-        XCTAssertEqual(rates?.inputPerMTok, 1.25)
-        XCTAssertEqual(rates?.outputPerMTok, 10)
-        XCTAssertEqual(rates?.cacheReadPerMTok, 0.31)
-    }
-
-    func testGeminiFlashTiersByVersion() {
-        XCTAssertEqual(TokenPricing.rates(for: "gemini-2.5-flash")?.inputPerMTok, 0.30)
-        XCTAssertEqual(TokenPricing.rates(for: "gemini-2.5-flash")?.outputPerMTok, 2.50)
-        XCTAssertEqual(TokenPricing.rates(for: "gemini-2.0-flash")?.inputPerMTok, 0.10)
-        XCTAssertEqual(TokenPricing.rates(for: "gemini-2.5-flash-lite")?.inputPerMTok, 0.10)
-        XCTAssertEqual(TokenPricing.rates(for: "gemini-2.5-flash-lite")?.outputPerMTok, 0.40)
-    }
-
-    func testGeminiCacheWriteEqualsInput() {
-        let rates = TokenPricing.rates(for: "gemini-2.5-pro")!
-        XCTAssertEqual(rates.cacheWritePerMTok, rates.inputPerMTok)
-    }
-
-    func testUnknownGeminiIdReturnsNil() {
-        // hasPrefix "gemini" but matches no family → unpriced, never a guess.
-        XCTAssertNil(TokenPricing.rates(for: "gemini-9.9-ultra"))
-    }
-
     // MARK: - Unknown ids never get a guessed price
 
     func testUnknownVendorReturnsNil() {

@@ -8,8 +8,7 @@ final class TokenProviderTests: XCTestCase {
     func testTokenProviderRawValueRoundTrips() {
         let cases: [(TokenProvider, String)] = [
             (.claude, "claude"),
-            (.codex, "codex"),
-            (.gemini, "gemini")
+            (.codex, "codex")
         ]
 
         for (provider, raw) in cases {
@@ -29,7 +28,6 @@ final class TokenProviderTests: XCTestCase {
         let cases: [(TokenProviderSelection, String)] = [
             (.claude, "claude"),
             (.codex, "codex"),
-            (.gemini, "gemini"),
             (.combined, "combined")
         ]
 
@@ -46,15 +44,21 @@ final class TokenProviderTests: XCTestCase {
         XCTAssertEqual(TokenProviderSelection(rawValue: "garbage") ?? .combined, .combined)
     }
 
+    func testRetiredGeminiSelectionFallsBackToCombined() {
+        // Older builds persisted "gemini"; after its removal the value is unknown and
+        // must decode to the default instead of crashing (migration contract).
+        XCTAssertNil(TokenProviderSelection(rawValue: "gemini"))
+        XCTAssertEqual(TokenProviderSelection(rawValue: "gemini") ?? .combined, .combined)
+    }
+
     // MARK: - Aggregated providers
 
-    func testCombinedAggregatesAllThreeProviders() {
-        XCTAssertEqual(TokenProviderSelection.combined.providers, [.claude, .codex, .gemini])
+    func testCombinedAggregatesBothProviders() {
+        XCTAssertEqual(TokenProviderSelection.combined.providers, [.claude, .codex])
     }
 
     func testSingleSelectionAggregatesOnlyItself() {
         XCTAssertEqual(TokenProviderSelection.claude.providers, [.claude])
         XCTAssertEqual(TokenProviderSelection.codex.providers, [.codex])
-        XCTAssertEqual(TokenProviderSelection.gemini.providers, [.gemini])
     }
 }

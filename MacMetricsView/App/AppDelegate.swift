@@ -18,7 +18,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     // instances and assert provider-tagged routing, mirroring `state`.
     let tokenSampler = TokenUsageSampler()
     let codexTokenSampler = TokenUsageSampler(reader: CodexLogReader())
-    let geminiTokenSampler = TokenUsageSampler(reader: GeminiCLILogReader())
     private var statusItemController: StatusItemController?
 
     // Cleaning-lock
@@ -100,7 +99,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         batterySampler.delegate = self
         tokenSampler.delegate = self
         codexTokenSampler.delegate = self
-        geminiTokenSampler.delegate = self
         reevaluateSamplers()
     }
 
@@ -117,7 +115,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         batterySampler.stop()
         tokenSampler.stop()
         codexTokenSampler.stop()
-        geminiTokenSampler.stop()
     }
 
     /// Seeds the first-run metric preset once, on a genuinely fresh install. The grant
@@ -216,8 +213,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         let provider: TokenProvider
         if sampler === codexTokenSampler {
             provider = .codex
-        } else if sampler === geminiTokenSampler {
-            provider = .gemini
         } else {
             provider = .claude
         }
@@ -242,7 +237,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             diskSampler.start(interval: 1.0, tolerance: 0)
             tokenSampler.start(interval: 1.0, tolerance: 0)
             codexTokenSampler.start(interval: 1.0, tolerance: 0)
-            geminiTokenSampler.start(interval: 1.0, tolerance: 0)
 
             if BatterySampler.batteryIsPresent() {
                 batterySampler.start(interval: 1.0, tolerance: 0)
@@ -288,11 +282,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
                 let tokenTolerance = tokenBgInterval * 0.25
                 tokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
                 codexTokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
-                geminiTokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
             } else {
                 tokenSampler.stop()
                 codexTokenSampler.stop()
-                geminiTokenSampler.stop()
             }
 
             if state.visibility.showBattery && BatterySampler.batteryIsPresent() {

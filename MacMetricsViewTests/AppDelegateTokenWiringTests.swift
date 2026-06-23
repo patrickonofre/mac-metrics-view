@@ -103,30 +103,17 @@ final class AppDelegateTokenWiringTests: XCTestCase {
         XCTAssertEqual(appDelegate.state.tokenStores[.codex]?.events.count, 0)
     }
 
-    func testGeminiSamplerBatchRoutesToGeminiStore() {
-        let appDelegate = AppDelegate()
-
-        appDelegate.tokenUsageSampler(appDelegate.geminiTokenSampler, didProduce: [event(input: 55, model: "gemini-2.5-pro")])
-
-        XCTAssertEqual(appDelegate.state.tokenStores[.gemini]?.events.count, 1)
-        XCTAssertEqual(appDelegate.state.tokenStores[.claude]?.events.count, 0)
-        XCTAssertEqual(appDelegate.state.tokenStores[.codex]?.events.count, 0)
-    }
-
-    func testAllThreeBatchesReachTheirStoresAndCombinedReflectsAll() {
+    func testBothBatchesReachTheirStoresAndCombinedReflectsBoth() {
         let appDelegate = AppDelegate()   // default selection: combined
 
         appDelegate.tokenUsageSampler(appDelegate.tokenSampler, didProduce: [event(input: 100)])
         appDelegate.tokenUsageSampler(appDelegate.codexTokenSampler, didProduce: [event(input: 40, model: "gpt-5-codex")])
-        appDelegate.tokenUsageSampler(appDelegate.geminiTokenSampler, didProduce: [event(input: 25, model: "gemini-2.5-pro")])
 
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 165)   // combined sum of all three
+        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 140)   // combined sum of both
 
         // Switching provider re-renders from the already-ingested batches, no restart.
         appDelegate.state.setTokenProvider(.codex)
         XCTAssertEqual(appDelegate.state.tokenAggregate.input, 40)
-        appDelegate.state.setTokenProvider(.gemini)
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 25)
         appDelegate.state.setTokenProvider(.claude)
         XCTAssertEqual(appDelegate.state.tokenAggregate.input, 100)
     }
