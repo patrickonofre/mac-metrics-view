@@ -24,7 +24,19 @@ enum ProcessNameParser {
 
 final class LibprocProcessReader: ProcessReading {
     private var timebase = mach_timebase_info_data_t()
-    
+
+    /// Per-PID name cache. `proc_name` is the only extra per-process syscall on top of the
+    /// CPU read, and a process name never changes for the life of a PID — so we resolve it
+    /// once and reuse it on later ticks (PERF-03). In steady state (the same ~hundreds of
+    /// PIDs from tick to tick), this drops `proc_name` calls per snapshot from one-per-PID to
+    /// one-per-newly-seen-PID, cutting the dominant cost of the 2s process sampler.
+    ///
+    /// Bounded to the live set: every snapshot prunes entries for PIDs that have exited, so
+    /// the cache scales with running processes, not with lifetime PID count. PID reuse can
+    /// momentarily surface a stale name (a recycled PID before the next prune), an acceptable
+    /// cosmetic edge for a top-CPU list that refreshes every 2s.
+    private var nameCache: [pid_t: String] = [:]
+
     init() {
         mach_timebase_info(&timebase)
         // Fallback to 1:1 if for some reason the timebase is invalid/empty
@@ -64,17 +76,35 @@ final class LibprocProcessReader: ProcessReading {
                 continue
             }
             
-            // Query name
-            let nameResult = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
-            let name = nameResult > 0 ? ProcessNameParser.parseName(from: nameBuffer) : "Unknown"
-            
+            // Resolve the name once per PID and reuse it on later ticks (PERF-03). A failed
+            // lookup is not cached, so a transient miss retries next tick instead of pinning
+            // a bogus "Unknown".
+            let name: String
+            if let cached = nameCache[pid] {
+                name = cached
+            } else {
+                let nameResult = proc_name(pid, &nameBuffer, UInt32(nameBuffer.count))
+                if nameResult > 0 {
+                    let resolved = ProcessNameParser.parseName(from: nameBuffer)
+                    nameCache[pid] = resolved
+                    name = resolved
+                } else {
+                    name = "Unknown"
+                }
+            }
+
             // Convert Mach ticks to nanoseconds using the cached timebase
             let totalTicks = taskInfo.pti_total_user + taskInfo.pti_total_system
             let cpuNanos = totalTicks * UInt64(timebase.numer) / UInt64(timebase.denom)
-            
+
             entries[pid] = ProcessCPUSnapshot.Entry(name: name, cpuNanos: cpuNanos)
         }
-        
+
+        // Prune cache to the live set so memory tracks running processes, not lifetime PIDs.
+        if nameCache.count > entries.count {
+            nameCache = nameCache.filter { entries[$0.key] != nil }
+        }
+
         return ProcessCPUSnapshot(timestamp: Date(), entries: entries)
     }
 }
