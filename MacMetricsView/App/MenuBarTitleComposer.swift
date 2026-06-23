@@ -7,16 +7,6 @@ import Foundation
 /// testing standards.
 enum MenuBarTitleComposer {
 
-    /// SF Symbol used for the secondary warning glyph appended while the cleaning
-    /// permission is missing (ADR-003).
-    static let accessibilityWarningSymbolName = "exclamationmark.triangle.fill"
-
-    /// Whether the Accessibility-warning glyph should be appended to the title.
-    /// Shown only while the grant is missing; cleared once granted.
-    static func showsAccessibilityWarning(isAccessibilityGranted: Bool) -> Bool {
-        !isAccessibilityGranted
-    }
-
     /// SF Symbol appended after the metrics when an update is available.
     static let updateBadgeSymbolName = "arrow.down.circle.fill"
 
