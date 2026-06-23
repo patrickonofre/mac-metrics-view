@@ -30,13 +30,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         configurePopover()
         updateTitle()
 
-        // The grant state can change without a metric tick (during recovery), so
-        // refresh the title — which carries the warning badge — when it flips.
-        state.$isAccessibilityGranted
-            .removeDuplicates()
-            .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
-            .store(in: &cancellables)
-
         state.$availableUpdateVersion
             .removeDuplicates()
             .sink { [weak self] _ in self?.setNeedsTitleUpdate() }
@@ -186,15 +179,9 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             ))
         }
 
-        // Additive, secondary warning glyph while the cleaning permission is
-        // missing — never recolors the metric segments (ADR-003).
-        // Appended in deterministic order: critical accessibility warning first,
-        // then the new version update badge.
-        if MenuBarTitleComposer.showsAccessibilityWarning(isAccessibilityGranted: state.isAccessibilityGranted) {
-            attributedTitle.append(separator)
-            attributedTitle.append(warningGlyphAttachment(color: .labelColor))
-        }
-
+        // Additive, secondary update badge while a newer version is available —
+        // never recolors the metric segments (ADR-003). The accessibility-permission
+        // warning lives only in the popover's recovery banner now, not the menu bar.
         if MenuBarTitleComposer.showsUpdateBadge(availableVersion: state.availableUpdateVersion) {
             attributedTitle.append(separator)
             attributedTitle.append(updateBadgeGlyphAttachment(color: .labelColor))
@@ -280,37 +267,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
                     string: metric.label,
                     attributes: baseAttributes(color: color)
                 )
-            }
-
-            image = symbol.menuBarTemplate()
-            iconCache[cacheKey] = image
-        }
-
-        let attachment = NSTextAttachment()
-        attachment.image = image
-        attachment.bounds = CGRect(x: 0, y: -2, width: image.size.width, height: image.size.height)
-
-        return NSAttributedString(attachment: attachment)
-    }
-
-    /// The secondary warning glyph appended to the title while the cleaning
-    /// permission is missing. Cached per appearance like the metric icons, so the
-    /// per-tick title rebuild does not re-render it.
-    private func warningGlyphAttachment(color: NSColor) -> NSAttributedString {
-        let cacheKey = "ax-warning"
-        let image: NSImage
-        if let cached = iconCache[cacheKey] {
-            image = cached
-        } else {
-            guard let symbol = NSImage(
-                systemSymbolName: MenuBarTitleComposer.accessibilityWarningSymbolName,
-                accessibilityDescription: Strings.accessibilityWarningBadge()
-            )?.withSymbolConfiguration(NSImage.SymbolConfiguration(
-                pointSize: max(NSFont.smallSystemFontSize, NSFont.systemFontSize - 2),
-                weight: .regular,
-                scale: .small
-            )) else {
-                return NSAttributedString(string: "!", attributes: baseAttributes(color: color))
             }
 
             image = symbol.menuBarTemplate()
