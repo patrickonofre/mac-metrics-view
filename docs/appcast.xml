@@ -6,6 +6,18 @@
         <description>Appcast for Mac Metrics View auto-update.</description>
         <language>en</language>
         <item>
+            <title>2.2.0</title>
+            <pubDate>Mon, 22 Jun 2026 23:59:24 -0300</pubDate>
+            <sparkle:version>44</sparkle:version>
+            <sparkle:shortVersionString>2.2.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-2.2.0.zip"
+                sparkle:edSignature="IXlHccKTLp6OGfiaOZt/N9QI1/2Vv47BhNz2OdxtcbWK+ZgUVqZ9k3ak8Vd9C/IKv6l1nSWS9d7vi/j+Hgg7DA=="
+                length="2032009"
+                type="application/octet-stream" />
+        </item>
+        <item>
             <title>2.1.1</title>
             <pubDate>Mon, 22 Jun 2026 14:32:42 -0300</pubDate>
             <sparkle:version>43</sparkle:version>
