@@ -236,11 +236,9 @@ final class CPUState: ObservableObject {
         let storedClaudeResetAt = userDefaults.object(forKey: TokenKeys.resetAt(.claude)) as? Date
         let claudeResetAt = storedClaudeResetAt ?? legacyResetAt ?? Date()
         let codexResetAt = (userDefaults.object(forKey: TokenKeys.resetAt(.codex)) as? Date) ?? Date()
-        let geminiResetAt = (userDefaults.object(forKey: TokenKeys.resetAt(.gemini)) as? Date) ?? Date()
         tokenStores = [
             .claude: TokenUsageStore(resetAt: claudeResetAt),
-            .codex: TokenUsageStore(resetAt: codexResetAt),
-            .gemini: TokenUsageStore(resetAt: geminiResetAt)
+            .codex: TokenUsageStore(resetAt: codexResetAt)
         ]
         if storedClaudeResetAt == nil, let legacyResetAt {
             userDefaults.set(legacyResetAt, forKey: TokenKeys.resetAt(.claude))

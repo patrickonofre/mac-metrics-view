@@ -143,7 +143,6 @@ struct TokenControls: View {
             ) {
                 Text(Strings.tokenProviderClaude()).tag(TokenProviderSelection.claude)
                 Text(Strings.tokenProviderCodex()).tag(TokenProviderSelection.codex)
-                Text(Strings.tokenProviderGemini()).tag(TokenProviderSelection.gemini)
                 Text(Strings.tokenProviderCombined()).tag(TokenProviderSelection.combined)
             }
 

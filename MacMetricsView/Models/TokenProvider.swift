@@ -1,6 +1,6 @@
 import Foundation
 
-/// Provider whose local logs back a token figure. Only `claude`/`codex` own a
+/// Provider whose local logs back a token figure. Both `claude`/`codex` own a
 /// `TokenUsageStore`; `combined` is a selector value (see `TokenProviderSelection`),
 /// never a stored-events provider (ADR-003).
 ///
@@ -9,7 +9,6 @@ import Foundation
 enum TokenProvider: String {
     case claude
     case codex
-    case gemini
 }
 
 /// The user-facing provider selection driving the meter: a single provider, or the
@@ -18,22 +17,21 @@ enum TokenProvider: String {
 ///
 /// `String`-raw-representable for persistence in `MetricDisplaySettings`. The default
 /// selection is `combined`; a consumer decoding an unknown raw value falls back to it
-/// (`TokenProviderSelection(rawValue:) ?? .combined`).
+/// (`TokenProviderSelection(rawValue:) ?? .combined`) — including the retired `gemini`
+/// value persisted by older builds.
 enum TokenProviderSelection: String {
     case claude
     case codex
-    case gemini
     case combined
 
-    /// The concrete provider(s) this selection aggregates: a single provider, or all
-    /// three for `combined`. The aggregation layer sums each provider's store
+    /// The concrete provider(s) this selection aggregates: a single provider, or both
+    /// for `combined`. The aggregation layer sums each provider's store
     /// independently (ADR-011).
     var providers: [TokenProvider] {
         switch self {
         case .claude: return [.claude]
         case .codex: return [.codex]
-        case .gemini: return [.gemini]
-        case .combined: return [.claude, .codex, .gemini]
+        case .combined: return [.claude, .codex]
         }
     }
 }

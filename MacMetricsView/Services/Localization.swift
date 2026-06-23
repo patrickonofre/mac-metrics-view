@@ -168,7 +168,6 @@ enum Strings {
     static let tokenProviderLabel = LocalizedText(en: "Provider", pt: "Provedor")
     static let tokenProviderClaude = LocalizedText(en: "Claude", pt: "Claude")
     static let tokenProviderCodex = LocalizedText(en: "Codex", pt: "Codex")
-    static let tokenProviderGemini = LocalizedText(en: "Gemini", pt: "Gemini")
     static let tokenProviderCombined = LocalizedText(en: "Combined", pt: "Combinado")
     // Window picker (rolling range shown)
     static let tokenWindowLabel = LocalizedText(en: "Token window", pt: "Janela de tokens")
@@ -247,7 +246,6 @@ enum Strings {
         switch selection {
         case .claude: return tokenProviderClaude
         case .codex: return tokenProviderCodex
-        case .gemini: return tokenProviderGemini
         case .combined: return tokenProviderCombined
         }
     }

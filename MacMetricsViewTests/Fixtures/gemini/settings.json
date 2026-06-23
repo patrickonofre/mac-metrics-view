@@ -1,7 +1,0 @@
-{
-  "telemetry": {
-    "enabled": true,
-    "target": "local",
-    "outfile": "~/.gemini/otel.log"
-  }
-}

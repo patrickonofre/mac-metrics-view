@@ -65,10 +65,7 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         
         XCTAssertTrue(appDelegate.codexTokenSampler.isRunning)
         XCTAssertEqual(appDelegate.codexTokenSampler.interval, 1.0)
-        
-        XCTAssertTrue(appDelegate.geminiTokenSampler.isRunning)
-        XCTAssertEqual(appDelegate.geminiTokenSampler.interval, 1.0)
-        
+
         if BatterySampler.batteryIsPresent() {
             XCTAssertTrue(appDelegate.batterySampler.isRunning)
             XCTAssertEqual(appDelegate.batterySampler.pollInterval, 1.0)
@@ -111,7 +108,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertFalse(appDelegate.temperatureSampler.isRunning)
         XCTAssertFalse(appDelegate.tokenSampler.isRunning)
         XCTAssertFalse(appDelegate.codexTokenSampler.isRunning)
-        XCTAssertFalse(appDelegate.geminiTokenSampler.isRunning)
         XCTAssertFalse(appDelegate.batterySampler.isRunning)
     }
     
@@ -138,14 +134,11 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertEqual(appDelegate.tokenSampler.tolerance, 2.5)
         XCTAssertTrue(appDelegate.codexTokenSampler.isRunning)
         XCTAssertEqual(appDelegate.codexTokenSampler.interval, 10.0)
-        XCTAssertTrue(appDelegate.geminiTokenSampler.isRunning)
-        XCTAssertEqual(appDelegate.geminiTokenSampler.interval, 10.0)
-        
+
         // Hide Tokens
         appDelegate.state.setTokenVisible(false)
         XCTAssertFalse(appDelegate.tokenSampler.isRunning)
         XCTAssertFalse(appDelegate.codexTokenSampler.isRunning)
-        XCTAssertFalse(appDelegate.geminiTokenSampler.isRunning)
     }
 
     func testChangingUpdateRateWhileClosedReschedulesActiveSamplers() {
