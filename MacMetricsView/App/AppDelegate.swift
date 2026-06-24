@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate, BatterySamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate, BatterySamplerDelegate, AmbientLightSamplerDelegate {
     // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
     // its visibility (see applyFirstRunMetricPresetIfNeeded()). Internal (not private) so
     // wiring tests can observe the published state after a delegate callback.
@@ -14,6 +14,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     let diskSampler = DiskSampler()
     // Internal so wiring tests can drive the gated lifecycle and assert routing.
     let batterySampler = BatterySampler()
+    // Ambient-light sampler for the theme suggestion. Gated by the opt-in setting
+    // (not menu-bar visibility): it runs whenever the feature is enabled. Internal so
+    // wiring tests can drive the gated lifecycle.
+    let ambientLightSampler = AmbientLightSampler()
     // Internal (not private) so wiring tests can drive the delegate with the exact sampler
     // instances and assert provider-tagged routing, mirroring `state`.
     let tokenSampler = TokenUsageSampler()
@@ -97,9 +101,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         temperatureSampler.delegate = self
         diskSampler.delegate = self
         batterySampler.delegate = self
+        ambientLightSampler.delegate = self
         tokenSampler.delegate = self
         codexTokenSampler.delegate = self
+
+        // The ambient sampler runs independently of menu-bar visibility / popover state:
+        // it is gated purely by the opt-in flag, so re-evaluate it whenever the setting
+        // changes (the Settings toggle flows through CPUState → this callback).
+        state.onAmbientThemeSettingsChange = { [weak self] _ in
+            self?.reevaluateAmbientSampler()
+        }
+
         reevaluateSamplers()
+        reevaluateAmbientSampler()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -113,6 +127,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         temperatureSampler.stop()
         diskSampler.stop()
         batterySampler.stop()
+        ambientLightSampler.stop()
         tokenSampler.stop()
         codexTokenSampler.stop()
     }
@@ -207,6 +222,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
+    func ambientLightSampler(_ sampler: AmbientLightSampler, didProduce sample: AmbientLightSample) {
+        // Theme suggestion is a popover-only surface (no menu-bar segment), so no title
+        // rebuild — CPUState republishes `themeSuggestion`/`latestAmbientSample` for the UI.
+        state.update(with: sample)
+    }
+
     func tokenUsageSampler(_ sampler: TokenUsageSampler, didProduce events: [TokenUsageEvent]) {
         // Route each sampler's batch to its provider store by instance identity; default
         // to Claude for any other sampler (back-compat with the single-sampler call sites).
@@ -292,6 +313,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             } else {
                 batterySampler.stop()
             }
+        }
+    }
+
+    /// Starts or stops the ambient sampler in step with the opt-in flag. Independent of
+    /// `reevaluateSamplers` (visibility/popover-driven): ambient light changes slowly, so
+    /// it polls on a fixed modest cadence with generous tolerance for wakeup coalescing.
+    func reevaluateAmbientSampler() {
+        if state.ambientThemeSettings.isEnabled {
+            ambientLightSampler.start(interval: 10, tolerance: 2.5)
+        } else {
+            ambientLightSampler.stop()
         }
     }
 }

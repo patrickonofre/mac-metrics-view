@@ -38,6 +38,17 @@ final class CPUState: ObservableObject {
     /// Latest battery reading, or `nil` when no battery is present / not yet sampled.
     /// No history is kept (ADR-002 — no charge sparkline).
     @Published private(set) var latestBatterySample: BatterySample?
+    /// Latest ambient-light reading, or `nil` when no ALS is present / not yet sampled.
+    @Published private(set) var latestAmbientSample: AmbientLightSample?
+    /// Current ambient-light theme suggestion (FR-7), or `.none`. Recomputed on each
+    /// ambient sample through `ThemeSuggestionEngine`; only ever proposes the mode not
+    /// currently active (FR-6).
+    @Published private(set) var themeSuggestion: ThemeSuggestion = .none
+    /// Result of the most recent apply attempt, so the banner can show the
+    /// denied-Automation guidance (`.notAuthorized`). `nil` until the user applies.
+    @Published private(set) var lastAppearanceApplyResult: AppearanceApplyResult?
+    /// Ambient-light theme settings (opt-in flag, thresholds, dwell). Default off.
+    @Published private(set) var ambientThemeSettings: AmbientThemeSettings
     @Published private(set) var topCPUProcesses: [ProcessCPUSample] = []
     @Published private(set) var history = CPUHistory()
     @Published private(set) var ramHistory = RAMHistory()
@@ -158,6 +169,9 @@ final class CPUState: ObservableObject {
     /// Asks the UI to open the popover programmatically (for the one-time post-update
     /// nudge). AppDelegate wires this to `StatusItemController.openPopover()`.
     var onRequestOpenPopover: (() -> Void)?
+    /// Fires when the ambient theme settings change so AppDelegate can start/stop the
+    /// ambient sampler in step with the opt-in flag.
+    var onAmbientThemeSettingsChange: ((AmbientThemeSettings) -> Void)?
 
     private let userDefaults: UserDefaults
     private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
@@ -200,12 +214,19 @@ final class CPUState: ObservableObject {
     /// is hidden and the continuous sampler is gated off (ADR-003). Returns nil on Macs
     /// with no battery, so `latestBatterySample` stays nil → "no battery" row.
     private let batteryReader: BatteryReading
+    /// Reads/writes the macOS system appearance for the ambient theme suggestion.
+    /// Injected so tests can fake the apply without running osascript / needing NSApp.
+    private let systemAppearance: SystemAppearanceControlling
+    /// Pure decision engine for the ambient theme suggestion; rebuilt when the
+    /// thresholds/dwell change so a settings edit takes effect immediately.
+    private var themeSuggestionEngine: ThemeSuggestionEngine
 
     init(
         userDefaults: UserDefaults = .standard,
         accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization(),
         accessibilityProbe: AccessibilityProbing? = nil,
         batteryReader: BatteryReading = IOKitBatteryReader(),
+        systemAppearance: SystemAppearanceControlling? = nil,
         processReader: ProcessReading = LibprocProcessReader(),
         samplingExecutor: SamplingExecutor = BackgroundSamplingExecutor(),
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
@@ -214,6 +235,10 @@ final class CPUState: ObservableObject {
         self.samplingExecutor = samplingExecutor
         self.userDefaults = userDefaults
         self.batteryReader = batteryReader
+        self.systemAppearance = systemAppearance ?? SystemAppearanceController()
+        let loadedAmbientSettings = AmbientThemeSettings.load(from: userDefaults)
+        ambientThemeSettings = loadedAmbientSettings
+        themeSuggestionEngine = ThemeSuggestionEngine(settings: loadedAmbientSettings)
         self.accessibilityAuthorization = accessibilityAuthorization
         // `SystemAccessibilityProbe` is `@MainActor`, so it cannot be a default
         // argument (those are evaluated in a nonisolated context); build it here in
@@ -588,6 +613,60 @@ final class CPUState: ObservableObject {
         if let sample = batteryReader.readSample() {
             latestBatterySample = sample
         }
+    }
+
+    // MARK: - Ambient theme suggestion
+
+    /// Records an ambient-light sample and recomputes the theme suggestion. The sample
+    /// is always stored (the popover lux row reads it); the suggestion is only computed
+    /// while the feature is enabled.
+    func update(with sample: AmbientLightSample) {
+        latestAmbientSample = sample
+        refreshThemeSuggestion()
+    }
+
+    private func refreshThemeSuggestion() {
+        guard ambientThemeSettings.isEnabled, let sample = latestAmbientSample else {
+            themeSuggestion = .none
+            return
+        }
+        themeSuggestion = themeSuggestionEngine.evaluate(
+            lux: sample.lux,
+            current: systemAppearance.current,
+            now: Date()
+        )
+    }
+
+    /// Applies the active suggestion to the macOS system appearance. On success the
+    /// suggestion clears; a denial is published for the banner's guidance state. No-op
+    /// when there is no active suggestion.
+    func applyThemeSuggestion() {
+        guard case let .suggest(mode) = themeSuggestion else { return }
+        let result = systemAppearance.apply(mode)
+        lastAppearanceApplyResult = result
+        if result == .applied {
+            themeSuggestion = .none
+        }
+    }
+
+    /// Dismisses the active suggestion: snoozes the engine for this direction until the
+    /// level returns through the dead band (FR-8) and clears the banner.
+    func dismissThemeSuggestion() {
+        themeSuggestionEngine.dismiss(themeSuggestion)
+        themeSuggestion = .none
+        lastAppearanceApplyResult = nil
+    }
+
+    /// Persists new ambient settings, rebuilds the engine with the new band, and
+    /// re-evaluates so the change takes effect at once. Fires the change callback so
+    /// AppDelegate can start/stop the sampler in step with the opt-in flag.
+    func setAmbientThemeSettings(_ settings: AmbientThemeSettings) {
+        guard ambientThemeSettings != settings else { return }
+        ambientThemeSettings = settings
+        settings.save(to: userDefaults)
+        themeSuggestionEngine = ThemeSuggestionEngine(settings: settings)
+        refreshThemeSuggestion()
+        onAmbientThemeSettingsChange?(settings)
     }
 
     /// Ingests a batch of parsed token events into the given provider's store and

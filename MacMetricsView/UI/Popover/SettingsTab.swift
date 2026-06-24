@@ -59,6 +59,10 @@ struct SettingsTab: View {
 
             Divider()
 
+            AmbientThemeControls(state: state)
+
+            Divider()
+
             LaunchAtLoginControl(settings: launchAtLoginSettings)
         }
         .font(.caption)
@@ -191,6 +195,154 @@ struct TokenControls: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .frame(width: 150, alignment: .leading)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Ambient theme suggestion controls
+
+/// Settings for the ambient-light theme suggestion: opt-in toggle, the live light
+/// readout (FR-10, doubles as a calibration aid), and the dark/light thresholds +
+/// dwell. All bind through `CPUState.setAmbientThemeSettings`, which persists, rebuilds
+/// the engine, and re-evaluates. Threshold setters clamp so `highLux > lowLux` always
+/// holds (otherwise the struct would reset the whole band to defaults).
+struct AmbientThemeControls: View {
+    @ObservedObject var state: CPUState
+
+    @State private var showHelp = false
+
+    private var settings: AmbientThemeSettings { state.ambientThemeSettings }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            HStack(spacing: 6) {
+                HStack(spacing: 3) {
+                    Text(Strings.ambientThemeSectionTitle())
+                        .lineLimit(1)
+                        .foregroundStyle(.primary)
+                    Button { showHelp.toggle() } label: {
+                        Image(systemName: showHelp ? "info.circle.fill" : "info.circle")
+                            .foregroundStyle(showHelp ? Color.accentColor : .secondary)
+                            .imageScale(.small)
+                    }
+                    .buttonStyle(.plain)
+                    .help(Strings.ambientThemeSectionTitle())
+                }
+
+                Spacer()
+
+                Toggle(Strings.ambientThemeEnable(), isOn: Binding(
+                    get: { settings.isEnabled },
+                    set: { newValue in
+                        var copy = settings
+                        copy.isEnabled = newValue
+                        state.setAmbientThemeSettings(copy)
+                    }
+                ))
+                .labelsHidden()
+                .toggleStyle(.switch)
+            }
+
+            if showHelp {
+                Text(Strings.ambientThemeHelp())
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .padding(9)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .fill(Color(nsColor: .controlBackgroundColor))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8, style: .continuous)
+                            .strokeBorder(Color.primary.opacity(0.08))
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+
+            if settings.isEnabled {
+                // Live light readout (FR-10) — also the calibration reference for the
+                // thresholds below. Falls back to "no sensor" on hardware without an ALS.
+                HStack(spacing: 6) {
+                    Text(Strings.ambientCurrentLight())
+                        .foregroundStyle(.primary)
+                        .frame(width: 120, alignment: .leading)
+                    if let lux = state.latestAmbientSample?.lux {
+                        Text("\(Int(lux))")
+                            .foregroundStyle(.secondary)
+                            .monospacedDigit()
+                    } else {
+                        Text(Strings.ambientNoSensor())
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                stepperRow(
+                    label: Strings.ambientThresholdDark(),
+                    value: Int(settings.lowLux),
+                    binding: Binding(
+                        get: { settings.lowLux },
+                        // Keep a non-empty dead band: dark threshold stays below the light one.
+                        set: { newValue in
+                            var copy = settings
+                            copy.lowLux = min(newValue, copy.highLux - 1)
+                            state.setAmbientThemeSettings(copy)
+                        }
+                    )
+                )
+
+                stepperRow(
+                    label: Strings.ambientThresholdLight(),
+                    value: Int(settings.highLux),
+                    binding: Binding(
+                        get: { settings.highLux },
+                        set: { newValue in
+                            var copy = settings
+                            copy.highLux = max(newValue, copy.lowLux + 1)
+                            state.setAmbientThemeSettings(copy)
+                        }
+                    )
+                )
+
+                stepperRow(
+                    label: Strings.ambientDwellLabel(),
+                    value: Int(settings.dwellSeconds),
+                    binding: Binding(
+                        get: { settings.dwellSeconds },
+                        set: { newValue in
+                            var copy = settings
+                            copy.dwellSeconds = max(0, newValue)
+                            state.setAmbientThemeSettings(copy)
+                        }
+                    ),
+                    range: 0...120
+                )
+            }
+        }
+        .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .animation(.easeInOut(duration: 0.18), value: showHelp)
+    }
+
+    private func stepperRow(
+        label: String,
+        value: Int,
+        binding: Binding<Double>,
+        range: ClosedRange<Double> = 0...2000
+    ) -> some View {
+        HStack(spacing: 6) {
+            Text(label)
+                .lineLimit(1)
+                .foregroundStyle(.primary)
+                .frame(width: 150, alignment: .leading)
+            Stepper(value: binding, in: range, step: 5) {
+                Text("\(value)")
+                    .monospacedDigit()
+                    .foregroundStyle(.secondary)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

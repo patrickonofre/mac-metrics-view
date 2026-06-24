@@ -44,6 +44,18 @@ struct PopoverView: View {
                     RecoveryBanner(wasResetByUpdate: state.accessibilityResetByUpdate)
                 }
 
+                let ambientBanner = AmbientSuggestionPresentation.bannerState(
+                    suggestion: state.themeSuggestion,
+                    lastApply: state.lastAppearanceApplyResult
+                )
+                if ambientBanner != .hidden {
+                    AmbientSuggestionBanner(
+                        state: ambientBanner,
+                        apply: { state.applyThemeSuggestion() },
+                        dismiss: { state.dismissThemeSuggestion() }
+                    )
+                }
+
                 tabBar
 
                 tabBody
