@@ -16,12 +16,12 @@
       "hero.eyebrow": "Versão 2.2 para macOS",
       "hero.title": "Seu Mac inteiro, na barra de menus.",
       "hero.lede": "CPU, memória, rede, temperatura, disco, bateria e tokens de IA — tudo glanceável, sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 2.2",
+      "hero.cta": "Baixar 2.3",
       "hero.secondary": "Ver o que há de novo",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View na barra de menus do macOS mostrando CPU, RAM, rede, temperatura, disco e bateria",
 
-      "sticky.label": "Mac Metrics View 2.2",
+      "sticky.label": "Mac Metrics View 2.3",
       "sticky.cta": "Baixar",
 
       "metric.cpu": "uso e processos",
@@ -97,9 +97,9 @@
       "privacy.li3": "Leitura 100% local — nada sai pela rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 2.2.",
+      "download.title": "Baixe a versão 2.3.",
       "download.body": "Para macOS 14 ou superior. Na primeira abertura o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, ele se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-2.2.0.zip",
+      "download.cta": "Baixar MacMetricsView-2.3.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · grátis e de código aberto",
 
       "firstrun.eyebrow": "Primeira abertura",
@@ -115,8 +115,10 @@
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
       "timeline.eyebrow": "Linha do tempo",
-      "timeline.title": "De 1.0 a 2.2.",
-      "timeline.lede": "O caminho até a versão 2.2, em resumo.",
+      "timeline.title": "De 1.0 a 2.3.",
+      "timeline.lede": "O caminho até a versão 2.3, em resumo.",
+      "timeline.v23Title": "2.3 — Só Apple Silicon e tema automático",
+      "timeline.v23Body": "Suporte exclusivo a Macs com chip Apple (M); código de compatibilidade com Intel removido. Sugestão automática de tema claro/escuro conforme a luz do ambiente.",
       "timeline.v22Title": "2.2 — Mais leve e foco em Claude e Codex",
       "timeline.v22Body": "Amostragem fora da thread principal (menos energia), aviso de acessibilidade só no popover e tokens de IA focados em Claude Code e Codex.",
       "timeline.v21Title": "2.1 — Memória usado/total e barra monocromática",
@@ -152,12 +154,12 @@
       "hero.eyebrow": "Version 2.2 for macOS",
       "hero.title": "Your whole Mac, in the menu bar.",
       "hero.lede": "CPU, memory, network, temperature, disk, battery, and AI tokens — all glanceable, without opening Activity Monitor.",
-      "hero.cta": "Download 2.2",
+      "hero.cta": "Download 2.3",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View in the macOS menu bar showing CPU, RAM, network, temperature, disk, and battery",
 
-      "sticky.label": "Mac Metrics View 2.2",
+      "sticky.label": "Mac Metrics View 2.3",
       "sticky.cta": "Download",
 
       "metric.cpu": "usage and processes",
@@ -233,9 +235,9 @@
       "privacy.li3": "100% local reads — nothing leaves over the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 2.2.",
+      "download.title": "Download version 2.3.",
       "download.body": "For macOS 14 or later. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-2.2.0.zip",
+      "download.cta": "Download MacMetricsView-2.3.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · free and open source",
 
       "firstrun.eyebrow": "First launch",
@@ -251,8 +253,10 @@
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
       "timeline.eyebrow": "Timeline",
-      "timeline.title": "From 1.0 to 2.2.",
-      "timeline.lede": "The road to version 2.2, in brief.",
+      "timeline.title": "From 1.0 to 2.3.",
+      "timeline.lede": "The road to version 2.3, in brief.",
+      "timeline.v23Title": "2.3 — Apple Silicon only and automatic theme",
+      "timeline.v23Body": "Exclusive support for Apple-chip Macs (M-series); Intel compatibility code removed. Automatic light/dark theme suggestion based on ambient light.",
       "timeline.v22Title": "2.2 — Lighter, focused on Claude and Codex",
       "timeline.v22Body": "Sampling moved off the main thread (less energy), the accessibility notice now lives only in the popover, and AI tokens focus on Claude Code and Codex.",
       "timeline.v21Title": "2.1 — Used/total memory and a monochrome menu bar",
