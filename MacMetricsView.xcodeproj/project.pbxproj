@@ -58,8 +58,15 @@
 		100000000000000000000031 /* TemperatureSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000126 /* TemperatureSampler.swift */; };
 		100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* IOHIDTemperatureSensors.swift */; };
 		100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* IOKitTemperatureReader.swift */; };
-		1000000000000000000000FFB /* SMCTemperatureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF2 /* SMCTemperatureReader.swift */; };
-		100000000000000000000053 /* TemperatureReaderFactory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000050 /* TemperatureReaderFactory.swift */; };
+		6714C7C4693B4956BAFB3424 /* AmbientLightModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */; };
+		910CC55A40BE48D6A324C28F /* AmbientThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */; };
+		B47D85D93D584D29AA3AB7AA /* AmbientLightSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */; };
+		E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */; };
+		C5F503404C4A431C8D2ACC85 /* SystemAppearanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */; };
+		65D017BEA6954CA095B9C64C /* ThemeSuggestionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */; };
+		4E9304DB8458485A81E2F532 /* AmbientSuggestionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */; };
+		B272469D84C03AFE9DF74A77 /* AmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */; };
+		324C4A03B03B87F9DECC6FF8 /* IOKitAmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */; };
 		100000000000000000000032 /* TemperatureSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000123 /* TemperatureSample.swift */; };
 		100000000000000000000033 /* TemperatureHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000124 /* TemperatureHistory.swift */; };
 		100000000000000000000034 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000125 /* TemperatureFormatter.swift */; };
@@ -215,8 +222,15 @@
 		100000000000000000000126 /* TemperatureSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureSampler.swift; sourceTree = "<group>"; };
 		10000000000000000000004E /* IOHIDTemperatureSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOHIDTemperatureSensors.swift; sourceTree = "<group>"; };
 		10000000000000000000004F /* IOKitTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitTemperatureReader.swift; sourceTree = "<group>"; };
-		1000000000000000000000FF2 /* SMCTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SMCTemperatureReader.swift; sourceTree = "<group>"; };
-		100000000000000000000050 /* TemperatureReaderFactory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureReaderFactory.swift; sourceTree = "<group>"; };
+		60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightModels.swift; path = MacMetricsView/Models/AmbientLightModels.swift; sourceTree = SOURCE_ROOT; };
+		04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientThemeSettings.swift; path = MacMetricsView/Models/AmbientThemeSettings.swift; sourceTree = SOURCE_ROOT; };
+		A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightSampler.swift; path = MacMetricsView/Services/AmbientLightSampler.swift; sourceTree = SOURCE_ROOT; };
+		5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOHIDAmbientLightSensors.swift; path = MacMetricsView/Services/IOHIDAmbientLightSensors.swift; sourceTree = SOURCE_ROOT; };
+		C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemAppearanceController.swift; path = MacMetricsView/Services/SystemAppearanceController.swift; sourceTree = SOURCE_ROOT; };
+		1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ThemeSuggestionEngine.swift; path = MacMetricsView/Services/ThemeSuggestionEngine.swift; sourceTree = SOURCE_ROOT; };
+		D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientSuggestionPresentation.swift; path = MacMetricsView/UI/AmbientSuggestionPresentation.swift; sourceTree = SOURCE_ROOT; };
+		4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightReader.swift; path = MacMetricsView/Services/AmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
+		353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOKitAmbientLightReader.swift; path = MacMetricsView/Services/IOKitAmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
 		10000000000000000000012B /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Localization.swift; sourceTree = "<group>"; };
 		10000000000000000000012C /* MainRunLoopTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MainRunLoopTimer.swift; sourceTree = "<group>"; };
 		100000000000000000000127 /* TemperatureFormattingAndHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormattingAndHistoryTests.swift; sourceTree = "<group>"; };
@@ -357,8 +371,15 @@
 				100000000000000000000126 /* TemperatureSampler.swift */,
 				10000000000000000000004E /* IOHIDTemperatureSensors.swift */,
 				10000000000000000000004F /* IOKitTemperatureReader.swift */,
-				1000000000000000000000FF2 /* SMCTemperatureReader.swift */,
-				100000000000000000000050 /* TemperatureReaderFactory.swift */,
+				60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */,
+				04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */,
+				A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */,
+				5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */,
+				C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */,
+				1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */,
+				D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */,
+				4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */,
+				353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */,
 				10000000000000000000011B /* DarwinNetworkReader.swift */,
 				10000000000000000000011D /* NetworkSampleCalculator.swift */,
 				10000000000000000000012B /* Localization.swift */,
@@ -599,8 +620,15 @@
 				100000000000000000000031 /* TemperatureSampler.swift in Sources */,
 				100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */,
 				100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */,
-				1000000000000000000000FFB /* SMCTemperatureReader.swift in Sources */,
-				100000000000000000000053 /* TemperatureReaderFactory.swift in Sources */,
+				6714C7C4693B4956BAFB3424 /* AmbientLightModels.swift in Sources */,
+				910CC55A40BE48D6A324C28F /* AmbientThemeSettings.swift in Sources */,
+				B47D85D93D584D29AA3AB7AA /* AmbientLightSampler.swift in Sources */,
+				E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */,
+				C5F503404C4A431C8D2ACC85 /* SystemAppearanceController.swift in Sources */,
+				65D017BEA6954CA095B9C64C /* ThemeSuggestionEngine.swift in Sources */,
+				4E9304DB8458485A81E2F532 /* AmbientSuggestionPresentation.swift in Sources */,
+				B272469D84C03AFE9DF74A77 /* AmbientLightReader.swift in Sources */,
+				324C4A03B03B87F9DECC6FF8 /* IOKitAmbientLightReader.swift in Sources */,
 				10000000000000000000001E /* DarwinNetworkReader.swift in Sources */,
 				100000000000000000000020 /* NetworkSampleCalculator.swift in Sources */,
 				10000000000000000000003B /* Localization.swift in Sources */,
@@ -736,6 +764,7 @@
 		100000000000000000000A01 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
@@ -759,6 +788,7 @@
 		100000000000000000000A02 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;

@@ -54,7 +54,7 @@ final class TemperatureSampler {
     weak var delegate: TemperatureSamplerDelegate?
 
     init(
-        reader: TemperatureReading = TemperatureReaderFactory.makeDefault(),
+        reader: TemperatureReading = IOKitTemperatureReader(),
         notificationCenter: NotificationCenter = .default,
         deliveryQueue: OperationQueue? = .main,
         pollInterval: TimeInterval = 3,

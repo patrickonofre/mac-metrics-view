@@ -6,11 +6,11 @@ Menu bar metric identifiers can be shown as compact SF Symbols by default or as 
 
 ## Temperature
 
-On Apple Silicon the temperature metric shows a numeric reading in °C (averaged SoC/CPU
+The temperature metric shows a numeric reading in °C (averaged SoC/CPU
 die sensors). This reads private `IOHIDEventSystemClient` sensors — resolved at runtime
 via `dlsym`, with **no `sudo`, no `powermetrics`, and no extra entitlement**. Because it
 relies on undocumented API, a future macOS could remove it; in that case (or on hardware
-with no usable sensor, including Intel Macs where the SMC reader is not yet shipped) the
+with no usable sensor) the
 app **falls back to the thermal-state label** (`Normal`/`Aquecido`/`Quente`/`Crítico`) —
 never a crash and no wrong number. The numeric value is polled only while the temperature
 metric is visible. See `docs/TECH_DECISIONS.md` TD-005.

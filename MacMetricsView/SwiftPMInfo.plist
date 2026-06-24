@@ -22,6 +22,8 @@
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>O Mac Metrics View usa o System Events para alternar a aparência do macOS (claro/escuro) quando você aceita a sugestão baseada na luz ambiente.</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
 </dict>

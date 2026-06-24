@@ -341,6 +341,52 @@ enum Strings {
         pt: "Conceda a permissão de Acessibilidade para usar o modo limpeza."
     )
 
+    // Ambient-light theme suggestion (feature). Suggestion banner + settings.
+    static let ambientSuggestionTitleDark = LocalizedText(
+        en: "Switch to Dark theme?",
+        pt: "Mudar para o tema Escuro?"
+    )
+    static let ambientSuggestionTitleLight = LocalizedText(
+        en: "Switch to Light theme?",
+        pt: "Mudar para o tema Claro?"
+    )
+    static let ambientSuggestionMessage = LocalizedText(
+        en: "The light around your Mac changed.",
+        pt: "A luz ao redor do seu Mac mudou."
+    )
+    static let ambientApply = LocalizedText(en: "Switch", pt: "Mudar")
+    static let ambientDismiss = LocalizedText(en: "Not now", pt: "Agora não")
+    static let ambientNotAuthorizedTitle = LocalizedText(
+        en: "Automation permission needed",
+        pt: "Permissão de automação necessária"
+    )
+    static let ambientNotAuthorizedMessage = LocalizedText(
+        en: "Allow Mac Metrics View to control System Events in Privacy & Security → Automation.",
+        pt: "Permita o Mac Metrics View controlar o System Events em Privacidade e Segurança → Automação."
+    )
+    static let ambientOpenAutomationSettings = LocalizedText(en: "Open Settings", pt: "Abrir Ajustes")
+
+    static let ambientThemeSectionTitle = LocalizedText(
+        en: "Auto theme by ambient light",
+        pt: "Tema automático por luz ambiente"
+    )
+    static let ambientThemeEnable = LocalizedText(
+        en: "Suggest theme by ambient light",
+        pt: "Sugerir tema pela luz ambiente"
+    )
+    static let ambientThemeHelp = LocalizedText(
+        en: "When the light around your Mac changes, suggest switching between Light and Dark. You confirm each switch.",
+        pt: "Quando a luz ao redor do seu Mac muda, sugere alternar entre Claro e Escuro. Você confirma cada troca."
+    )
+    static let ambientThresholdDark = LocalizedText(en: "Suggest Dark below", pt: "Sugerir Escuro abaixo de")
+    static let ambientThresholdLight = LocalizedText(en: "Suggest Light above", pt: "Sugerir Claro acima de")
+    static let ambientDwellLabel = LocalizedText(en: "Hold for (s)", pt: "Aguardar (s)")
+    static let ambientCurrentLight = LocalizedText(en: "Current light", pt: "Luz atual")
+    static let ambientNoSensor = LocalizedText(
+        en: "No ambient light sensor on this Mac.",
+        pt: "Sem sensor de luz ambiente neste Mac."
+    )
+
     // Shared
     static let unavailable = LocalizedText(en: "Unavailable", pt: "Indisponível")
 }
