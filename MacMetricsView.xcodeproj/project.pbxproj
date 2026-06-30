@@ -109,6 +109,7 @@
 		1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E01 /* AccessibilityProbe.swift */; };
 		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
 		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
+		B101B101B101B101B101B101 /* TokenUsageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A101A101A101A101A101A101 /* TokenUsageModel.swift */; };
 		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
 		1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E05 /* UpdateBannerPresentation.swift */; };
 		1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F01 /* TokenUsageEvent.swift */; };
@@ -210,6 +211,7 @@
 		1000000000000000000000E01 /* AccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityProbe.swift; sourceTree = "<group>"; };
 		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
 		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
+		A101A101A101A101A101A101 /* TokenUsageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TokenUsageModel.swift; sourceTree = "<group>"; };
 		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
 		1000000000000000000000E05 /* UpdateBannerPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/UpdateBannerPresentation.swift; sourceTree = "<group>"; };
 		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
@@ -422,6 +424,7 @@
 				1000000000000000000000E01 /* AccessibilityProbe.swift */,
 				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
 				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
+				A101A101A101A101A101A101 /* TokenUsageModel.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
 				1000000000000000000000E05 /* UpdateBannerPresentation.swift */,
 				1000000000000000000000F01 /* TokenUsageEvent.swift */,
@@ -677,6 +680,7 @@
 				1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */,
 				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
 				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
+				B101B101B101B101B101B101 /* TokenUsageModel.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
 				1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */,
 				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,

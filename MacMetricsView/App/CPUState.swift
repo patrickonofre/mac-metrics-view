@@ -1,19 +1,6 @@
 import Foundation
 import Combine
 
-/// Rate-limit estimate published to the popover in one value (Phase 3): the
-/// active 5h block (or `nil` between blocks), the rolling-week figures from the
-/// daily ledger, and the user-set budgets (0 = off, ADR-008). Always
-/// Claude-scoped regardless of the provider picker (ADR-006). Defined here — not
-/// in its own file — so it adds no Xcode-target-membership risk.
-struct TokenRateLimitSnapshot: Equatable {
-    let block: TokenRateLimitBlock?
-    let weeklyUsage: TokenAggregate
-    let weeklyCostUSD: Double
-    let sessionBudget: Int
-    let weeklyBudget: Int
-}
-
 /// Where the cleaning-permission recovery flow is, for the UI to render and for the
 /// state machine to gate its probe poll loop and one-shot relaunch (see ADR-002).
 enum AccessibilityRecoveryPhase: Equatable {
@@ -66,61 +53,16 @@ final class CPUState: ObservableObject {
     private var lastNetworkSampleTimestamp: Date?
     private var lastDiskSampleTimestamp: Date?
 
-    /// One bounded token event store + since-reset accumulator per provider (ADR-003).
-    /// Ingested via `update(provider:with:)`; the popover/menu bar read the selected
-    /// provider's store (or both, summed, for `combined`).
-    @Published private(set) var tokenStores: [TokenProvider: TokenUsageStore]
-    /// Token breakdown for the currently selected provider + scope + window, recomputed
-    /// whenever events arrive or the provider/scope/window changes. For `combined` it is the
-    /// sum of each provider's aggregate. Drives the menu bar and popover.
-    @Published private(set) var tokenAggregate: TokenAggregate = .zero
-    /// Estimated USD cost over the same selection, or `nil` when no events fall in the
-    /// window (ADR-003). For `combined` it is the sum of per-provider costs. Since-reset
-    /// cost only covers the retained-events horizon — same caveat as the sparkline.
-    @Published private(set) var tokenCost: TokenCostBreakdown?
-    /// Events backing the per-model attribution and the cost figure, merged across the
-    /// selected providers, newest first. Filtered once per recompute so attribution and
-    /// cost never trigger a second filtering pass on the hot path (TechSpec).
-    @Published private(set) var tokenFilteredEvents: [TokenUsageEvent] = []
-    /// Pace over the fixed trailing hour for the selected provider(s), or `nil` when no
-    /// event falls in that window — the popover row hides (ADR-004). Deliberately
-    /// ignores the scope/window pickers: it sources the providers' raw events filtered
-    /// by timestamp only, always answering "pace right now".
-    @Published private(set) var tokenBurnRate: TokenBurnRateBreakdown?
-    /// Claude rate-limit estimate (5h block + rolling week + budgets), or `nil`
-    /// when there is no data at all — no active block AND an empty week. A
-    /// missing block with a populated week still publishes, so the weekly row
-    /// stays meaningful (ADR-006/007/008). Ignores the scope/window/provider
-    /// pickers; refreshed on the same recompute pass and ADR-005 tick.
-    @Published private(set) var tokenRateLimit: TokenRateLimitSnapshot?
+    /// The Dev/AI pillar (TD-012): token stores, the derived aggregate/cost/burn-rate/
+    /// rate-limit surfaces, the daily ledger and the popover-open refresh (ADR-005).
+    /// Extracted to `TokenUsageModel` (task-001). This coordinator forwards token reads to
+    /// it (shims below) and republishes its changes (see init) so the UI that still
+    /// observes `CPUState` keeps updating; task-002 observes the model directly.
+    let token: TokenUsageModel
 
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
     /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
     let diskSampleInterval: TimeInterval = 1
-
-    private enum TokenKeys {
-        /// Legacy single reset key (pre-Codex). Migrated once into the Claude slot.
-        static let legacyResetAt = "CPUState.tokenResetAt"
-        static func resetAt(_ provider: TokenProvider) -> String {
-            "CPUState.tokenResetAt.\(provider.rawValue)"
-        }
-        /// JSON-encoded `TokenDailyLedger` backing the weekly figure (ADR-007).
-        static let dailyLedger = "CPUState.tokenDailyLedger.claude"
-        /// Newest Claude event timestamp already folded into the ledger. Guards the
-        /// reader's cold-start tail re-emission after a relaunch — without it every
-        /// restart would re-fold up to 24h of already-counted events (ADR-007's
-        /// no-double-count rule applied at the persistence boundary).
-        static let ledgerWatermark = "CPUState.tokenLedgerWatermark.claude"
-        /// One-shot guard for the historical backfill scan (ADR-007).
-        static let ledgerBackfilled = "CPUState.tokenLedgerBackfilled.claude"
-    }
-
-    /// Per-day Claude usage + cost buckets behind the weekly rate-limit figure
-    /// (ADR-007). Loaded at init, folded on ingest, persisted once per batch.
-    /// Not published — the UI reads it through the `tokenRateLimit` snapshot.
-    private(set) var tokenDailyLedger = TokenDailyLedger()
-    /// Newest folded event timestamp; events at or before it are skipped on fold.
-    private var tokenLedgerWatermark: Date?
 
     // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
     @Published private(set) var lockPhase: LockPhase = .idle
@@ -184,13 +126,10 @@ final class CPUState: ObservableObject {
     private var nudgeTracker: AccessibilityNudgeTracker
     /// Active only while `recoveryPhase == .awaitingGrant`; spawns a probe each tick.
     private var recoveryPollTimer: Timer?
-    /// Active only while the popover is open (ADR-005); each tick re-runs the token
-    /// recompute with a fresh `now` so the trailing-hour burn rate and the rolling
-    /// windows keep sliding without new ingest.
-    private var tokenAutoRefreshTimer: Timer?
-    /// Refresh cadence while the popover is open: fast enough that the 60-minute
-    /// window moves visibly, slow enough to be free (ADR-005). Not configurable.
-    private let tokenAutoRefreshInterval: TimeInterval = 30
+    /// Forwards `TokenUsageModel` changes to this coordinator's `objectWillChange` so the
+    /// UI that still observes `CPUState` (task-001) updates when token figures change.
+    /// task-002 observes the model directly at the point of use and drops this.
+    private var tokenObservation: AnyCancellable?
     private let processReader: ProcessReading
     /// Runs the all-PID process enumeration off the main thread (PERF-01). The reader's mutable
     /// state (its PID→name cache) is touched only inside the executor; `previousProcessSnapshot`
@@ -257,28 +196,22 @@ final class CPUState: ObservableObject {
         updateRate = loadedDisplay.updateRate
         cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
 
-        // Per-provider reset times. Migrate the legacy single key into the Claude slot once
-        // (ADR-003), so an existing install's since-reset measurement carries over.
-        let legacyResetAt = userDefaults.object(forKey: TokenKeys.legacyResetAt) as? Date
-        let storedClaudeResetAt = userDefaults.object(forKey: TokenKeys.resetAt(.claude)) as? Date
-        let claudeResetAt = storedClaudeResetAt ?? legacyResetAt ?? Date()
-        let codexResetAt = (userDefaults.object(forKey: TokenKeys.resetAt(.codex)) as? Date) ?? Date()
-        tokenStores = [
-            .claude: TokenUsageStore(resetAt: claudeResetAt),
-            .codex: TokenUsageStore(resetAt: codexResetAt)
-        ]
-        if storedClaudeResetAt == nil, let legacyResetAt {
-            userDefaults.set(legacyResetAt, forKey: TokenKeys.resetAt(.claude))
-            userDefaults.removeObject(forKey: TokenKeys.legacyResetAt)
-        }
+        token = TokenUsageModel(
+            userDefaults: userDefaults,
+            selection: TokenDisplaySelection(
+                scope: loadedDisplay.tokenScope,
+                window: loadedDisplay.tokenMenuBarWindow,
+                provider: loadedDisplay.tokenProvider,
+                sessionBudget: loadedDisplay.tokenSessionBudget,
+                weeklyBudget: loadedDisplay.tokenWeeklyBudget
+            )
+        )
 
-        // Daily ledger restore (ADR-007). A missing or undecodable payload yields
-        // an empty ledger — corruption degrades, never crashes.
-        if let data = userDefaults.data(forKey: TokenKeys.dailyLedger),
-           let ledger = try? JSONDecoder().decode(TokenDailyLedger.self, from: data) {
-            tokenDailyLedger = ledger
+        // Republish the token model's changes through this coordinator while the UI still
+        // observes `CPUState` (task-001 bridge; task-002 observes the model directly).
+        tokenObservation = token.objectWillChange.sink { [weak self] in
+            self?.objectWillChange.send()
         }
-        tokenLedgerWatermark = userDefaults.object(forKey: TokenKeys.ledgerWatermark) as? Date
 
         evaluateAccessibility()
     }
@@ -286,7 +219,6 @@ final class CPUState: ObservableObject {
     deinit {
         // No leaked timers if the state is torn down mid-recovery or popover-open.
         recoveryPollTimer?.invalidate()
-        tokenAutoRefreshTimer?.invalidate()
         processSamplingTimer?.invalidate()
     }
 
@@ -426,10 +358,16 @@ final class CPUState: ObservableObject {
         display.diskMenuBarMetric
     }
 
+    /// Token shims forwarding to `TokenUsageModel` (task-001; task-002 reads it directly).
+    var tokenStores: [TokenProvider: TokenUsageStore] { token.tokenStores }
+    var tokenAggregate: TokenAggregate { token.aggregate }
+    var tokenCost: TokenCostBreakdown? { token.cost }
+    var tokenFilteredEvents: [TokenUsageEvent] { token.filteredEvents }
+    var tokenBurnRate: TokenBurnRateBreakdown? { token.burnRate }
+    var tokenRateLimit: TokenRateLimitSnapshot? { token.rateLimit }
+    var tokenDailyLedger: TokenDailyLedger { token.dailyLedger }
     /// Token volume has no danger threshold in the volume-only MVP — always `.normal`.
-    var tokenMenuBarTextStyle: CPUMenuBarTextStyle {
-        TokenFormatter.menuBarTextStyle(for: tokenAggregate)
-    }
+    var tokenMenuBarTextStyle: CPUMenuBarTextStyle { token.menuBarTextStyle }
 
     var tokenScope: TokenScope {
         display.tokenScope
@@ -444,93 +382,25 @@ final class CPUState: ObservableObject {
         display.tokenProvider
     }
 
-    /// Whether the token meter has nothing meaningful to show (no logs / all-zero).
-    var tokenIsEmpty: Bool {
-        TokenFormatter.isEmpty(tokenAggregate)
-    }
+    var tokenIsEmpty: Bool { token.isEmpty }
+    var tokenRowValue: String { token.rowValue }
+    var tokenBreakdown: [(label: String, value: String)] { token.breakdown }
+    var tokenCostRowValue: String? { token.costRowValue }
+    var tokenCostPerModel: [(label: String, value: String)] { token.costPerModel }
+    var tokenCostHasUnpricedTokens: Bool { token.costHasUnpricedTokens }
+    var tokenPaceRowValue: String? { token.paceRowValue }
+    var tokenActiveModels: String? { token.activeModels }
+    var tokenSparkline: [Double] { token.sparkline }
 
-    /// Headline value for the popover token row: the humanized total, or the localized
-    /// empty/zero state when there is no data.
-    var tokenRowValue: String {
-        tokenIsEmpty ? TokenFormatter.emptyState() : TokenFormatter.humanized(tokenAggregate.usageTotal)
-    }
-
-    /// Localized input/output/cache breakdown rows for the popover.
-    var tokenBreakdown: [(label: String, value: String)] {
-        TokenFormatter.breakdown(for: tokenAggregate)
-    }
-
-    /// Formatted estimated-cost headline for the popover cost row, or `nil` when there
-    /// is no cost to show (no events in the window) — the row hides instead of
-    /// rendering a misleading `$0.00`.
-    var tokenCostRowValue: String? {
-        tokenCost.map { TokenFormatter.costString($0.totalUSD) }
-    }
-
-    /// Per-model formatted costs for the attribution list, largest first. Models
-    /// without a friendly display name fall back to the raw id so attribution never
-    /// silently drops a priced model.
-    var tokenCostPerModel: [(label: String, value: String)] {
-        guard let cost = tokenCost else { return [] }
-        return cost.perModelUSD.map { entry in
-            (TokenFormatter.modelDisplayName(entry.model) ?? entry.model,
-             TokenFormatter.costString(entry.usd))
-        }
-    }
-
-    /// Whether the unpriced indicator must accompany the cost figure: events from
-    /// unrecognized models were excluded from the total (ADR-003).
-    var tokenCostHasUnpricedTokens: Bool {
-        (tokenCost?.unpricedTokens ?? 0) > 0
-    }
-
-    /// Formatted pace line for the popover ("123.4k/h · $0.85/h · ~$20.4/day"), or
-    /// `nil` when no event falls in the trailing hour — the row hides instead of
-    /// rendering a misleading zero pace (ADR-004).
-    var tokenPaceRowValue: String? {
-        tokenBurnRate.map { TokenFormatter.burnRateString($0) }
-    }
-
-    /// Distinct friendly model names used within the current provider/scope/window, newest
-    /// first (e.g. "GPT-5 Codex, Opus 4.8"). For `combined`, events from both providers are
-    /// merged and ordered by recency. `nil` when there is no usage to attribute. Reads the
-    /// events already filtered on the recompute path — no filtering of its own.
-    var tokenActiveModels: String? {
-        guard !tokenIsEmpty else { return nil }
-        var seen = Set<String>()
-        let names = tokenFilteredEvents.compactMap { event -> String? in
-            guard !seen.contains(event.model) else { return nil }
-            seen.insert(event.model)
-            return TokenFormatter.modelDisplayName(event.model)
-        }
-        return names.isEmpty ? nil : names.joined(separator: ", ")
-    }
-
-    /// Sparkline values (0–100 normalized) of recent token volume for the selected
-    /// provider/scope/window, mirroring `normalizedDiskTrend`. For `combined`, per-bucket
-    /// totals are summed across providers before normalizing. Empty when there is no data.
-    var tokenSparkline: [Double] {
-        guard !tokenIsEmpty else { return [] }
-        let now = Date()
-        var summed: [Int] = []
-        for provider in display.tokenProvider.providers {
-            guard let store = tokenStores[provider] else { continue }
-            let buckets = TokenWindowStats.sparklineBuckets(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-            if summed.isEmpty {
-                summed = buckets
-            } else {
-                for index in buckets.indices where index < summed.count {
-                    summed[index] += buckets[index]
-                }
-            }
-        }
-        guard let peak = summed.max(), peak > 0 else { return [] }
-        return summed.map { Double($0) / Double(peak) * 100 }
+    /// The token-relevant slice of `display`, pushed into the model on each picker change.
+    private var tokenSelection: TokenDisplaySelection {
+        TokenDisplaySelection(
+            scope: display.tokenScope,
+            window: display.tokenMenuBarWindow,
+            provider: display.tokenProvider,
+            sessionBudget: display.tokenSessionBudget,
+            weeklyBudget: display.tokenWeeklyBudget
+        )
     }
 
     var hasVisibleMetric: Bool {
@@ -693,58 +563,14 @@ final class CPUState: ObservableObject {
         onAmbientThemeSettingsChange?(settings)
     }
 
-    /// Ingests a batch of parsed token events into the given provider's store and
-    /// republishes the selected aggregate. Ingestion is independent of menu-bar visibility —
-    /// like the other metrics, the popover keeps working when the segment is hidden.
+    /// Forwards token ingest to the model (task-001 shim).
     func update(provider: TokenProvider, with events: [TokenUsageEvent]) {
-        guard !events.isEmpty else { return }
-        for event in events {
-            tokenStores[provider]?.append(event)
-        }
-        if provider == .claude {
-            foldIntoDailyLedger(events)
-        }
-        recomputeTokenAggregate()
-    }
-
-    /// Folds a Claude ingest batch into the daily ledger (ADR-007): cost computed
-    /// at ingest with the shipped price table, prune to the rolling 8 days, one
-    /// debounced persistence write per batch — never per event. The watermark
-    /// skips events already counted before a relaunch (the reader's cold-start
-    /// tail re-emits up to 24h of history).
-    private func foldIntoDailyLedger(_ events: [TokenUsageEvent]) {
-        let calendar = Calendar.current
-        var folded = false
-        for event in events {
-            if let watermark = tokenLedgerWatermark, event.timestamp <= watermark { continue }
-            tokenDailyLedger.fold(
-                event,
-                costUSD: TokenCostCalculator.cost(of: [event]).totalUSD,
-                calendar: calendar
-            )
-            folded = true
-        }
-        guard folded else { return }
-        if let newest = events.map(\.timestamp).max() {
-            tokenLedgerWatermark = max(tokenLedgerWatermark ?? .distantPast, newest)
-        }
-        tokenDailyLedger.prune(now: Date(), calendar: calendar)
-        persistDailyLedger()
-    }
-
-    /// One write per ingest batch / backfill merge — the ledger is ~8 small entries.
-    private func persistDailyLedger() {
-        if let data = try? JSONEncoder().encode(tokenDailyLedger) {
-            userDefaults.set(data, forKey: TokenKeys.dailyLedger)
-        }
-        if let watermark = tokenLedgerWatermark {
-            userDefaults.set(watermark, forKey: TokenKeys.ledgerWatermark)
-        }
+        token.update(provider: provider, with: events)
     }
 
     /// Claude-provider convenience used by the existing Claude sampler path and tests.
     func update(with events: [TokenUsageEvent]) {
-        update(provider: .claude, with: events)
+        token.update(with: events)
     }
 
     func setTokenVisible(_ isVisible: Bool) {
@@ -756,7 +582,7 @@ final class CPUState: ObservableObject {
 
         display.tokenScope = scope
         display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        token.apply(selection: tokenSelection)
         onDisplayChange?()
     }
 
@@ -765,7 +591,7 @@ final class CPUState: ObservableObject {
 
         display.tokenMenuBarWindow = window
         display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        token.apply(selection: tokenSelection)
         onDisplayChange?()
     }
 
@@ -776,7 +602,7 @@ final class CPUState: ObservableObject {
 
         display.tokenProvider = selection
         display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        token.apply(selection: tokenSelection)
         onDisplayChange?()
     }
 
@@ -788,7 +614,7 @@ final class CPUState: ObservableObject {
 
         display.tokenSessionBudget = sanitized
         display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        token.apply(selection: tokenSelection)
     }
 
     /// Persists the weekly token budget (0 = off, negatives clamp to 0 — ADR-008).
@@ -798,106 +624,25 @@ final class CPUState: ObservableObject {
 
         display.tokenWeeklyBudget = sanitized
         display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        token.apply(selection: tokenSelection)
     }
 
-    /// Starts a fresh since-reset measurement for the selected provider(s) — both when
-    /// `combined` is selected (ADR-003). The rolling windows (today/1h/24h) are unaffected;
-    /// only the since-reset view zeroes. Each provider's `resetAt` is persisted under its own
-    /// key so it survives relaunch and rebuilds from the backfilled tail.
+    /// Forwards the since-reset counter restart to the model (task-001 shim).
     func resetTokenCounter() {
-        let now = Date()
-        for provider in display.tokenProvider.providers {
-            tokenStores[provider]?.reset(now: now)
-            userDefaults.set(now, forKey: TokenKeys.resetAt(provider))
-        }
-        recomputeTokenAggregate()
+        token.resetCounter()
     }
 
-    /// Starts the popover-open token refresh (ADR-005): recomputes immediately so the
-    /// figures are fresh the moment the popover opens, then ticks every ~30s.
-    /// Idempotent — a second `begin` refreshes but never stacks a second timer.
+    /// Forwards the popover-open token refresh lifecycle to the model (ADR-005 shims).
     func beginTokenAutoRefresh() {
-        recomputeTokenAggregate()
-        guard tokenAutoRefreshTimer == nil else { return }
-        tokenAutoRefreshTimer = MainRunLoopTimer.repeating(every: tokenAutoRefreshInterval) { [weak self] in
-            self?.tokenAutoRefreshTick()
-        }
+        token.beginAutoRefresh()
     }
 
-    /// Stops the popover-open refresh. Safe without a matching `begin` (no-op); zero
-    /// timers run while the popover is closed (ADR-005).
     func endTokenAutoRefresh() {
-        tokenAutoRefreshTimer?.invalidate()
-        tokenAutoRefreshTimer = nil
+        token.endAutoRefresh()
     }
 
-    /// One refresh tick: re-runs the token recompute with a fresh (injectable) `now`.
-    /// Internal so tests can drive window decay deterministically, mirroring
-    /// `pollAccessibilityRecovery`. A no-op once `end` ran, so a late timer fire
-    /// cannot recompute after the popover closed.
     func tokenAutoRefreshTick(now: Date = Date()) {
-        guard tokenAutoRefreshTimer != nil else { return }
-        recomputeTokenAggregate(now: now)
-    }
-
-    /// The aggregate for the selected provider, or the sum of both providers' aggregates
-    /// for `combined` (each computed independently with its own MRU — ADR-003). The same
-    /// pass filters each provider's events once and derives the cost breakdown from them,
-    /// so attribution and cost share the filtering work (TechSpec hot-path rule).
-    /// `now` is injectable so the auto-refresh tick can slide the windows in tests;
-    /// production call sites use the default.
-    private func recomputeTokenAggregate(now: Date = Date()) {
-        var aggregate = TokenAggregate.zero
-        var cost = TokenCostBreakdown.zero
-        var events: [TokenUsageEvent] = []
-        var rateEvents: [TokenUsageEvent] = []
-
-        for provider in display.tokenProvider.providers {
-            guard let store = tokenStores[provider] else { continue }
-            aggregate = aggregate + TokenWindowStats.aggregate(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-            let filtered = TokenWindowStats.filteredEvents(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-            events += filtered
-            cost = cost + TokenCostCalculator.cost(of: filtered)
-            // Burn rate reads the raw store, not the picker-filtered set: its window
-            // is the fixed trailing hour regardless of scope/window (ADR-004).
-            rateEvents += store.events
-        }
-
-        events.sort { $0.timestamp > $1.timestamp }   // newest first across providers
-        tokenFilteredEvents = events
-        tokenAggregate = aggregate
-        tokenCost = events.isEmpty ? nil : cost
-        tokenBurnRate = TokenBurnRate.compute(events: rateEvents, now: now)
-
-        // Rate-limit snapshot: always the Claude store, regardless of the pickers
-        // (ADR-006); weekly from the ledger; budgets from display settings.
-        let block = TokenRateLimitWindow.activeBlock(
-            events: tokenStores[.claude]?.events ?? [],
-            now: now
-        )
-        let weekly = tokenDailyLedger.weeklyTotal(now: now, calendar: .current)
-        if block == nil, weekly.usage.total == 0, weekly.costUSD == 0 {
-            tokenRateLimit = nil
-        } else {
-            tokenRateLimit = TokenRateLimitSnapshot(
-                block: block,
-                weeklyUsage: weekly.usage,
-                weeklyCostUSD: weekly.costUSD,
-                sessionBudget: display.tokenSessionBudget,
-                weeklyBudget: display.tokenWeeklyBudget
-            )
-        }
+        token.autoRefreshTick(now: now)
     }
 
     func setCPUVisible(_ isVisible: Bool) {
