@@ -84,7 +84,7 @@ final class StatusItemTokenSegmentTests: XCTestCase {
         state.setTokenVisible(true)
         state.update(with: [event(input: 9_999_999)])
 
-        XCTAssertEqual(state.tokenMenuBarTextStyle, .normal)
+        XCTAssertEqual(state.token.menuBarTextStyle, .normal)
     }
 
     // MARK: - Integration

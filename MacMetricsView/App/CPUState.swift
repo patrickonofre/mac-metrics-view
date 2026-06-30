@@ -55,9 +55,14 @@ final class CPUState: ObservableObject {
 
     /// The Dev/AI pillar (TD-012): token stores, the derived aggregate/cost/burn-rate/
     /// rate-limit surfaces, the daily ledger and the popover-open refresh (ADR-005).
-    /// Extracted to `TokenUsageModel` (task-001). This coordinator forwards token reads to
-    /// it (shims below) and republishes its changes (see init) so the UI that still
-    /// observes `CPUState` keeps updating; task-002 observes the model directly.
+    /// Extracted to `TokenUsageModel` (task-001/002). Deliberately **not** bridged to this
+    /// coordinator's `objectWillChange`: `StatusItemController` is AppKit-imperative and
+    /// learns about token changes via an explicit `setNeedsTitleUpdate()` push from
+    /// `AppDelegate.tokenUsageSampler(_:didProduce:)`, never through Combine. SwiftUI
+    /// consumers that need live token reactivity observe `token` directly at the point of
+    /// use (e.g. `MetricsTab`) — bridging here would re-invalidate every `CPUState`
+    /// observer (Settings/Actions tabs) on every token tick, including the popover-open
+    /// 30s auto-refresh (ADR-005), defeating the churn isolation this split exists for.
     let token: TokenUsageModel
 
     /// Interval the disk sampler ticks at, used to convert rolling-window rate
@@ -126,10 +131,6 @@ final class CPUState: ObservableObject {
     private var nudgeTracker: AccessibilityNudgeTracker
     /// Active only while `recoveryPhase == .awaitingGrant`; spawns a probe each tick.
     private var recoveryPollTimer: Timer?
-    /// Forwards `TokenUsageModel` changes to this coordinator's `objectWillChange` so the
-    /// UI that still observes `CPUState` (task-001) updates when token figures change.
-    /// task-002 observes the model directly at the point of use and drops this.
-    private var tokenObservation: AnyCancellable?
     private let processReader: ProcessReading
     /// Runs the all-PID process enumeration off the main thread (PERF-01). The reader's mutable
     /// state (its PID→name cache) is touched only inside the executor; `previousProcessSnapshot`
@@ -207,12 +208,6 @@ final class CPUState: ObservableObject {
             )
         )
 
-        // Republish the token model's changes through this coordinator while the UI still
-        // observes `CPUState` (task-001 bridge; task-002 observes the model directly).
-        tokenObservation = token.objectWillChange.sink { [weak self] in
-            self?.objectWillChange.send()
-        }
-
         evaluateAccessibility()
     }
 
@@ -263,7 +258,7 @@ final class CPUState: ObservableObject {
         }
 
         if visibility.showTokens {
-            let value = TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false)
+            let value = TokenFormatter.menuBarTitle(for: token.aggregate, showLabel: false)
             if showLabel {
                 titles.append("\(TokenFormatter.menuBarLabel(for: display.tokenProvider)) \(value)")
             } else {
@@ -358,17 +353,6 @@ final class CPUState: ObservableObject {
         display.diskMenuBarMetric
     }
 
-    /// Token shims forwarding to `TokenUsageModel` (task-001; task-002 reads it directly).
-    var tokenStores: [TokenProvider: TokenUsageStore] { token.tokenStores }
-    var tokenAggregate: TokenAggregate { token.aggregate }
-    var tokenCost: TokenCostBreakdown? { token.cost }
-    var tokenFilteredEvents: [TokenUsageEvent] { token.filteredEvents }
-    var tokenBurnRate: TokenBurnRateBreakdown? { token.burnRate }
-    var tokenRateLimit: TokenRateLimitSnapshot? { token.rateLimit }
-    var tokenDailyLedger: TokenDailyLedger { token.dailyLedger }
-    /// Token volume has no danger threshold in the volume-only MVP — always `.normal`.
-    var tokenMenuBarTextStyle: CPUMenuBarTextStyle { token.menuBarTextStyle }
-
     var tokenScope: TokenScope {
         display.tokenScope
     }
@@ -381,16 +365,6 @@ final class CPUState: ObservableObject {
     var tokenProvider: TokenProviderSelection {
         display.tokenProvider
     }
-
-    var tokenIsEmpty: Bool { token.isEmpty }
-    var tokenRowValue: String { token.rowValue }
-    var tokenBreakdown: [(label: String, value: String)] { token.breakdown }
-    var tokenCostRowValue: String? { token.costRowValue }
-    var tokenCostPerModel: [(label: String, value: String)] { token.costPerModel }
-    var tokenCostHasUnpricedTokens: Bool { token.costHasUnpricedTokens }
-    var tokenPaceRowValue: String? { token.paceRowValue }
-    var tokenActiveModels: String? { token.activeModels }
-    var tokenSparkline: [Double] { token.sparkline }
 
     /// The token-relevant slice of `display`, pushed into the model on each picker change.
     private var tokenSelection: TokenDisplaySelection {
@@ -439,7 +413,7 @@ final class CPUState: ObservableObject {
         }
 
         if visibility.showTokens {
-            segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false))")
+            segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: token.aggregate, showLabel: false))")
         }
 
         guard !segments.isEmpty else { return Strings.metricsPlaceholder() }

@@ -54,6 +54,10 @@ enum MetricGridLayout {
 /// state is ephemeral and owned by the shell (ADR-002). Read-only — no settings here.
 struct MetricsTab: View {
     @ObservedObject var state: CPUState
+    /// Observed separately from `state` (task-002): the Dev/AI pillar's popover-open
+    /// 30s refresh (ADR-005) mutates only this object, so isolating the observation here
+    /// keeps that tick from re-rendering the rest of the metrics grid.
+    @ObservedObject var token: TokenUsageModel
     @Binding var expandedCards: Set<MetricCardKind>
 
     private var layoutRows: [[MetricCardKind]] {
@@ -187,8 +191,8 @@ struct MetricsTab: View {
                 kind: .tokens,
                 symbol: "number",
                 title: Strings.tokens(),
-                value: state.tokenRowValue,
-                sparkline: state.tokenSparkline,
+                value: token.rowValue,
+                sparkline: token.sparkline,
                 severity: .normal,
                 isExpanded: expansionBinding(for: .tokens)
             ) {
@@ -238,23 +242,23 @@ struct MetricsTab: View {
     @ViewBuilder
     private var tokenDetail: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if state.tokenIsEmpty {
+            if token.isEmpty {
                 Text(Strings.tokenEmptyState())
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else {
-                TokenBreakdownRow(breakdown: state.tokenBreakdown)
+                TokenBreakdownRow(breakdown: token.breakdown)
             }
 
-            if let totalCost = state.tokenCostRowValue {
+            if let totalCost = token.costRowValue {
                 TokenCostRow(
                     total: totalCost,
-                    perModel: state.tokenCostPerModel,
-                    showsUnpricedNote: state.tokenCostHasUnpricedTokens
+                    perModel: token.costPerModel,
+                    showsUnpricedNote: token.costHasUnpricedTokens
                 )
             }
 
-            if let pace = state.tokenPaceRowValue {
+            if let pace = token.paceRowValue {
                 TokenPaceRow(value: pace)
             }
         }

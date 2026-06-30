@@ -178,8 +178,8 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
             attributedTitle.append(statusSegment(
                 metric: .tokens,
-                value: TokenFormatter.menuBarTitle(for: state.tokenAggregate, showLabel: false),
-                style: state.tokenMenuBarTextStyle,
+                value: TokenFormatter.menuBarTitle(for: state.token.aggregate, showLabel: false),
+                style: state.token.menuBarTextStyle,
                 labelOverride: TokenFormatter.menuBarLabel(for: state.tokenProvider)
             ))
         }

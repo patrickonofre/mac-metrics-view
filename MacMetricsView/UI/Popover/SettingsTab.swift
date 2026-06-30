@@ -106,7 +106,7 @@ struct TokenControls: View {
                 .labelsHidden()
                 .toggleStyle(.switch)
 
-                if let models = state.tokenActiveModels {
+                if let models = state.token.activeModels {
                     Text(models)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)

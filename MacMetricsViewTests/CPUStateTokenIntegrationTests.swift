@@ -38,8 +38,8 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
         state.update(with: [event(input: 100)])
 
-        XCTAssertEqual(state.tokenAggregate.input, 100)   // default scope global, window today
-        XCTAssertEqual(state.tokenAggregate.total, 100)
+        XCTAssertEqual(state.token.aggregate.input, 100)   // default scope global, window today
+        XCTAssertEqual(state.token.aggregate.total, 100)
     }
 
     // MARK: - Scope
@@ -56,7 +56,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.setTokenScope(.session)
 
         XCTAssertEqual(state.tokenScope, .session)
-        XCTAssertEqual(state.tokenAggregate.input, 40)   // s2 only
+        XCTAssertEqual(state.token.aggregate.input, 40)   // s2 only
         XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).tokenScope, .session)
     }
 
@@ -70,10 +70,10 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         ])
 
         state.setTokenMenuBarWindow(.lastHour)
-        XCTAssertEqual(state.tokenAggregate.input, 10)
+        XCTAssertEqual(state.token.aggregate.input, 10)
 
         state.setTokenMenuBarWindow(.last24h)
-        XCTAssertEqual(state.tokenAggregate.input, 60)
+        XCTAssertEqual(state.token.aggregate.input, 60)
     }
 
     // MARK: - Reset
@@ -84,16 +84,16 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(with: [event(input: 100)])
 
         state.setTokenMenuBarWindow(.sinceReset)
-        XCTAssertEqual(state.tokenAggregate.input, 100)
+        XCTAssertEqual(state.token.aggregate.input, 100)
 
         state.resetTokenCounter()
-        XCTAssertEqual(state.tokenAggregate.input, 0)              // since-reset zeroed
+        XCTAssertEqual(state.token.aggregate.input, 0)              // since-reset zeroed
         // Default provider is combined → reset persists per-provider keys (both).
         XCTAssertNotNil(userDefaults.object(forKey: "CPUState.tokenResetAt.claude"))
         XCTAssertNotNil(userDefaults.object(forKey: "CPUState.tokenResetAt.codex"))
 
         state.setTokenMenuBarWindow(.last24h)
-        XCTAssertEqual(state.tokenAggregate.input, 100)           // rolling window unaffected
+        XCTAssertEqual(state.token.aggregate.input, 100)           // rolling window unaffected
     }
 
     // MARK: - Visibility vs ingestion
@@ -103,7 +103,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         // showTokens defaults to false.
         state.update(with: [event(input: 100)])
 
-        XCTAssertEqual(state.tokenAggregate.input, 100)   // ingested despite being hidden
+        XCTAssertEqual(state.token.aggregate.input, 100)   // ingested despite being hidden
         XCTAssertFalse(state.visibility.showTokens)        // no token segment in the menu bar
     }
 
@@ -164,8 +164,8 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(provider: .codex, with: [codexEvent(input: 70, reasoning: 5)])
 
-        XCTAssertEqual(state.tokenStores[.codex]?.events.count, 1)
-        XCTAssertEqual(state.tokenStores[.claude]?.events.count, 0)   // claude untouched
+        XCTAssertEqual(state.token.tokenStores[.codex]?.events.count, 1)
+        XCTAssertEqual(state.token.tokenStores[.claude]?.events.count, 0)   // claude untouched
     }
 
     func testCombinedAggregateSumsBothProviders() {
@@ -174,10 +174,10 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(provider: .codex, with: [codexEvent(input: 10, output: 20, reasoning: 5)])
 
         XCTAssertEqual(state.tokenProvider, .combined)
-        XCTAssertEqual(state.tokenAggregate.input, 110)
-        XCTAssertEqual(state.tokenAggregate.output, 220)
-        XCTAssertEqual(state.tokenAggregate.reasoning, 5)
-        XCTAssertEqual(state.tokenAggregate.usageTotal, 110 + 220 + 5)
+        XCTAssertEqual(state.token.aggregate.input, 110)
+        XCTAssertEqual(state.token.aggregate.output, 220)
+        XCTAssertEqual(state.token.aggregate.reasoning, 5)
+        XCTAssertEqual(state.token.aggregate.usageTotal, 110 + 220 + 5)
     }
 
     func testSetTokenProviderReflectsOnlyThatProvider() {
@@ -187,13 +187,13 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(provider: .codex, with: [codexEvent(input: 10, reasoning: 5)])
 
         state.setTokenProvider(.codex)
-        XCTAssertEqual(state.tokenAggregate.input, 10)
-        XCTAssertEqual(state.tokenAggregate.reasoning, 5)
+        XCTAssertEqual(state.token.aggregate.input, 10)
+        XCTAssertEqual(state.token.aggregate.reasoning, 5)
         XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).tokenProvider, .codex)
 
         state.setTokenProvider(.claude)
-        XCTAssertEqual(state.tokenAggregate.input, 100)
-        XCTAssertEqual(state.tokenAggregate.reasoning, 0)
+        XCTAssertEqual(state.token.aggregate.input, 100)
+        XCTAssertEqual(state.token.aggregate.reasoning, 0)
     }
 
     func testResetScopedToSelectedProvider() {
@@ -205,14 +205,14 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         // Reset only Codex.
         state.setTokenProvider(.codex)
         state.resetTokenCounter()
-        XCTAssertEqual(state.tokenAggregate.input, 0)              // codex since-reset zeroed
+        XCTAssertEqual(state.token.aggregate.input, 0)              // codex since-reset zeroed
         state.setTokenProvider(.claude)
-        XCTAssertEqual(state.tokenAggregate.input, 100)            // claude untouched
+        XCTAssertEqual(state.token.aggregate.input, 100)            // claude untouched
 
         // Reset both via combined.
         state.setTokenProvider(.combined)
         state.resetTokenCounter()
-        XCTAssertEqual(state.tokenAggregate.input, 0)
+        XCTAssertEqual(state.token.aggregate.input, 0)
     }
 
     func testPerProviderResetKeysPersistIndependently() {
@@ -235,7 +235,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
         let state = CPUState(userDefaults: userDefaults)
 
-        XCTAssertEqual(state.tokenStores[.claude]?.resetAt, legacy)        // carried into claude store
+        XCTAssertEqual(state.token.tokenStores[.claude]?.resetAt, legacy)        // carried into claude store
         XCTAssertEqual(userDefaults.object(forKey: "CPUState.tokenResetAt.claude") as? Date, legacy)
         XCTAssertNil(userDefaults.object(forKey: "CPUState.tokenResetAt"))  // legacy key removed
     }
@@ -245,10 +245,10 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 1_500, output: 500, cacheRead: 300)])
 
-        XCTAssertEqual(state.tokenAggregate.input, 1_500)
-        XCTAssertEqual(state.tokenAggregate.output, 500)
-        XCTAssertEqual(state.tokenAggregate.reasoning, 0)
-        XCTAssertEqual(state.tokenAggregate.usageTotal, 2_000)   // input + output, reasoning 0
+        XCTAssertEqual(state.token.aggregate.input, 1_500)
+        XCTAssertEqual(state.token.aggregate.output, 500)
+        XCTAssertEqual(state.token.aggregate.reasoning, 0)
+        XCTAssertEqual(state.token.aggregate.usageTotal, 2_000)   // input + output, reasoning 0
     }
 
     func testSwitchingProviderRerendersWithoutReingest() {
@@ -272,9 +272,9 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         // Opus 4.8: 1M input = $5, 200k output = $5, 500k cacheRead = $0.25.
         state.update(with: [event(input: 1_000_000, output: 200_000, cacheRead: 500_000)])
 
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 10.25, accuracy: 1e-9)
-        XCTAssertEqual(state.tokenCost?.perModelUSD.map { $0.model }, ["claude-opus-4-8"])
-        XCTAssertEqual(state.tokenCost?.unpricedTokens, 0)
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 10.25, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.perModelUSD.map { $0.model }, ["claude-opus-4-8"])
+        XCTAssertEqual(state.token.cost?.unpricedTokens, 0)
     }
 
     func testCostRecomputesOnWindowSwitch() {
@@ -285,10 +285,10 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         ])
 
         state.setTokenMenuBarWindow(.lastHour)
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 1, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 1, accuracy: 1e-9)
 
         state.setTokenMenuBarWindow(.last24h)
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 6, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 6, accuracy: 1e-9)
     }
 
     func testCostRecomputesOnScopeSwitch() {
@@ -300,10 +300,10 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         ])
 
         state.setTokenScope(.session)
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 2, accuracy: 1e-9)   // s2 only: 0.4M × $5
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 2, accuracy: 1e-9)   // s2 only: 0.4M × $5
 
         state.setTokenScope(.global)
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 7, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 7, accuracy: 1e-9)
     }
 
     func testCombinedProviderCostSumsBothProvidersWithAttribution() {
@@ -311,11 +311,11 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(provider: .claude, with: [event(input: 1_000_000)])             // $5
         state.update(provider: .codex, with: [codexEvent(input: 1_000_000)])         // $1.25
 
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 6.25, accuracy: 1e-9)
-        XCTAssertEqual(state.tokenCost?.perModelUSD.map { $0.model }, ["claude-opus-4-8", "gpt-5-codex"])
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 6.25, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.perModelUSD.map { $0.model }, ["claude-opus-4-8", "gpt-5-codex"])
 
         state.setTokenProvider(.codex)
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 1.25, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 1.25, accuracy: 1e-9)
     }
 
     func testUnknownModelEventsPropagateUnpricedTokens() {
@@ -334,14 +334,14 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
             )
         ])
 
-        XCTAssertEqual(state.tokenCost?.totalUSD ?? -1, 5, accuracy: 1e-9)
-        XCTAssertEqual(state.tokenCost?.unpricedTokens, 400)
+        XCTAssertEqual(state.token.cost?.totalUSD ?? -1, 5, accuracy: 1e-9)
+        XCTAssertEqual(state.token.cost?.unpricedTokens, 400)
     }
 
     func testCostIsNilWithoutEvents() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        XCTAssertNil(state.tokenCost)
+        XCTAssertNil(state.token.cost)
     }
 
     func testCostEventSetStaysConsistentWithAggregate() {
@@ -353,9 +353,9 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
             event(at: Date(), input: 40)
         ])
 
-        let filteredInput = state.tokenFilteredEvents.reduce(0) { $0 + $1.inputTokens }
-        XCTAssertEqual(filteredInput, state.tokenAggregate.input)
-        XCTAssertNotNil(state.tokenCost)
+        let filteredInput = state.token.filteredEvents.reduce(0) { $0 + $1.inputTokens }
+        XCTAssertEqual(filteredInput, state.token.aggregate.input)
+        XCTAssertNotNil(state.token.cost)
     }
 
     // MARK: - Burn rate (Phase 2, task_04)
@@ -365,7 +365,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         // 10 minutes old, inside the trailing hour. Opus 4.8: 1M input = $5.
         state.update(with: [event(at: Date().addingTimeInterval(-600), input: 1_000_000, output: 200_000)])
 
-        let rate = try XCTUnwrap(state.tokenBurnRate)
+        let rate = try XCTUnwrap(state.token.burnRate)
         XCTAssertEqual(rate.tokensPerHour, 1_200_000, accuracy: 1e-6)
         XCTAssertEqual(rate.costPerHourUSD, 10, accuracy: 1e-9)   // $5 input + $5 output (200k × $25)
         XCTAssertEqual(rate.costPerDayUSD, rate.costPerHourUSD * 24, accuracy: 1e-9)
@@ -375,9 +375,9 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(at: Date().addingTimeInterval(-600), input: 500_000)])
 
-        let before = try XCTUnwrap(state.tokenBurnRate)
+        let before = try XCTUnwrap(state.token.burnRate)
         state.setTokenMenuBarWindow(.last24h)
-        let after = try XCTUnwrap(state.tokenBurnRate)
+        let after = try XCTUnwrap(state.token.burnRate)
 
         XCTAssertEqual(before.tokensPerHour, after.tokensPerHour, accuracy: 1)
         XCTAssertEqual(before.costPerHourUSD, after.costPerHourUSD, accuracy: 1e-6)
@@ -392,11 +392,11 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
             event(at: Date(), input: 40_000, session: "s2", project: "p2")
         ])
 
-        let before = try XCTUnwrap(state.tokenBurnRate)
+        let before = try XCTUnwrap(state.token.burnRate)
         state.setTokenScope(.session)
-        let after = try XCTUnwrap(state.tokenBurnRate)
+        let after = try XCTUnwrap(state.token.burnRate)
 
-        XCTAssertEqual(state.tokenAggregate.input, 40_000)        // counter narrowed
+        XCTAssertEqual(state.token.aggregate.input, 40_000)        // counter narrowed
         XCTAssertEqual(after.tokensPerHour, 140_000, accuracy: 1)  // rate did not
         XCTAssertEqual(before.tokensPerHour, after.tokensPerHour, accuracy: 1)
     }
@@ -406,11 +406,11 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-60), input: 100_000)])
         state.update(provider: .codex, with: [codexEvent(at: Date().addingTimeInterval(-30), input: 50_000, reasoning: 10_000)])
 
-        let combined = try XCTUnwrap(state.tokenBurnRate)
+        let combined = try XCTUnwrap(state.token.burnRate)
         XCTAssertEqual(combined.tokensPerHour, 160_000, accuracy: 1)
 
         state.setTokenProvider(.codex)
-        let codexOnly = try XCTUnwrap(state.tokenBurnRate)
+        let codexOnly = try XCTUnwrap(state.token.burnRate)
         XCTAssertEqual(codexOnly.tokensPerHour, 60_000, accuracy: 1)   // Claude contribution dropped
     }
 
@@ -419,14 +419,14 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(with: [event(at: Date().addingTimeInterval(-2 * 3_600), input: 100)])   // 2h ago
 
         state.setTokenMenuBarWindow(.last24h)
-        XCTAssertEqual(state.tokenAggregate.input, 100)   // 24h counter sees it
-        XCTAssertNil(state.tokenBurnRate)                  // trailing hour does not
+        XCTAssertEqual(state.token.aggregate.input, 100)   // 24h counter sees it
+        XCTAssertNil(state.token.burnRate)                  // trailing hour does not
     }
 
     func testBurnRateNilWithNoEvents() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        XCTAssertNil(state.tokenBurnRate)
+        XCTAssertNil(state.token.burnRate)
     }
 
     func testPublishedBurnRateConsistentWithDirectCompute() throws {
@@ -438,8 +438,8 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
             event(at: Date().addingTimeInterval(-30), input: 50_000, output: 10_000)
         ])
 
-        let published = try XCTUnwrap(state.tokenBurnRate)
-        let events = state.tokenStores[.claude]!.events + state.tokenStores[.codex]!.events
+        let published = try XCTUnwrap(state.token.burnRate)
+        let events = state.token.tokenStores[.claude]!.events + state.token.tokenStores[.codex]!.events
         let direct = try XCTUnwrap(TokenBurnRate.compute(events: events, now: Date()))
 
         XCTAssertEqual(published.tokensPerHour, direct.tokensPerHour, accuracy: 1)
@@ -456,7 +456,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.beginTokenAutoRefresh()
         defer { state.endTokenAutoRefresh() }
 
-        let rate = try XCTUnwrap(state.tokenBurnRate)
+        let rate = try XCTUnwrap(state.token.burnRate)
         XCTAssertEqual(rate.tokensPerHour, 120_000, accuracy: 1)
     }
 
@@ -464,26 +464,26 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.setTokenMenuBarWindow(.last24h)
         state.update(with: [event(input: 100)])
-        XCTAssertNotNil(state.tokenBurnRate)
+        XCTAssertNotNil(state.token.burnRate)
 
         state.beginTokenAutoRefresh()
         defer { state.endTokenAutoRefresh() }
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))   // window slid past it
 
-        XCTAssertNil(state.tokenBurnRate)
-        XCTAssertEqual(state.tokenAggregate.input, 100)   // 24h counter still shows it
+        XCTAssertNil(state.token.burnRate)
+        XCTAssertEqual(state.token.aggregate.input, 100)   // 24h counter still shows it
     }
 
     func testTickThirtyMinutesLaterKeepsRateUnchangedFixedDenominator() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 120_000)])
-        let before = try XCTUnwrap(state.tokenBurnRate)
+        let before = try XCTUnwrap(state.token.burnRate)
 
         state.beginTokenAutoRefresh()
         defer { state.endTokenAutoRefresh() }
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(30 * 60))   // still in-window
 
-        let after = try XCTUnwrap(state.tokenBurnRate)
+        let after = try XCTUnwrap(state.token.burnRate)
         XCTAssertEqual(before.tokensPerHour, after.tokensPerHour, accuracy: 1)
     }
 
@@ -498,7 +498,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         // With no live timer, a time-advanced tick is a no-op: the rate would have
         // cleared if a recompute had run with the advanced clock.
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
-        XCTAssertNotNil(state.tokenBurnRate)
+        XCTAssertNotNil(state.token.burnRate)
     }
 
     func testEndWithoutBeginIsANoOp() {
@@ -507,8 +507,8 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
         state.endTokenAutoRefresh()   // must not crash or change published state
 
-        XCTAssertNotNil(state.tokenBurnRate)
-        XCTAssertEqual(state.tokenAggregate.input, 100)
+        XCTAssertNotNil(state.token.burnRate)
+        XCTAssertEqual(state.token.aggregate.input, 100)
     }
 
     func testTickRefreshesLastHourAggregateSoAgedOutEventLeavesCounterToo() {
@@ -516,13 +516,13 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.setTokenMenuBarWindow(.lastHour)
         state.update(with: [event(input: 100)])
-        XCTAssertEqual(state.tokenAggregate.input, 100)
+        XCTAssertEqual(state.token.aggregate.input, 100)
 
         state.beginTokenAutoRefresh()
         defer { state.endTokenAutoRefresh() }
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
 
-        XCTAssertEqual(state.tokenAggregate.input, 0)   // aged out of the lastHour window
+        XCTAssertEqual(state.token.aggregate.input, 0)   // aged out of the lastHour window
     }
 
     func testReopenAfterCloseReArmsAutoRefreshAndRecomputes() {
@@ -545,7 +545,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         defer { state.endTokenAutoRefresh() }
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
 
-        XCTAssertEqual(state.tokenAggregate.input, 0)   // recompute ran on the re-armed timer
+        XCTAssertEqual(state.token.aggregate.input, 0)   // recompute ran on the re-armed timer
     }
 
     func testCombinedMergesPerModelAndPerProviderMRU() throws {
@@ -553,13 +553,13 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-10), input: 100)])  // claude-opus-4-8
         state.update(provider: .codex, with: [codexEvent(at: Date(), input: 50, model: "gpt-5-codex")])
 
-        let models = try XCTUnwrap(state.tokenActiveModels)
+        let models = try XCTUnwrap(state.token.activeModels)
         XCTAssertTrue(models.contains("GPT-5 Codex"))
         XCTAssertTrue(models.contains("Opus 4.8"))
 
         // Per-provider MRU: project scope resolves each provider's own current project.
         state.setTokenScope(.project)
-        XCTAssertEqual(state.tokenAggregate.input, 150)   // claude /p1 + codex /cx, each its own MRU project
+        XCTAssertEqual(state.token.aggregate.input, 150)   // claude /p1 + codex /cx, each its own MRU project
     }
 
     // MARK: - Daily ledger persistence + ingest fold (Phase 3, task_05)
@@ -572,7 +572,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
             event(at: Date().addingTimeInterval(-60), output: 200_000)
         ])
 
-        let weekly = state.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        let weekly = state.token.dailyLedger.weeklyTotal(now: Date(), calendar: .current)
         XCTAssertEqual(weekly.usage.input, 1_000_000)
         XCTAssertEqual(weekly.usage.output, 200_000)
         XCTAssertEqual(weekly.costUSD, 10, accuracy: 1e-9)
@@ -583,18 +583,18 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
         state.update(provider: .codex, with: [codexEvent(input: 500_000)])
 
-        XCTAssertTrue(state.tokenDailyLedger.days.isEmpty)
+        XCTAssertTrue(state.token.dailyLedger.days.isEmpty)
     }
 
     func testLedgerSurvivesRestartWithIdenticalContents() {
         let userDefaults = makeUserDefaults()
         let state = CPUState(userDefaults: userDefaults)
         state.update(with: [event(at: Date().addingTimeInterval(-60), input: 250_000, output: 10_000)])
-        let before = state.tokenDailyLedger
+        let before = state.token.dailyLedger
 
         let restarted = CPUState(userDefaults: userDefaults)
 
-        XCTAssertEqual(restarted.tokenDailyLedger, before)
+        XCTAssertEqual(restarted.token.dailyLedger, before)
         XCTAssertFalse(before.days.isEmpty)
     }
 
@@ -609,12 +609,12 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         ]
         let state = CPUState(userDefaults: userDefaults)
         state.update(with: batch)
-        let weeklyBefore = state.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        let weeklyBefore = state.token.dailyLedger.weeklyTotal(now: Date(), calendar: .current)
 
         let restarted = CPUState(userDefaults: userDefaults)
         restarted.update(with: batch)   // simulated tail re-emission
 
-        let weeklyAfter = restarted.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        let weeklyAfter = restarted.token.dailyLedger.weeklyTotal(now: Date(), calendar: .current)
         XCTAssertEqual(weeklyAfter.usage, weeklyBefore.usage)
         XCTAssertEqual(weeklyAfter.costUSD, weeklyBefore.costUSD, accuracy: 1e-9)
     }
@@ -625,7 +625,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
         let state = CPUState(userDefaults: userDefaults)
 
-        XCTAssertTrue(state.tokenDailyLedger.days.isEmpty)
+        XCTAssertTrue(state.token.dailyLedger.days.isEmpty)
     }
 
     func testLedgerPruneAtIngestKeepsTodayPlusSevenDays() {
@@ -635,7 +635,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
             state.update(with: [event(at: Date().addingTimeInterval(Double(-daysBack) * 86_400), input: 10)])
         }
 
-        XCTAssertEqual(state.tokenDailyLedger.days.count, 8)   // today + 7, the 8-days-back bucket dropped
+        XCTAssertEqual(state.token.dailyLedger.days.count, 8)   // today + 7, the 8-days-back bucket dropped
     }
 
     // MARK: - tokenRateLimit snapshot (Phase 3, task_06)
@@ -647,7 +647,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         // One Claude event 10 min ago: in the active block and today's bucket.
         state.update(with: [event(at: Date().addingTimeInterval(-600), input: 1_000_000, output: 200_000)])
 
-        let snapshot = try XCTUnwrap(state.tokenRateLimit)
+        let snapshot = try XCTUnwrap(state.token.rateLimit)
         let block = try XCTUnwrap(snapshot.block)
         XCTAssertEqual(block.usage.input, 1_000_000)
         XCTAssertEqual(block.usage.output, 200_000)
@@ -663,13 +663,13 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(provider: .claude, with: [event(at: Date().addingTimeInterval(-300), input: 100_000)])
         state.update(provider: .codex, with: [codexEvent(at: Date().addingTimeInterval(-60), input: 999_000)])
-        let before = try XCTUnwrap(state.tokenRateLimit)
+        let before = try XCTUnwrap(state.token.rateLimit)
 
         state.setTokenProvider(.codex)   // Codex-only selection
         state.setTokenScope(.session)
         state.setTokenMenuBarWindow(.lastHour)
 
-        let after = try XCTUnwrap(state.tokenRateLimit)
+        let after = try XCTUnwrap(state.token.rateLimit)
         XCTAssertEqual(after, before)                              // Claude-scoped, picker-independent
         XCTAssertEqual(after.block?.usage.input, 100_000)          // Codex event never counted
     }
@@ -677,13 +677,13 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
     func testTickPastBlockEndClearsBlockButKeepsWeeklyFigure() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(at: Date().addingTimeInterval(-60), input: 50_000)])
-        XCTAssertNotNil(try XCTUnwrap(state.tokenRateLimit).block)
+        XCTAssertNotNil(try XCTUnwrap(state.token.rateLimit).block)
 
         state.beginTokenAutoRefresh()
         defer { state.endTokenAutoRefresh() }
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(6 * 3_600))   // past block end
 
-        let snapshot = try XCTUnwrap(state.tokenRateLimit)        // still published
+        let snapshot = try XCTUnwrap(state.token.rateLimit)        // still published
         XCTAssertNil(snapshot.block)                               // block expired
         XCTAssertEqual(snapshot.weeklyUsage.input, 50_000)         // week persists
     }
@@ -691,7 +691,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
     func testSnapshotNilWithEmptyStoreAndEmptyLedger() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        XCTAssertNil(state.tokenRateLimit)
+        XCTAssertNil(state.token.rateLimit)
     }
 
     func testBudgetSettersPersistSanitizeAndRepublish() throws {
@@ -702,7 +702,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.setTokenSessionBudget(2_000_000)
         state.setTokenWeeklyBudget(-5)   // sanitized to 0
 
-        let snapshot = try XCTUnwrap(state.tokenRateLimit)
+        let snapshot = try XCTUnwrap(state.token.rateLimit)
         XCTAssertEqual(snapshot.sessionBudget, 2_000_000)
         XCTAssertEqual(snapshot.weeklyBudget, 0)
         let persisted = MetricDisplaySettings.load(from: userDefaults)
@@ -713,11 +713,11 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
     func testIngestRecomputeUpdatesBlockAndTodayContributionInOnePass() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(at: Date().addingTimeInterval(-1_200), input: 100_000)])
-        let first = try XCTUnwrap(state.tokenRateLimit)
+        let first = try XCTUnwrap(state.token.rateLimit)
 
         state.update(with: [event(at: Date().addingTimeInterval(-30), input: 40_000)])
 
-        let second = try XCTUnwrap(state.tokenRateLimit)
+        let second = try XCTUnwrap(state.token.rateLimit)
         XCTAssertEqual(second.block?.usage.input, 140_000)
         XCTAssertEqual(second.weeklyUsage.input, 140_000)
         XCTAssertGreaterThan(second.weeklyUsage.input, first.weeklyUsage.input)
@@ -732,7 +732,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
         // Full path: ingest → persisted payload → reload → weekly sum sees all N.
         let reloaded = CPUState(userDefaults: userDefaults)
-        let weekly = reloaded.tokenDailyLedger.weeklyTotal(now: Date(), calendar: .current)
+        let weekly = reloaded.token.dailyLedger.weeklyTotal(now: Date(), calendar: .current)
         XCTAssertEqual(weekly.usage.input, 50_000)
         XCTAssertEqual(weekly.costUSD, 0.25, accuracy: 1e-9)   // 50k × $5/MTok
     }

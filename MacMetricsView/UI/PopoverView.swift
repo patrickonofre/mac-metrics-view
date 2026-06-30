@@ -122,7 +122,7 @@ struct PopoverView: View {
     private var tabBody: some View {
         switch selectedTab {
         case .metrics:
-            MetricsTab(state: state, expandedCards: $expandedCards)
+            MetricsTab(state: state, token: state.token, expandedCards: $expandedCards)
         case .settings:
             SettingsTab(state: state, launchAtLoginSettings: launchAtLoginSettings)
         case .actions:

@@ -53,7 +53,7 @@ final class AppDelegateTokenWiringTests: XCTestCase {
 
         appDelegate.tokenUsageSampler(TokenUsageSampler(), didProduce: [event(input: 100)])
 
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 100)
+        XCTAssertEqual(appDelegate.state.token.aggregate.input, 100)
     }
 
     func testForwardedEventsRenderInMenuBarTitleWhenTokensVisible() {
@@ -79,7 +79,7 @@ final class AppDelegateTokenWiringTests: XCTestCase {
         sampler.start()
         scheduler.fire()
 
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 1_200)
+        XCTAssertEqual(appDelegate.state.token.aggregate.input, 1_200)
         XCTAssertTrue(appDelegate.state.visibleMenuBarTitles.contains("1.2k"))
     }
 
@@ -90,8 +90,8 @@ final class AppDelegateTokenWiringTests: XCTestCase {
 
         appDelegate.tokenUsageSampler(appDelegate.codexTokenSampler, didProduce: [event(input: 70, model: "gpt-5-codex")])
 
-        XCTAssertEqual(appDelegate.state.tokenStores[.codex]?.events.count, 1)
-        XCTAssertEqual(appDelegate.state.tokenStores[.claude]?.events.count, 0)
+        XCTAssertEqual(appDelegate.state.token.tokenStores[.codex]?.events.count, 1)
+        XCTAssertEqual(appDelegate.state.token.tokenStores[.claude]?.events.count, 0)
     }
 
     func testClaudeSamplerBatchRoutesToClaudeStore() {
@@ -99,8 +99,8 @@ final class AppDelegateTokenWiringTests: XCTestCase {
 
         appDelegate.tokenUsageSampler(appDelegate.tokenSampler, didProduce: [event(input: 100)])
 
-        XCTAssertEqual(appDelegate.state.tokenStores[.claude]?.events.count, 1)
-        XCTAssertEqual(appDelegate.state.tokenStores[.codex]?.events.count, 0)
+        XCTAssertEqual(appDelegate.state.token.tokenStores[.claude]?.events.count, 1)
+        XCTAssertEqual(appDelegate.state.token.tokenStores[.codex]?.events.count, 0)
     }
 
     func testBothBatchesReachTheirStoresAndCombinedReflectsBoth() {
@@ -109,12 +109,12 @@ final class AppDelegateTokenWiringTests: XCTestCase {
         appDelegate.tokenUsageSampler(appDelegate.tokenSampler, didProduce: [event(input: 100)])
         appDelegate.tokenUsageSampler(appDelegate.codexTokenSampler, didProduce: [event(input: 40, model: "gpt-5-codex")])
 
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 140)   // combined sum of both
+        XCTAssertEqual(appDelegate.state.token.aggregate.input, 140)   // combined sum of both
 
         // Switching provider re-renders from the already-ingested batches, no restart.
         appDelegate.state.setTokenProvider(.codex)
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 40)
+        XCTAssertEqual(appDelegate.state.token.aggregate.input, 40)
         appDelegate.state.setTokenProvider(.claude)
-        XCTAssertEqual(appDelegate.state.tokenAggregate.input, 100)
+        XCTAssertEqual(appDelegate.state.token.aggregate.input, 100)
     }
 }
