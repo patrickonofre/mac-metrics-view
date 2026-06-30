@@ -9,6 +9,7 @@ struct MetricVisibilitySettings: Equatable {
         case disk
         case tokens
         case battery
+        case gpu
     }
 
     private enum Keys {
@@ -19,6 +20,7 @@ struct MetricVisibilitySettings: Equatable {
         static let showDisk = "MetricVisibilitySettings.showDisk"
         static let showTokens = "MetricVisibilitySettings.showTokens"
         static let showBattery = "MetricVisibilitySettings.showBattery"
+        static let showGPU = "MetricVisibilitySettings.showGPU"
         static let firstRunPresetApplied = "MetricVisibilitySettings.firstRunPresetApplied"
     }
 
@@ -32,7 +34,8 @@ struct MetricVisibilitySettings: Equatable {
         showTemperature: true,
         showDisk: false,
         showTokens: false,
-        showBattery: false
+        showBattery: false,
+        showGPU: false
     )
 
     var showCPU: Bool
@@ -48,6 +51,9 @@ struct MetricVisibilitySettings: Equatable {
     /// Battery defaults to `false` (ADR-005 precedent) — opt-in like Disk/Tokens, so an
     /// update never adds a battery segment to an existing user's menu bar.
     var showBattery: Bool
+    /// GPU defaults to `false` (ADR-005 precedent) — opt-in like Disk/Tokens/Battery, so an
+    /// update never adds a GPU segment to an existing user's menu bar.
+    var showGPU: Bool
 
     init(
         showCPU: Bool = true,
@@ -56,7 +62,8 @@ struct MetricVisibilitySettings: Equatable {
         showTemperature: Bool = false,
         showDisk: Bool = false,
         showTokens: Bool = false,
-        showBattery: Bool = false
+        showBattery: Bool = false,
+        showGPU: Bool = false
     ) {
         self.showCPU = showCPU
         self.showRAM = showRAM
@@ -65,10 +72,11 @@ struct MetricVisibilitySettings: Equatable {
         self.showDisk = showDisk
         self.showTokens = showTokens
         self.showBattery = showBattery
+        self.showGPU = showGPU
     }
 
     var hasVisibleMetric: Bool {
-        showCPU || showRAM || showNetwork || showTemperature || showDisk || showTokens || showBattery
+        showCPU || showRAM || showNetwork || showTemperature || showDisk || showTokens || showBattery || showGPU
     }
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricVisibilitySettings {
@@ -79,7 +87,8 @@ struct MetricVisibilitySettings: Equatable {
             showTemperature: bool(forKey: Keys.showTemperature, defaultValue: false, userDefaults: userDefaults),
             showDisk: bool(forKey: Keys.showDisk, defaultValue: false, userDefaults: userDefaults),
             showTokens: bool(forKey: Keys.showTokens, defaultValue: false, userDefaults: userDefaults),
-            showBattery: bool(forKey: Keys.showBattery, defaultValue: false, userDefaults: userDefaults)
+            showBattery: bool(forKey: Keys.showBattery, defaultValue: false, userDefaults: userDefaults),
+            showGPU: bool(forKey: Keys.showGPU, defaultValue: false, userDefaults: userDefaults)
         )
     }
 
@@ -91,6 +100,7 @@ struct MetricVisibilitySettings: Equatable {
         userDefaults.set(showDisk, forKey: Keys.showDisk)
         userDefaults.set(showTokens, forKey: Keys.showTokens)
         userDefaults.set(showBattery, forKey: Keys.showBattery)
+        userDefaults.set(showGPU, forKey: Keys.showGPU)
     }
 
     /// Resolves the visibility to use at launch, applying the first-run preset exactly
@@ -127,7 +137,7 @@ struct MetricVisibilitySettings: Equatable {
     }
 
     private static func hasStoredVisibility(in userDefaults: UserDefaults) -> Bool {
-        [Keys.showCPU, Keys.showRAM, Keys.showNetwork, Keys.showTemperature, Keys.showDisk, Keys.showTokens, Keys.showBattery]
+        [Keys.showCPU, Keys.showRAM, Keys.showNetwork, Keys.showTemperature, Keys.showDisk, Keys.showTokens, Keys.showBattery, Keys.showGPU]
             .contains { userDefaults.object(forKey: $0) != nil }
     }
 

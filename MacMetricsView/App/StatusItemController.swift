@@ -92,6 +92,18 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             ))
         }
 
+        if state.visibility.showGPU {
+            if attributedTitle.length > 0 {
+                attributedTitle.append(separator)
+            }
+
+            attributedTitle.append(statusSegment(
+                metric: .gpu,
+                value: GPUFormatter.menuBarTitle(for: state.latestGPUSample, showLabel: false),
+                style: state.gpuMenuBarTextStyle
+            ))
+        }
+
         if state.visibility.showRAM {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
@@ -404,6 +416,7 @@ private enum MenuBarMetric {
     case disk
     case tokens
     case battery
+    case gpu
 
     var label: String {
         switch self {
@@ -421,6 +434,8 @@ private enum MenuBarMetric {
             return TokenFormatter.menuBarLabel
         case .battery:
             return "BAT"
+        case .gpu:
+            return "GPU"
         }
     }
 
@@ -441,6 +456,10 @@ private enum MenuBarMetric {
         case .battery:
             // Static fallback; the live segment passes a charge-level glyph override.
             return "battery.100"
+        case .gpu:
+            // No official `gpu` SF Symbol on macOS 14; this 3D-stack proxy reads as
+            // graphics/compute. iconAttachment falls back to the "GPU" label if absent.
+            return "square.stack.3d.up"
         }
     }
 
@@ -460,6 +479,8 @@ private enum MenuBarMetric {
             return Strings.tokens()
         case .battery:
             return Strings.battery()
+        case .gpu:
+            return Strings.gpu()
         }
     }
 }

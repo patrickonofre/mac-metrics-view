@@ -99,6 +99,17 @@ struct MetricsTab: View {
                 cpuDetail
             }
 
+        case .gpu:
+            MetricCard(
+                kind: .gpu,
+                symbol: "square.stack.3d.up",
+                title: Strings.gpu(),
+                value: state.gpuCardValue,
+                sparkline: state.gpuHistory.samples.map(\.utilizationPercent),
+                severity: state.gpuMenuBarTextStyle,
+                isExpanded: expansionBinding(for: .gpu)
+            ) { EmptyView() }
+
         case .ram:
             MetricCard(
                 kind: .ram,

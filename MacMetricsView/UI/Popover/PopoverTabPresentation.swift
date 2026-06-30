@@ -12,6 +12,7 @@ enum PopoverTab: CaseIterable, Hashable {
 /// by `PopoverTabPresentation.cardOrder`; expandability by `isExpandable(_:)`.
 enum MetricCardKind: Hashable {
     case cpu
+    case gpu
     case ram
     case network
     case temperature
@@ -51,7 +52,7 @@ enum PopoverTabPresentation {
 
     /// Default top-to-bottom, left-to-right card order in the Metrics grid.
     static let cardOrder: [MetricCardKind] =
-        [.cpu, .ram, .network, .temperature, .disk, .battery, .tokens]
+        [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery, .tokens]
 
     /// Cards that can expand to double width; all others are summary-only.
     static func isExpandable(_ kind: MetricCardKind) -> Bool {

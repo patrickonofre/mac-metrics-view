@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate, BatterySamplerDelegate, AmbientLightSamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate, BatterySamplerDelegate, AmbientLightSamplerDelegate, GPUSamplerDelegate {
     // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
     // its visibility (see applyFirstRunMetricPresetIfNeeded()). Internal (not private) so
     // wiring tests can observe the published state after a delegate callback.
@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     let networkSampler = NetworkSampler()
     let temperatureSampler = TemperatureSampler()
     let diskSampler = DiskSampler()
+    let gpuSampler = GPUSampler()
     // Internal so wiring tests can drive the gated lifecycle and assert routing.
     let batterySampler = BatterySampler()
     // Ambient-light sampler for the theme suggestion. Gated by the opt-in setting
@@ -100,6 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.delegate = self
         temperatureSampler.delegate = self
         diskSampler.delegate = self
+        gpuSampler.delegate = self
         batterySampler.delegate = self
         ambientLightSampler.delegate = self
         tokenSampler.delegate = self
@@ -126,6 +128,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         networkSampler.stop()
         temperatureSampler.stop()
         diskSampler.stop()
+        gpuSampler.stop()
         batterySampler.stop()
         ambientLightSampler.stop()
         tokenSampler.stop()
@@ -217,6 +220,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         statusItemController?.setNeedsTitleUpdate()
     }
 
+    func gpuSampler(_ sampler: GPUSampler, didProduce sample: GPUSample) {
+        state.update(with: sample)
+        statusItemController?.setNeedsTitleUpdate()
+    }
+
     func batterySampler(_ sampler: BatterySampler, didProduce sample: BatterySample) {
         state.update(with: sample)
         statusItemController?.setNeedsTitleUpdate()
@@ -256,6 +264,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             networkSampler.start(interval: 1.0, tolerance: 0)
             temperatureSampler.start(interval: 1.0, tolerance: 0)
             diskSampler.start(interval: 1.0, tolerance: 0)
+            gpuSampler.start(interval: 1.0, tolerance: 0)
             tokenSampler.start(interval: 1.0, tolerance: 0)
             codexTokenSampler.start(interval: 1.0, tolerance: 0)
 
@@ -296,6 +305,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
                 diskSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 diskSampler.stop()
+            }
+
+            if state.visibility.showGPU {
+                gpuSampler.start(interval: bgInterval, tolerance: bgTolerance)
+            } else {
+                gpuSampler.stop()
             }
 
             if state.visibility.showTokens {

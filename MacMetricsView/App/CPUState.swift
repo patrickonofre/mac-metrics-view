@@ -35,6 +35,7 @@ final class CPUState: ObservableObject {
     @Published private(set) var latestNetworkSample: NetworkSample?
     @Published private(set) var latestTemperatureSample: TemperatureSample?
     @Published private(set) var latestDiskSample: DiskSample?
+    @Published private(set) var latestGPUSample: GPUSample?
     /// Latest battery reading, or `nil` when no battery is present / not yet sampled.
     /// No history is kept (ADR-002 — no charge sparkline).
     @Published private(set) var latestBatterySample: BatterySample?
@@ -55,6 +56,7 @@ final class CPUState: ObservableObject {
     @Published private(set) var networkHistory = NetworkHistory()
     @Published private(set) var temperatureHistory = TemperatureHistory()
     @Published private(set) var diskHistory = DiskHistory()
+    @Published private(set) var gpuHistory = GPUHistory()
 
     /// Cumulative download/upload and read/write byte totals since launch (in-memory,
     /// reset each launch), folded from consecutive sample gaps. Surface the since-launch
@@ -302,6 +304,10 @@ final class CPUState: ObservableObject {
             titles.append(CPUFormatter.menuBarTitle(for: latestSample, showLabel: showLabel))
         }
 
+        if visibility.showGPU {
+            titles.append(GPUFormatter.menuBarTitle(for: latestGPUSample, showLabel: showLabel))
+        }
+
         if visibility.showRAM {
             titles.append(RAMFormatter.menuBarTitle(for: latestRAMSample, metric: display.ramMenuBarMetric, showLabel: showLabel))
         }
@@ -385,6 +391,15 @@ final class CPUState: ObservableObject {
 
     var diskMenuBarTextStyle: CPUMenuBarTextStyle {
         DiskFormatter.menuBarTextStyle(for: latestDiskSample)
+    }
+
+    var gpuMenuBarTextStyle: CPUMenuBarTextStyle {
+        GPUFormatter.menuBarTextStyle(for: latestGPUSample)
+    }
+
+    /// Popover GPU card headline: the utilization percentage, or `--%` until the first read.
+    var gpuCardValue: String {
+        GPUFormatter.percentageString(for: latestGPUSample)
     }
 
     var batteryMenuBarTextStyle: CPUMenuBarTextStyle {
@@ -529,6 +544,10 @@ final class CPUState: ObservableObject {
             segments.append("CPU \(CPUFormatter.percentageString(latestSample?.totalUsagePercent))")
         }
 
+        if visibility.showGPU {
+            segments.append("\(Strings.gpu()) \(GPUFormatter.percentageString(for: latestGPUSample))")
+        }
+
         if visibility.showRAM {
             segments.append("RAM \(RAMFormatter.valueString(for: latestRAMSample, metric: display.ramMenuBarMetric))")
         }
@@ -598,6 +617,11 @@ final class CPUState: ObservableObject {
             )
         }
         lastDiskSampleTimestamp = sample.timestamp
+    }
+
+    func update(with sample: GPUSample) {
+        latestGPUSample = sample
+        gpuHistory.append(sample)
     }
 
     /// No history is kept for battery (ADR-002 — no charge sparkline); just the latest.
@@ -900,6 +924,10 @@ final class CPUState: ObservableObject {
         updateVisibility(metric: .battery, isVisible: isVisible)
     }
 
+    func setGPUVisible(_ isVisible: Bool) {
+        updateVisibility(metric: .gpu, isVisible: isVisible)
+    }
+
     func setMetricIdentifierStyle(_ identifierStyle: MetricDisplaySettings.IdentifierStyle) {
         guard display.identifierStyle != identifierStyle else { return }
 
@@ -952,6 +980,8 @@ final class CPUState: ObservableObject {
             visibility.showTokens = isVisible
         case .battery:
             visibility.showBattery = isVisible
+        case .gpu:
+            visibility.showGPU = isVisible
         }
 
         visibility.save(to: userDefaults)
@@ -1162,6 +1192,8 @@ final class CPUState: ObservableObject {
             return visibility.showTokens
         case .battery:
             return visibility.showBattery
+        case .gpu:
+            return visibility.showGPU
         }
     }
 }
