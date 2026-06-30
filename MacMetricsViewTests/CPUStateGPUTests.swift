@@ -13,31 +13,31 @@ final class CPUStateGPUTests: XCTestCase {
     func testUpdateWithGPUSampleStoresLatestAndHistory() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.update(with: GPUSample(utilizationPercent: 39))
+        state.metrics.update(with: GPUSample(utilizationPercent: 39))
 
-        XCTAssertEqual(state.latestGPUSample?.utilizationPercent, 39)
-        XCTAssertEqual(state.gpuHistory.samples.map(\.utilizationPercent), [39])
+        XCTAssertEqual(state.metrics.latestGPUSample?.utilizationPercent, 39)
+        XCTAssertEqual(state.metrics.gpuHistory.samples.map(\.utilizationPercent), [39])
     }
 
     func testGPUSeverityReusesCPUThresholds() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.update(with: GPUSample(utilizationPercent: 79))
-        XCTAssertEqual(state.gpuMenuBarTextStyle, .normal)
+        state.metrics.update(with: GPUSample(utilizationPercent: 79))
+        XCTAssertEqual(state.metrics.gpuMenuBarTextStyle, .normal)
 
-        state.update(with: GPUSample(utilizationPercent: 80))
-        XCTAssertEqual(state.gpuMenuBarTextStyle, .elevatedCPU)
+        state.metrics.update(with: GPUSample(utilizationPercent: 80))
+        XCTAssertEqual(state.metrics.gpuMenuBarTextStyle, .elevatedCPU)
 
-        state.update(with: GPUSample(utilizationPercent: 90))
-        XCTAssertEqual(state.gpuMenuBarTextStyle, .highCPU)
+        state.metrics.update(with: GPUSample(utilizationPercent: 90))
+        XCTAssertEqual(state.metrics.gpuMenuBarTextStyle, .highCPU)
     }
 
     func testGPUSegmentAppearsInMenuBarWhenVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
 
-        state.setGPUVisible(true)
-        state.update(with: GPUSample(utilizationPercent: 39))
+        state.metrics.setGPUVisible(true)
+        state.metrics.update(with: GPUSample(utilizationPercent: 39))
 
         XCTAssertTrue(state.menuBarTitle.contains("GPU"))
         XCTAssertTrue(state.menuBarTitle.contains("39%"))
@@ -45,9 +45,9 @@ final class CPUStateGPUTests: XCTestCase {
 
     func testGPUHiddenByDefaultOmitsSegment() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
 
-        state.update(with: GPUSample(utilizationPercent: 39))
+        state.metrics.update(with: GPUSample(utilizationPercent: 39))
 
         // Default off (opt-in) → no GPU segment, even with a sample present.
         XCTAssertFalse(state.menuBarTitle.contains("GPU"))
@@ -56,24 +56,24 @@ final class CPUStateGPUTests: XCTestCase {
     func testGPUOnlyVisibleStillCountsAsVisibleMetric() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
-        state.setGPUVisible(true)
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setGPUVisible(true)
 
-        XCTAssertTrue(state.hasVisibleMetric)
+        XCTAssertTrue(state.metrics.hasVisibleMetric)
     }
 
     func testHidingGPUFromMenuBarStillRecordsHistory() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setGPUVisible(true)
-        state.update(with: GPUSample(utilizationPercent: 40))
-        state.setGPUVisible(false)
-        state.update(with: GPUSample(utilizationPercent: 50))
+        state.metrics.setGPUVisible(true)
+        state.metrics.update(with: GPUSample(utilizationPercent: 40))
+        state.metrics.setGPUVisible(false)
+        state.metrics.update(with: GPUSample(utilizationPercent: 50))
 
         // Visibility only curates the menu bar; popover history keeps accumulating.
-        XCTAssertEqual(state.gpuHistory.samples.map(\.utilizationPercent), [40, 50])
+        XCTAssertEqual(state.metrics.gpuHistory.samples.map(\.utilizationPercent), [40, 50])
     }
 
     func testGPUVisibilityChangeNotifiesSamplerCoordinator() {
@@ -83,8 +83,8 @@ final class CPUStateGPUTests: XCTestCase {
             changes.append((metric, isVisible))
         }
 
-        state.setGPUVisible(true)
-        state.setGPUVisible(false)
+        state.metrics.setGPUVisible(true)
+        state.metrics.setGPUVisible(false)
 
         XCTAssertEqual(changes.count, 2)
         XCTAssertEqual(changes[0].0, .gpu)

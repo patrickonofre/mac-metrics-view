@@ -58,7 +58,7 @@ final class AppDelegateTokenWiringTests: XCTestCase {
 
     func testForwardedEventsRenderInMenuBarTitleWhenTokensVisible() {
         let appDelegate = AppDelegate()
-        appDelegate.state.setTokenVisible(true)   // identifier style defaults to icons → count only
+        appDelegate.state.metrics.setTokenVisible(true)   // identifier style defaults to icons → count only
 
         appDelegate.tokenUsageSampler(TokenUsageSampler(), didProduce: [event(input: 1_500)])
 
@@ -69,7 +69,7 @@ final class AppDelegateTokenWiringTests: XCTestCase {
     // AppDelegate delegate method into CPUState.
     func testFakeReaderPollFlowsThroughAppDelegateIntoState() {
         let appDelegate = AppDelegate()
-        appDelegate.state.setTokenVisible(true)
+        appDelegate.state.metrics.setTokenVisible(true)
 
         let reader = ScriptedReader(batches: [[event(input: 1_200)]])
         let scheduler = FakeScheduler()

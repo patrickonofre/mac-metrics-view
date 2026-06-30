@@ -82,14 +82,14 @@ struct PopoverView: View {
                 // Time-derived token figures (burn rate, rolling windows) refresh on a
                 // ~30s timer only while the popover is open (ADR-005).
                 state.beginTokenAutoRefresh()
-                state.beginProcessSampling()
+                state.metrics.beginProcessSampling()
             }
             .onDisappear {
                 // If the popover is dismissed mid-recovery, stop the probe poll loop.
                 // No-op unless we were awaiting a grant.
                 lock.recovery.cancelRecovery()
                 state.endTokenAutoRefresh()
-                state.endProcessSampling()
+                state.metrics.endProcessSampling()
             }
         } else {
             Color.clear
@@ -131,9 +131,9 @@ struct PopoverView: View {
     private var tabBody: some View {
         switch selectedTab {
         case .metrics:
-            MetricsTab(state: state, token: state.token, expandedCards: $expandedCards)
+            MetricsTab(metrics: state.metrics, token: state.token, expandedCards: $expandedCards)
         case .settings:
-            SettingsTab(state: state, launchAtLoginSettings: launchAtLoginSettings)
+            SettingsTab(state: state, metrics: state.metrics, launchAtLoginSettings: launchAtLoginSettings)
         case .actions:
             ActionsTab(
                 state: state,

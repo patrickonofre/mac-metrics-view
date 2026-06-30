@@ -38,28 +38,28 @@ final class CPUStateProcessSamplingTests: XCTestCase {
         )
         processReader.snapshotToReturn = snapshot
         
-        XCTAssertTrue(state.topCPUProcesses.isEmpty)
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty)
         XCTAssertEqual(processReader.readCount, 0)
         
-        state.beginProcessSampling()
+        state.metrics.beginProcessSampling()
         
         // Should have captured baseline
         XCTAssertEqual(processReader.readCount, 1)
-        XCTAssertTrue(state.topCPUProcesses.isEmpty, "Should still be empty after baseline capture before first tick")
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty, "Should still be empty after baseline capture before first tick")
         
-        state.endProcessSampling()
+        state.metrics.endProcessSampling()
     }
     
     func testBeginProcessSamplingIsIdempotent() {
         let state = makeState()
-        state.beginProcessSampling()
+        state.metrics.beginProcessSampling()
         XCTAssertEqual(processReader.readCount, 1)
         
         // Calling begin again should not trigger another baseline read
-        state.beginProcessSampling()
+        state.metrics.beginProcessSampling()
         XCTAssertEqual(processReader.readCount, 1)
         
-        state.endProcessSampling()
+        state.metrics.endProcessSampling()
     }
     
     func testProcessSamplingTickPublishesRankedList() {
@@ -74,7 +74,7 @@ final class CPUStateProcessSamplingTests: XCTestCase {
                 2: .init(name: "p2", cpuNanos: 2_000_000_000)
             ]
         )
-        state.beginProcessSampling()
+        state.metrics.beginProcessSampling()
         XCTAssertEqual(processReader.readCount, 1)
         
         // 2. Setup next snapshot for the tick
@@ -87,45 +87,45 @@ final class CPUStateProcessSamplingTests: XCTestCase {
         )
         
         // 3. Tick
-        state.processSamplingTick()
+        state.metrics.processSamplingTick()
         XCTAssertEqual(processReader.readCount, 2)
-        XCTAssertEqual(state.topCPUProcesses.count, 2)
+        XCTAssertEqual(state.metrics.topCPUProcesses.count, 2)
         
         // p2 is 150%, p1 is 100% -> p2 should be first
         let cores = Double(ProcessInfo.processInfo.activeProcessorCount)
-        XCTAssertEqual(state.topCPUProcesses[0].pid, 2)
-        XCTAssertEqual(state.topCPUProcesses[0].cpuPercent, 150.0 / cores)
-        XCTAssertEqual(state.topCPUProcesses[1].pid, 1)
-        XCTAssertEqual(state.topCPUProcesses[1].cpuPercent, 100.0 / cores)
+        XCTAssertEqual(state.metrics.topCPUProcesses[0].pid, 2)
+        XCTAssertEqual(state.metrics.topCPUProcesses[0].cpuPercent, 150.0 / cores)
+        XCTAssertEqual(state.metrics.topCPUProcesses[1].pid, 1)
+        XCTAssertEqual(state.metrics.topCPUProcesses[1].cpuPercent, 100.0 / cores)
         
-        state.endProcessSampling()
+        state.metrics.endProcessSampling()
     }
     
     func testEndProcessSamplingInvalidatesTimerAndClearsSnapshot() {
         let state = makeState()
-        state.beginProcessSampling()
+        state.metrics.beginProcessSampling()
         XCTAssertEqual(processReader.readCount, 1)
         
-        state.endProcessSampling()
+        state.metrics.endProcessSampling()
         
         // Ticking after end should be a no-op
         processReader.snapshotToReturn = ProcessCPUSnapshot(
             timestamp: Date(),
             entries: [1: .init(name: "p1", cpuNanos: 100)]
         )
-        state.processSamplingTick()
+        state.metrics.processSamplingTick()
         
         XCTAssertEqual(processReader.readCount, 1, "Should not read from reader after end")
-        XCTAssertTrue(state.topCPUProcesses.isEmpty)
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty)
     }
     
     func testTickAfterEndIsNoOp() {
         let state = makeState()
-        state.beginProcessSampling()
-        state.endProcessSampling()
+        state.metrics.beginProcessSampling()
+        state.metrics.endProcessSampling()
         
         let previousReadCount = processReader.readCount
-        state.processSamplingTick()
+        state.metrics.processSamplingTick()
         
         XCTAssertEqual(processReader.readCount, previousReadCount, "Tick after end should not perform reads")
     }

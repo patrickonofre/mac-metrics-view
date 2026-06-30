@@ -29,7 +29,7 @@ final class StatusItemTokenSegmentTests: XCTestCase {
 
     func testTokenSegmentShowsHumanizedCountWhenVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)
+        state.metrics.setTokenVisible(true)
         state.update(with: [event(input: 12_300)])
 
         XCTAssertTrue(state.visibleMenuBarTitles.contains("12.3k"))
@@ -45,15 +45,15 @@ final class StatusItemTokenSegmentTests: XCTestCase {
 
     func testLabelsStyleShowsLabelIconsStyleOmitsTextLabel() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)
+        state.metrics.setTokenVisible(true)
         state.update(with: [event(input: 12_300)])
 
         // Default provider is combined → labels mode shows the provider-aware identifier.
         let providerLabel = TokenFormatter.menuBarLabel(for: .combined)
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
         XCTAssertTrue(state.visibleMenuBarTitles.contains("\(providerLabel) 12.3k"))
 
-        state.setMetricIdentifierStyle(.icons)
+        state.metrics.setMetricIdentifierStyle(.icons)
         // In icons mode the plain title carries only the count; the SF Symbol is rendered
         // separately by StatusItemController, so no text label appears here.
         XCTAssertTrue(state.visibleMenuBarTitles.contains("12.3k"))
@@ -62,8 +62,8 @@ final class StatusItemTokenSegmentTests: XCTestCase {
 
     func testTokenSegmentLabelReflectsSelectedProvider() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
-        state.setTokenVisible(true)
+        state.metrics.setMetricIdentifierStyle(.labels)
+        state.metrics.setTokenVisible(true)
         state.update(provider: .codex, with: [
             TokenUsageEvent(timestamp: Date(), model: "gpt-5-codex", inputTokens: 12_300,
                             outputTokens: 0, cacheReadTokens: 0, cacheCreationTokens: 0,
@@ -81,7 +81,7 @@ final class StatusItemTokenSegmentTests: XCTestCase {
 
     func testTokenStyleIsNormalRegardlessOfMagnitude() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)
+        state.metrics.setTokenVisible(true)
         state.update(with: [event(input: 9_999_999)])
 
         XCTAssertEqual(state.token.menuBarTextStyle, .normal)
@@ -91,7 +91,7 @@ final class StatusItemTokenSegmentTests: XCTestCase {
 
     func testChangingWindowUpdatesTokenSegmentCount() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)
+        state.metrics.setTokenVisible(true)
         state.update(with: [
             event(at: Date().addingTimeInterval(-2 * 3_600), input: 50_000),  // 2h ago
             event(at: Date(), input: 1_500)                                    // now

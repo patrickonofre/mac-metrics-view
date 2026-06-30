@@ -186,9 +186,9 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     @MainActor
     func testHidingCPURemovesCPUFromFormattedMenuBarOutput() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
 
-        state.setCPUVisible(false)
+        state.metrics.setCPUVisible(false)
 
         XCTAssertFalse(state.menuBarTitle.contains("CPU"))
         XCTAssertTrue(state.menuBarTitle.contains("RAM"))
@@ -198,9 +198,9 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     @MainActor
     func testHidingRAMRemovesRAMFromFormattedMenuBarOutput() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
 
-        state.setRAMVisible(false)
+        state.metrics.setRAMVisible(false)
 
         XCTAssertTrue(state.menuBarTitle.contains("CPU"))
         XCTAssertFalse(state.menuBarTitle.contains("RAM"))
@@ -211,31 +211,31 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testRAMMenuBarMetricSelectionDrivesTitleAndPersists() {
         let userDefaults = makeUserDefaults()
         let state = CPUState(userDefaults: userDefaults)
-        state.setMetricIdentifierStyle(.labels)
-        state.update(with: RAMSample(usedGB: 14, totalGB: 16, usedPercent: 87, appMemoryGB: 12.4, appMemoryPercent: 77, pressurePercent: 58.6))
+        state.metrics.setMetricIdentifierStyle(.labels)
+        state.metrics.update(with: RAMSample(usedGB: 14, totalGB: 16, usedPercent: 87, appMemoryGB: 12.4, appMemoryPercent: 77, pressurePercent: 58.6))
 
         // Default: Used / Total → compact ratio.
         XCTAssertTrue(state.menuBarTitle.contains("RAM 14.0/16 GB"))
 
-        state.setRAMMenuBarMetric(.appMemory)
+        state.metrics.setRAMMenuBarMetric(.appMemory)
         XCTAssertTrue(state.menuBarTitle.contains("RAM 12.4 GB"))
 
-        state.setRAMMenuBarMetric(.pressure)
+        state.metrics.setRAMMenuBarMetric(.pressure)
         XCTAssertTrue(state.menuBarTitle.contains("RAM 59%"))
         XCTAssertFalse(state.menuBarTitle.contains("GB"))
 
         // Persisted across a fresh load.
         XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).ramMenuBarMetric, .pressure)
         let reloaded = CPUState(userDefaults: userDefaults)
-        XCTAssertEqual(reloaded.ramMenuBarMetric, .pressure)
+        XCTAssertEqual(reloaded.metrics.ramMenuBarMetric, .pressure)
     }
 
     @MainActor
     func testHidingNetworkRemovesNetworkFromFormattedMenuBarOutput() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
 
-        state.setNetworkVisible(false)
+        state.metrics.setNetworkVisible(false)
 
         XCTAssertTrue(state.menuBarTitle.contains("CPU"))
         XCTAssertTrue(state.menuBarTitle.contains("RAM"))
@@ -246,9 +246,9 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testAllMetricsHiddenReturnsMinimalMenuBarControlLabel() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
 
         XCTAssertEqual(state.menuBarTitle, Strings.metricsPlaceholder())
     }
@@ -257,12 +257,12 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testTemperatureCountsAsVisibleMetric() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
-        state.setTemperatureVisible(true)
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setTemperatureVisible(true)
 
-        XCTAssertTrue(state.hasVisibleMetric)
+        XCTAssertTrue(state.metrics.hasVisibleMetric)
         XCTAssertEqual(state.menuBarTitle, "--")
     }
 
@@ -270,26 +270,26 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testHidingMetricFromMenuBarStillRecordsHistory() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setCPUVisible(false)
-        state.update(with: CPUSample(totalUsagePercent: 42))
+        state.metrics.setCPUVisible(false)
+        state.metrics.update(with: CPUSample(totalUsagePercent: 42))
 
         // Visibility only curates the menu bar; the popover shows every metric, so history
         // keeps accumulating even when hidden from the menu bar.
-        XCTAssertEqual(state.latestSample?.totalUsagePercent, 42)
-        XCTAssertEqual(state.history.samples.count, 1)
+        XCTAssertEqual(state.metrics.latestSample?.totalUsagePercent, 42)
+        XCTAssertEqual(state.metrics.history.samples.count, 1)
     }
 
     @MainActor
     func testTogglingMenuBarVisibilityKeepsExistingData() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.update(with: CPUSample(totalUsagePercent: 42))
-        state.setCPUVisible(false)
-        state.setCPUVisible(true)
+        state.metrics.update(with: CPUSample(totalUsagePercent: 42))
+        state.metrics.setCPUVisible(false)
+        state.metrics.setCPUVisible(true)
 
         // No reset on re-show: the sample and history survive a menu-bar visibility toggle.
-        XCTAssertEqual(state.latestSample?.totalUsagePercent, 42)
-        XCTAssertEqual(state.history.samples.count, 1)
+        XCTAssertEqual(state.metrics.latestSample?.totalUsagePercent, 42)
+        XCTAssertEqual(state.metrics.history.samples.count, 1)
     }
 
     @MainActor
@@ -306,11 +306,11 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testTemperatureMenuBarOutputUsesIconModeWithoutLabel() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
-        state.setTemperatureVisible(true)
-        state.update(with: try XCTUnwrap(TemperatureSample(celsius: 68.4, state: .normal)))
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setTemperatureVisible(true)
+        state.metrics.update(with: try XCTUnwrap(TemperatureSample(celsius: 68.4, state: .normal)))
 
         XCTAssertEqual(state.menuBarTitle, "68 °C")
         XCTAssertFalse(state.menuBarTitle.contains("TEMP"))
@@ -320,12 +320,12 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testTemperatureMenuBarOutputUsesTempLabelInLabelMode() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setMetricIdentifierStyle(.labels)
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
-        state.setTemperatureVisible(true)
-        state.update(with: try XCTUnwrap(TemperatureSample(celsius: nil, state: .normal)))
+        state.metrics.setMetricIdentifierStyle(.labels)
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setTemperatureVisible(true)
+        state.metrics.update(with: try XCTUnwrap(TemperatureSample(celsius: nil, state: .normal)))
 
         XCTAssertEqual(state.menuBarTitle, "TEMP Normal")
     }
@@ -334,18 +334,18 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testHidingTemperatureRemovesMenuBarSegmentButKeepsHistory() throws {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
-        state.setTemperatureVisible(true)
-        state.update(with: try XCTUnwrap(TemperatureSample(celsius: 68, state: .normal)))
-        state.setTemperatureVisible(false)
-        state.update(with: try XCTUnwrap(TemperatureSample(celsius: 69, state: .normal)))
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setTemperatureVisible(true)
+        state.metrics.update(with: try XCTUnwrap(TemperatureSample(celsius: 68, state: .normal)))
+        state.metrics.setTemperatureVisible(false)
+        state.metrics.update(with: try XCTUnwrap(TemperatureSample(celsius: 69, state: .normal)))
 
         // Menu bar: temperature hidden, and it was the only visible metric → placeholder.
         XCTAssertEqual(state.menuBarTitle, Strings.metricsPlaceholder())
         // Popover data: history keeps accumulating regardless of menu-bar visibility.
-        XCTAssertEqual(state.temperatureHistory.samples.map(\.celsius), [68, 69])
+        XCTAssertEqual(state.metrics.temperatureHistory.samples.map(\.celsius), [68, 69])
     }
 
     @MainActor
@@ -359,7 +359,7 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     func testLabelDisplayModeIncludesMetricLabelsForVisibleMetrics() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        state.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.labels)
 
         XCTAssertEqual(state.menuBarTitle, "CPU  --%  RAM --/-- GB  NET ↓ --.- MB/s ↑ --.- MB/s")
     }
@@ -376,8 +376,8 @@ final class MetricVisibilitySettingsTests: XCTestCase {
             displayChangeCount += 1
         }
 
-        state.setMetricIdentifierStyle(.labels)
-        state.setMetricIdentifierStyle(.icons)
+        state.metrics.setMetricIdentifierStyle(.labels)
+        state.metrics.setMetricIdentifierStyle(.icons)
 
         XCTAssertTrue(visibilityChanges.isEmpty)
         XCTAssertEqual(displayChangeCount, 2)
@@ -391,10 +391,10 @@ final class MetricVisibilitySettingsTests: XCTestCase {
             changes.append((metric, isVisible))
         }
 
-        state.setNetworkVisible(false)
-        state.setNetworkVisible(true)
-        state.setTemperatureVisible(true)
-        state.setTemperatureVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setNetworkVisible(true)
+        state.metrics.setTemperatureVisible(true)
+        state.metrics.setTemperatureVisible(false)
 
         XCTAssertEqual(changes.count, 4)
         XCTAssertEqual(changes[0].0, .network)

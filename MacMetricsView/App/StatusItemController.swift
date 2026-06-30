@@ -84,63 +84,63 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         separatorAttributes[.kern] = 6.0
         let separator = NSAttributedString(string: " ", attributes: separatorAttributes)
 
-        if state.visibility.showCPU {
+        if state.metrics.visibility.showCPU {
             attributedTitle.append(statusSegment(
                 metric: .cpu,
-                value: CPUFormatter.fixedWidthPercentageString(state.latestSample?.totalUsagePercent),
-                style: state.menuBarTextStyle
+                value: CPUFormatter.fixedWidthPercentageString(state.metrics.latestSample?.totalUsagePercent),
+                style: state.metrics.menuBarTextStyle
             ))
         }
 
-        if state.visibility.showGPU {
+        if state.metrics.visibility.showGPU {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
 
             attributedTitle.append(statusSegment(
                 metric: .gpu,
-                value: GPUFormatter.menuBarTitle(for: state.latestGPUSample, showLabel: false),
-                style: state.gpuMenuBarTextStyle
+                value: GPUFormatter.menuBarTitle(for: state.metrics.latestGPUSample, showLabel: false),
+                style: state.metrics.gpuMenuBarTextStyle
             ))
         }
 
-        if state.visibility.showRAM {
+        if state.metrics.visibility.showRAM {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
 
             attributedTitle.append(statusSegment(
                 metric: .ram,
-                value: RAMFormatter.valueString(for: state.latestRAMSample, metric: state.ramMenuBarMetric),
-                style: state.ramMenuBarTextStyle
+                value: RAMFormatter.valueString(for: state.metrics.latestRAMSample, metric: state.metrics.ramMenuBarMetric),
+                style: state.metrics.ramMenuBarTextStyle
             ))
         }
 
-        if state.visibility.showNetwork {
+        if state.metrics.visibility.showNetwork {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
 
             attributedTitle.append(statusSegment(
                 metric: .network,
-                value: NetworkFormatter.compactMenuBarValue(for: state.latestNetworkSample),
+                value: NetworkFormatter.compactMenuBarValue(for: state.metrics.latestNetworkSample),
                 style: .normal
             ))
         }
 
-        if state.visibility.showTemperature {
+        if state.metrics.visibility.showTemperature {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
 
             attributedTitle.append(statusSegment(
                 metric: .temperature,
-                value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
-                style: state.temperatureMenuBarTextStyle
+                value: TemperatureFormatter.displayString(for: state.metrics.latestTemperatureSample),
+                style: state.metrics.temperatureMenuBarTextStyle
             ))
         }
 
-        if state.visibility.showDisk {
+        if state.metrics.visibility.showDisk {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
@@ -148,30 +148,30 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             attributedTitle.append(statusSegment(
                 metric: .disk,
                 value: DiskFormatter.stableMenuBarTitle(
-                    for: state.latestDiskSample,
-                    metric: state.diskMenuBarMetric,
+                    for: state.metrics.latestDiskSample,
+                    metric: state.metrics.diskMenuBarMetric,
                     showLabel: false
                 ),
-                style: state.diskMenuBarTextStyle
+                style: state.metrics.diskMenuBarTextStyle
             ))
         }
 
         // Battery emits only when present (sample non-nil), so a desktop Mac shows nothing
         // even with the toggle on (ADR-003). The icon is the live charge-level glyph.
-        if state.visibility.showBattery, state.latestBatterySample != nil {
+        if state.metrics.visibility.showBattery, state.metrics.latestBatterySample != nil {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
 
             attributedTitle.append(statusSegment(
                 metric: .battery,
-                value: BatteryFormatter.menuBarValue(for: state.latestBatterySample),
-                style: state.batteryMenuBarTextStyle,
-                symbolOverride: BatteryFormatter.menuBarGlyphName(for: state.latestBatterySample)
+                value: BatteryFormatter.menuBarValue(for: state.metrics.latestBatterySample),
+                style: state.metrics.batteryMenuBarTextStyle,
+                symbolOverride: BatteryFormatter.menuBarGlyphName(for: state.metrics.latestBatterySample)
             ))
         }
 
-        if state.visibility.showTokens {
+        if state.metrics.visibility.showTokens {
             if attributedTitle.length > 0 {
                 attributedTitle.append(separator)
             }
@@ -218,7 +218,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let identifierColor = NSColor.labelColor
         let segment = NSMutableAttributedString()
 
-        switch state.display.identifierStyle {
+        switch state.metrics.display.identifierStyle {
         case .labels:
             // `labelOverride` lets the token segment show the provider-aware name
             // (Claude / Codex / Combined) instead of the fixed metric label.
@@ -388,7 +388,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         state.refreshAccessibilityAuthorization()
         // One-shot battery read so the popover row is live even when the segment is hidden
         // and the continuous sampler is gated off (ADR-003). No-op cost on desktops.
-        state.refreshBatteryReading()
+        state.metrics.refreshBatteryReading()
         // Build the SwiftUI graph fresh for this open, after the pre-show refreshes so the
         // first body pass reads current state; popoverDidClose releases it (ADR-001).
         popover.contentViewController = makePopoverHostingController()

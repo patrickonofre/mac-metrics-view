@@ -104,13 +104,13 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
         state.update(with: [event(input: 100)])
 
         XCTAssertEqual(state.token.aggregate.input, 100)   // ingested despite being hidden
-        XCTAssertFalse(state.visibility.showTokens)        // no token segment in the menu bar
+        XCTAssertFalse(state.metrics.visibility.showTokens)        // no token segment in the menu bar
     }
 
     func testVisibleMenuBarTitlesIncludesTokenSegmentWhenVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
-        state.setTokenVisible(true)
+        state.metrics.setMetricIdentifierStyle(.labels)
+        state.metrics.setTokenVisible(true)
         state.update(with: [event(input: 1_500)])
 
         // Default provider is combined → the label is the provider-aware name, not "TOK".
@@ -122,7 +122,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
     func testVisibleMenuBarTitleReflectsHumanizedCountForSelectedWindow() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)   // identifier style defaults to icons → count only
+        state.metrics.setTokenVisible(true)   // identifier style defaults to icons → count only
         state.update(with: [event(input: 1_500)])
 
         XCTAssertTrue(state.visibleMenuBarTitles.contains("1.5k"))
@@ -130,7 +130,7 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
     func testAccessibilityMenuBarTitleIncludesTokenWordingWhenVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)
+        state.metrics.setTokenVisible(true)
         state.update(with: [event(input: 100)])
 
         XCTAssertTrue(state.accessibilityMenuBarTitle.contains(Strings.tokens()))
@@ -253,8 +253,8 @@ final class CPUStateTokenIntegrationTests: XCTestCase {
 
     func testSwitchingProviderRerendersWithoutReingest() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(true)
-        state.setMetricIdentifierStyle(.icons)
+        state.metrics.setTokenVisible(true)
+        state.metrics.setMetricIdentifierStyle(.icons)
         state.update(provider: .claude, with: [event(input: 1_500)])
         state.update(provider: .codex, with: [codexEvent(input: 3_000)])
 

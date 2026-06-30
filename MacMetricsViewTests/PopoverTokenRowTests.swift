@@ -281,12 +281,12 @@ final class PopoverTokenRowTests: XCTestCase {
 
     func testTokenRowDataSurvivesMenuBarVisibilityOff() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(false)   // hidden from the menu bar
+        state.metrics.setTokenVisible(false)   // hidden from the menu bar
         state.update(with: [event(input: 100)])
 
         // The popover row binds to these regardless of menu-bar visibility.
         XCTAssertFalse(state.token.isEmpty)
         XCTAssertEqual(state.token.rowValue, "100")
-        XCTAssertFalse(state.visibility.showTokens)
+        XCTAssertFalse(state.metrics.visibility.showTokens)
     }
 }

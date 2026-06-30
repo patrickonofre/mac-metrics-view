@@ -41,13 +41,13 @@ final class CPUStatePopoverTests: XCTestCase {
         )
         
         // Simulating PopoverView.onAppear
-        state.beginProcessSampling()
+        state.metrics.beginProcessSampling()
         XCTAssertEqual(processReader.readCount, 1, "onAppear should start process sampling and read baseline")
         
         // Simulating PopoverView.onDisappear
-        state.endProcessSampling()
+        state.metrics.endProcessSampling()
         // Advancing time or calling tick after end should not perform further reads
-        state.processSamplingTick()
+        state.metrics.processSamplingTick()
         XCTAssertEqual(processReader.readCount, 1, "onDisappear should stop sampling and prevent further ticks")
     }
 
@@ -59,18 +59,18 @@ final class CPUStatePopoverTests: XCTestCase {
             displayChangeCalled = true
         }
         
-        state.setUpdateRate(3)
-        XCTAssertEqual(state.updateRate, 3)
+        state.metrics.setUpdateRate(3)
+        XCTAssertEqual(state.metrics.updateRate, 3)
         XCTAssertTrue(displayChangeCalled)
         
         displayChangeCalled = false
-        state.setUpdateRate(5) // invalid, should clamp to 1
-        XCTAssertEqual(state.updateRate, 1)
+        state.metrics.setUpdateRate(5) // invalid, should clamp to 1
+        XCTAssertEqual(state.metrics.updateRate, 1)
         XCTAssertTrue(displayChangeCalled)
         
         displayChangeCalled = false
-        state.setUpdateRate(0) // invalid, should clamp to 1
-        XCTAssertEqual(state.updateRate, 1)
+        state.metrics.setUpdateRate(0) // invalid, should clamp to 1
+        XCTAssertEqual(state.metrics.updateRate, 1)
         XCTAssertTrue(displayChangeCalled)
     }
     

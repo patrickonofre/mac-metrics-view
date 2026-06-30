@@ -71,7 +71,7 @@ final class CPUStateTokenChurnIsolationTests: XCTestCase {
     func testMenuBarTitleComposesTokenSegmentFromTheExtractedModel() {
         let defaults = makeDefaults()
         let state = CPUState(userDefaults: defaults)
-        state.setTokenVisible(true)
+        state.metrics.setTokenVisible(true)
 
         // Before any ingest: the token segment reflects the model's zero aggregate.
         XCTAssertTrue(
