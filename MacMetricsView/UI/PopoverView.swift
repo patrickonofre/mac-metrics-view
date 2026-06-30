@@ -9,6 +9,10 @@ import SwiftUI
 /// this view on every open.
 struct PopoverView: View {
     @ObservedObject var state: CPUState
+    /// Observed separately from `state` (task-003): the theme-suggestion banner has no
+    /// AppKit-imperative refresh path (unlike the menu bar), so it must react to
+    /// `AmbientThemeModel`'s own publisher directly to stay live within an open popover.
+    @ObservedObject var ambient: AmbientThemeModel
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
     let dismissPopover: () -> Void
     let quit: () -> Void
@@ -45,14 +49,14 @@ struct PopoverView: View {
                 }
 
                 let ambientBanner = AmbientSuggestionPresentation.bannerState(
-                    suggestion: state.themeSuggestion,
-                    lastApply: state.lastAppearanceApplyResult
+                    suggestion: ambient.suggestion,
+                    lastApply: ambient.lastApplyResult
                 )
                 if ambientBanner != .hidden {
                     AmbientSuggestionBanner(
                         state: ambientBanner,
-                        apply: { state.applyThemeSuggestion() },
-                        dismiss: { state.dismissThemeSuggestion() }
+                        apply: { ambient.apply() },
+                        dismiss: { ambient.dismiss() }
                     )
                 }
 

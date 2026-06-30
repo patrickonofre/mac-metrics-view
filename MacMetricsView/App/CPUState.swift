@@ -26,17 +26,14 @@ final class CPUState: ObservableObject {
     /// Latest battery reading, or `nil` when no battery is present / not yet sampled.
     /// No history is kept (ADR-002 — no charge sparkline).
     @Published private(set) var latestBatterySample: BatterySample?
-    /// Latest ambient-light reading, or `nil` when no ALS is present / not yet sampled.
-    @Published private(set) var latestAmbientSample: AmbientLightSample?
-    /// Current ambient-light theme suggestion (FR-7), or `.none`. Recomputed on each
-    /// ambient sample through `ThemeSuggestionEngine`; only ever proposes the mode not
-    /// currently active (FR-6).
-    @Published private(set) var themeSuggestion: ThemeSuggestion = .none
-    /// Result of the most recent apply attempt, so the banner can show the
-    /// denied-Automation guidance (`.notAuthorized`). `nil` until the user applies.
-    @Published private(set) var lastAppearanceApplyResult: AppearanceApplyResult?
-    /// Ambient-light theme settings (opt-in flag, thresholds, dwell). Default off.
-    @Published private(set) var ambientThemeSettings: AmbientThemeSettings
+    /// The Ambient pillar (TD-012): the latest ambient-light reading, the derived theme
+    /// suggestion, and the opt-in settings. Extracted to `AmbientThemeModel` (task-003).
+    /// `PopoverView` observes `ambient` directly (its own `@ObservedObject`) because, unlike
+    /// the menu bar, the theme-suggestion banner has no AppKit-imperative refresh path —
+    /// it only exists in SwiftUI, so it must react to the model's own publisher. Lower-
+    /// frequency consumers (Settings tab, AppDelegate's sampler gate) read through the
+    /// `ambientThemeSettings`/`latestAmbientSample` shims below instead.
+    let ambient: AmbientThemeModel
     @Published private(set) var topCPUProcesses: [ProcessCPUSample] = []
     @Published private(set) var history = CPUHistory()
     @Published private(set) var ramHistory = RAMHistory()
@@ -156,12 +153,6 @@ final class CPUState: ObservableObject {
     /// is hidden and the continuous sampler is gated off (ADR-003). Returns nil on Macs
     /// with no battery, so `latestBatterySample` stays nil → "no battery" row.
     private let batteryReader: BatteryReading
-    /// Reads/writes the macOS system appearance for the ambient theme suggestion.
-    /// Injected so tests can fake the apply without running osascript / needing NSApp.
-    private let systemAppearance: SystemAppearanceControlling
-    /// Pure decision engine for the ambient theme suggestion; rebuilt when the
-    /// thresholds/dwell change so a settings edit takes effect immediately.
-    private var themeSuggestionEngine: ThemeSuggestionEngine
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -177,10 +168,10 @@ final class CPUState: ObservableObject {
         self.samplingExecutor = samplingExecutor
         self.userDefaults = userDefaults
         self.batteryReader = batteryReader
-        self.systemAppearance = systemAppearance ?? SystemAppearanceController()
-        let loadedAmbientSettings = AmbientThemeSettings.load(from: userDefaults)
-        ambientThemeSettings = loadedAmbientSettings
-        themeSuggestionEngine = ThemeSuggestionEngine(settings: loadedAmbientSettings)
+        ambient = AmbientThemeModel(
+            userDefaults: userDefaults,
+            systemAppearance: systemAppearance ?? SystemAppearanceController()
+        )
         self.accessibilityAuthorization = accessibilityAuthorization
         // `SystemAccessibilityProbe` is `@MainActor`, so it cannot be a default
         // argument (those are evaluated in a nonisolated context); build it here in
@@ -483,57 +474,31 @@ final class CPUState: ObservableObject {
         }
     }
 
-    // MARK: - Ambient theme suggestion
+    // MARK: - Ambient theme suggestion (forwards to `AmbientThemeModel`, task-003)
 
-    /// Records an ambient-light sample and recomputes the theme suggestion. The sample
-    /// is always stored (the popover lux row reads it); the suggestion is only computed
-    /// while the feature is enabled.
+    /// Lower-frequency read shims (Settings tab, AppDelegate's sampler gate). The
+    /// reactive banner in `PopoverView` observes `ambient` directly instead.
+    var ambientThemeSettings: AmbientThemeSettings { ambient.settings }
+    var latestAmbientSample: AmbientLightSample? { ambient.latestSample }
+    var themeSuggestion: ThemeSuggestion { ambient.suggestion }
+    var lastAppearanceApplyResult: AppearanceApplyResult? { ambient.lastApplyResult }
+
     func update(with sample: AmbientLightSample) {
-        latestAmbientSample = sample
-        refreshThemeSuggestion()
+        ambient.update(with: sample)
     }
 
-    private func refreshThemeSuggestion() {
-        guard ambientThemeSettings.isEnabled, let sample = latestAmbientSample else {
-            themeSuggestion = .none
-            return
-        }
-        themeSuggestion = themeSuggestionEngine.evaluate(
-            lux: sample.lux,
-            current: systemAppearance.current,
-            now: Date()
-        )
-    }
-
-    /// Applies the active suggestion to the macOS system appearance. On success the
-    /// suggestion clears; a denial is published for the banner's guidance state. No-op
-    /// when there is no active suggestion.
     func applyThemeSuggestion() {
-        guard case let .suggest(mode) = themeSuggestion else { return }
-        let result = systemAppearance.apply(mode)
-        lastAppearanceApplyResult = result
-        if result == .applied {
-            themeSuggestion = .none
-        }
+        ambient.apply()
     }
 
-    /// Dismisses the active suggestion: snoozes the engine for this direction until the
-    /// level returns through the dead band (FR-8) and clears the banner.
     func dismissThemeSuggestion() {
-        themeSuggestionEngine.dismiss(themeSuggestion)
-        themeSuggestion = .none
-        lastAppearanceApplyResult = nil
+        ambient.dismiss()
     }
 
-    /// Persists new ambient settings, rebuilds the engine with the new band, and
-    /// re-evaluates so the change takes effect at once. Fires the change callback so
-    /// AppDelegate can start/stop the sampler in step with the opt-in flag.
+    /// Persists new ambient settings via the model and fires the change callback so
+    /// `AppDelegate` can start/stop the sampler in step with the opt-in flag.
     func setAmbientThemeSettings(_ settings: AmbientThemeSettings) {
-        guard ambientThemeSettings != settings else { return }
-        ambientThemeSettings = settings
-        settings.save(to: userDefaults)
-        themeSuggestionEngine = ThemeSuggestionEngine(settings: settings)
-        refreshThemeSuggestion()
+        guard ambient.setSettings(settings) else { return }
         onAmbientThemeSettingsChange?(settings)
     }
 
