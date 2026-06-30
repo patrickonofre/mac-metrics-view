@@ -354,6 +354,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             rootView: PopoverView(
                 state: state,
                 ambient: state.ambient,
+                lock: state.lock,
                 launchAtLoginSettings: launchAtLoginSettings,
                 dismissPopover: { [weak self] in
                     self?.popover.performClose(nil)

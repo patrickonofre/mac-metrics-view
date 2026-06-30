@@ -3,7 +3,7 @@ import SwiftUI
 /// Full-screen SwiftUI view rendered inside every `LockOverlayWindow`.
 /// Shows the countdown and the emergency-abort instruction.
 struct LockOverlayView: View {
-    @ObservedObject var state: CPUState
+    @ObservedObject var lock: CleaningLockModel
 
     var body: some View {
         ZStack {
@@ -22,7 +22,7 @@ struct LockOverlayView: View {
                     .foregroundStyle(.white.opacity(0.55))
                     .monospacedDigit()
                     .contentTransition(.numericText(countsDown: true))
-                    .animation(.easeInOut(duration: 0.3), value: state.lockRemaining)
+                    .animation(.easeInOut(duration: 0.3), value: lock.remaining)
             }
             .multilineTextAlignment(.center)
 
@@ -39,8 +39,8 @@ struct LockOverlayView: View {
 
     private var countdownText: String {
         CleaningLockCountdownFormatter.string(
-            forRemaining: state.lockRemaining,
-            total: state.cleaningLockSettings.selectedDuration
+            forRemaining: lock.remaining,
+            total: lock.settings.selectedDuration
         )
     }
 }

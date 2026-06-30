@@ -1,17 +1,6 @@
 import Foundation
 import Combine
 
-/// Where the cleaning-permission recovery flow is, for the UI to render and for the
-/// state machine to gate its probe poll loop and one-shot relaunch (see ADR-002).
-enum AccessibilityRecoveryPhase: Equatable {
-    /// Not recovering — no probing happens.
-    case idle
-    /// Settings opened; the probe poll loop is running, watching for a valid grant.
-    case awaitingGrant
-    /// A valid grant was detected; the relaunch that applies it is in flight.
-    case applying
-}
-
 @MainActor
 final class CPUState: ObservableObject {
     @Published private(set) var visibility: MetricVisibilitySettings
@@ -66,31 +55,17 @@ final class CPUState: ObservableObject {
     /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
     let diskSampleInterval: TimeInterval = 1
 
-    // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
-    @Published private(set) var lockPhase: LockPhase = .idle
-    @Published private(set) var lockRemaining: TimeInterval = 0
-    @Published private(set) var cleaningLockSettings: CleaningLockSettings
+    /// The Utilities pillar (TD-012): cleaning-mode input lock + the Accessibility
+    /// recovery flow that gates it. Extracted to `CleaningLockModel` (task-004), which
+    /// composes `AccessibilityRecoveryModel` and bridges its changes internally. UI
+    /// observes `lock` directly at the point of use (`ActionsTab`, `LockOverlayView`,
+    /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `token`/`ambient`.
+    let lock: CleaningLockModel
 
     /// Newest version announced by the appcast when it is more recent than the
     /// installed build, or `nil` when the app is up to date. Fed by a passive
     /// Sparkle probe (no dialog) via `setAvailableUpdateVersion(_:)`.
     @Published private(set) var availableUpdateVersion: String?
-
-    /// Live Accessibility (AX) permission gate for the cleaning lock.
-    /// Refreshed on each popover show so a grant made in System Settings is
-    /// reflected without relaunching the app.
-    @Published private(set) var isAccessibilityGranted: Bool = false
-
-    /// True when AX is not currently granted but a *previous* app version had
-    /// it — i.e. an update reset the permission (ad-hoc signing, TD-010). The UI
-    /// uses this to tell the user the stale System Settings entry must be removed
-    /// and re-added, not merely toggled.
-    @Published private(set) var accessibilityResetByUpdate: Bool = false
-
-    /// Where the self-healing recovery flow is. Drives the popover's recovery card
-    /// (awaiting vs applying) and gates the probe poll loop: probing happens only
-    /// while `.awaitingGrant`.
-    @Published private(set) var recoveryPhase: AccessibilityRecoveryPhase = .idle
 
     /// Tracks if the popover is currently open. Used to lazy-load PopoverView content
     /// and completely bypass SwiftUI view graph updates when the popover is closed.
@@ -106,28 +81,28 @@ final class CPUState: ObservableObject {
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
     var onPopoverOpenChange: ((Bool) -> Void)?
-    /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
-    var onStartLock: ((TimeInterval) -> Void)?
     /// Called when the user requests a manual update check; AppDelegate forwards to the updater.
     var onCheckForUpdates: (() -> Void)?
-    /// Called when the user asks to relaunch after granting Accessibility; AppDelegate owns the relaunch.
-    var onRelaunch: (() -> Void)?
-    /// Asks the UI to open the popover programmatically (for the one-time post-update
-    /// nudge). AppDelegate wires this to `StatusItemController.openPopover()`.
-    var onRequestOpenPopover: (() -> Void)?
     /// Fires when the ambient theme settings change so AppDelegate can start/stop the
     /// ambient sampler in step with the opt-in flag.
     var onAmbientThemeSettingsChange: ((AmbientThemeSettings) -> Void)?
 
+    /// `AppDelegate` wires these against `CPUState` directly; forwarded to `lock`/
+    /// `lock.recovery` so the wiring call sites need no change.
+    var onStartLock: ((TimeInterval) -> Void)? {
+        get { lock.onStartLock }
+        set { lock.onStartLock = newValue }
+    }
+    var onRelaunch: (() -> Void)? {
+        get { lock.recovery.onRelaunch }
+        set { lock.recovery.onRelaunch = newValue }
+    }
+    var onRequestOpenPopover: (() -> Void)? {
+        get { lock.recovery.onRequestOpenPopover }
+        set { lock.recovery.onRequestOpenPopover = newValue }
+    }
+
     private let userDefaults: UserDefaults
-    private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
-    private let accessibilityProbe: AccessibilityProbing
-    private let currentAppVersion: String
-    private var grantTracker: AccessibilityGrantTracker
-    /// One-time auto-open nudge persistence (fires once per reset event).
-    private var nudgeTracker: AccessibilityNudgeTracker
-    /// Active only while `recoveryPhase == .awaitingGrant`; spawns a probe each tick.
-    private var recoveryPollTimer: Timer?
     private let processReader: ProcessReading
     /// Runs the all-PID process enumeration off the main thread (PERF-01). The reader's mutable
     /// state (its PID→name cache) is touched only inside the executor; `previousProcessSnapshot`
@@ -135,19 +110,6 @@ final class CPUState: ObservableObject {
     private let samplingExecutor: SamplingExecutor
     private var previousProcessSnapshot: ProcessCPUSnapshot?
     private var processSamplingTimer: Timer?
-    /// Probe cadence during recovery. Slow enough to stay cheap (a process spawn per
-    /// tick), fast enough that re-adding the entry is noticed promptly.
-    private let recoveryPollInterval: TimeInterval = 1.5
-    /// True once the native AX prompt has been shown this session. macOS only
-    /// surfaces that prompt once per launch, so later taps fall back to opening
-    /// the Settings pane directly instead of doing nothing.
-    private var hasPromptedForAccess = false
-    /// Snapshot of the tracker as it was *before this launch* recorded the
-    /// current version. Reset detection is computed against this frozen baseline
-    /// so the flag stays stable across in-session refreshes — once the current
-    /// version is recorded as "seen", the live tracker would no longer report a
-    /// reset, but the user still needs the recovery guidance until they grant.
-    private let resetBaselineTracker: AccessibilityGrantTracker
     /// One-shot battery reader used to refresh the popover row on open, so the popover
     /// shows live battery data like every other metric even while the menu-bar segment
     /// is hidden and the continuous sampler is gated off (ADR-003). Returns nil on Macs
@@ -172,21 +134,19 @@ final class CPUState: ObservableObject {
             userDefaults: userDefaults,
             systemAppearance: systemAppearance ?? SystemAppearanceController()
         )
-        self.accessibilityAuthorization = accessibilityAuthorization
         // `SystemAccessibilityProbe` is `@MainActor`, so it cannot be a default
         // argument (those are evaluated in a nonisolated context); build it here in
         // the main-actor init instead. Tests inject a `FakeAccessibilityProbe`.
-        self.accessibilityProbe = accessibilityProbe ?? SystemAccessibilityProbe()
-        self.currentAppVersion = currentAppVersion
-        let loadedTracker = AccessibilityGrantTracker.load(from: userDefaults)
-        grantTracker = loadedTracker
-        resetBaselineTracker = loadedTracker
-        nudgeTracker = AccessibilityNudgeTracker.load(from: userDefaults)
+        lock = CleaningLockModel(
+            userDefaults: userDefaults,
+            accessibilityAuthorization: accessibilityAuthorization,
+            accessibilityProbe: accessibilityProbe ?? SystemAccessibilityProbe(),
+            currentAppVersion: currentAppVersion
+        )
         visibility = MetricVisibilitySettings.load(from: userDefaults)
         let loadedDisplay = MetricDisplaySettings.resolved(from: userDefaults)
         display = loadedDisplay
         updateRate = loadedDisplay.updateRate
-        cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
 
         token = TokenUsageModel(
             userDefaults: userDefaults,
@@ -198,13 +158,10 @@ final class CPUState: ObservableObject {
                 weeklyBudget: loadedDisplay.tokenWeeklyBudget
             )
         )
-
-        evaluateAccessibility()
     }
 
     deinit {
-        // No leaked timers if the state is torn down mid-recovery or popover-open.
-        recoveryPollTimer?.invalidate()
+        // No leaked timers if the state is torn down mid-popover-open.
         processSamplingTimer?.invalidate()
     }
 
@@ -704,145 +661,45 @@ final class CPUState: ObservableObject {
         }
     }
 
-    // MARK: - Cleaning lock
+    // MARK: - Cleaning lock + Accessibility recovery (forwards to `CleaningLockModel`, task-004)
 
-    /// Persists the selected duration and updates the in-memory setting.
+    /// Lower-frequency read/write shims for non-reactive call sites (`StatusItemController`,
+    /// `AppDelegate`). UI that needs live reactivity observes `lock` directly instead.
     func selectLockDuration(_ duration: TimeInterval) {
-        guard CleaningLockSettings.presets.contains(duration) else { return }
-        cleaningLockSettings.selectedDuration = duration
-        cleaningLockSettings.save(to: userDefaults)
+        lock.selectDuration(duration)
     }
 
-    /// Fires `onStartLock` with the currently selected duration.
-    /// AppDelegate owns the lock service and responds to this callback.
     func startCleaningLock() {
-        onStartLock?(cleaningLockSettings.selectedDuration)
+        lock.start()
     }
 
-    /// Re-reads the live Accessibility permission and republishes it so the
-    /// cleaning-lock UI reflects a grant made in System Settings without an
-    /// app relaunch. Called whenever the popover is shown.
     func refreshAccessibilityAuthorization() {
-        evaluateAccessibility()
+        lock.recovery.refreshAuthorization()
     }
 
-    /// User-initiated request for the Accessibility grant. The first tap shows
-    /// the native macOS prompt (which registers the entry under the running
-    /// build's identity); later taps open the Settings pane directly, since the
-    /// system prompt only appears once per launch.
     func requestAccessibilityAccess() {
-        if hasPromptedForAccess {
-            accessibilityAuthorization.openSettings()
-        } else {
-            hasPromptedForAccess = true
-            accessibilityAuthorization.promptForAccess()
-            accessibilityAuthorization.openSettings()
-        }
+        lock.recovery.requestAccess()
     }
 
-    // MARK: - Self-healing recovery
-
-    /// Starts active recovery: opens the Accessibility pane and begins polling a
-    /// fresh child-process probe for the *current* code identity's grant (the
-    /// in-process `AXIsProcessTrusted()` stays stale, ADR-002). On the first trusted
-    /// result the app relaunches to apply the grant.
     func beginAccessibilityRecovery() {
-        guard recoveryPhase == .idle else { return }
-        recoveryPhase = .awaitingGrant
-        // Reuses the request path: the first call shows the native prompt, which
-        // registers the entry under the *running build's* identity (avoiding the
-        // stale-entry trap), and opens the Accessibility pane. Later calls just
-        // open Settings. The probe loop then watches for the re-added grant.
-        requestAccessibilityAccess()
-        startRecoveryPolling()
+        lock.recovery.beginRecovery()
     }
 
-    /// Stops active recovery (e.g. the popover was dismissed before a grant) and
-    /// tears down the poll loop, returning to `.idle`.
     func cancelAccessibilityRecovery() {
-        guard recoveryPhase == .awaitingGrant else { return }
-        stopRecoveryPolling()
-        recoveryPhase = .idle
+        lock.recovery.cancelRecovery()
     }
 
-    /// One poll tick: spawn a fresh probe and apply its result. Internal (not
-    /// private) so the unit tests can drive ticks deterministically, the same way
-    /// `FakeInputLockService.tick()` drives the lock tests. A no-op outside active
-    /// recovery, so a late timer fire after cancel cannot spawn a probe.
     func pollAccessibilityRecovery() {
-        guard recoveryPhase == .awaitingGrant else { return }
-        accessibilityProbe.probe { [weak self] trusted in
-            self?.handleProbeResult(trusted)
-        }
+        lock.recovery.pollRecovery()
     }
 
-    /// One-time launch decision: when an update reset the grant and the proactive
-    /// nudge has not yet fired for this version, ask the UI to open the recovery
-    /// card once, recording the nudge so it never repeats for this version (ADR-003).
     func evaluateAccessibilityLaunchNudge() {
-        guard !isAccessibilityGranted else { return }
-        guard accessibilityResetByUpdate else { return }
-        guard nudgeTracker.shouldNudge(forVersion: currentAppVersion) else { return }
-        nudgeTracker = nudgeTracker.recordingNudge(version: currentAppVersion)
-        nudgeTracker.save(to: userDefaults)
-        onRequestOpenPopover?()
-    }
-
-    private func handleProbeResult(_ trusted: Bool) {
-        // Ignore a result that lands after cancel or after applying already began —
-        // relaunch fires at most once, only during active recovery.
-        guard recoveryPhase == .awaitingGrant, trusted else { return }
-        recoveryPhase = .applying
-        stopRecoveryPolling()
-        onRelaunch?()
-    }
-
-    private func startRecoveryPolling() {
-        stopRecoveryPolling()
-        recoveryPollTimer = MainRunLoopTimer.repeating(every: recoveryPollInterval) { [weak self] in
-            self?.pollAccessibilityRecovery()
-        }
-    }
-
-    private func stopRecoveryPolling() {
-        recoveryPollTimer?.invalidate()
-        recoveryPollTimer = nil
-    }
-
-    /// Reads the live AX permission, publishes the gate, and maintains the
-    /// grant tracker so an update-reset state can be told apart from a normal
-    /// first-time grant. When trusted, records the current version as the last
-    /// granted one; when not, flags whether an earlier version had been granted.
-    private func evaluateAccessibility() {
-        let trusted = accessibilityAuthorization.isTrusted
-        isAccessibilityGranted = trusted
-
-        if trusted {
-            accessibilityResetByUpdate = false
-            if grantTracker.lastGrantedVersion != currentAppVersion {
-                grantTracker = grantTracker.recordingGrant(version: currentAppVersion)
-                grantTracker.save(to: userDefaults)
-            }
-        } else {
-            // Compare against the pre-launch baseline so the flag does not flip
-            // off once this version is recorded as seen below.
-            accessibilityResetByUpdate = resetBaselineTracker.wasResetByUpdate(
-                isTrusted: false,
-                currentVersion: currentAppVersion
-            )
-            // Remember that this build ran (even ungranted), so a *future*
-            // update can be recognised as a reset for never-granted users too.
-            if grantTracker.lastSeenVersion != currentAppVersion {
-                grantTracker = grantTracker.recordingSeen(version: currentAppVersion)
-                grantTracker.save(to: userDefaults)
-            }
-        }
+        lock.recovery.evaluateLaunchNudge()
     }
 
     /// Called by AppDelegate each tick and on session end to keep the UI in sync.
     func updateLockState(phase: LockPhase, remaining: TimeInterval) {
-        lockPhase = phase
-        lockRemaining = remaining
+        lock.updateState(phase: phase, remaining: remaining)
     }
 
     // MARK: - Update

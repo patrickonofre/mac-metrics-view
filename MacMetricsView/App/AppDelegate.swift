@@ -186,7 +186,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         lockService.start(duration: duration)
         let controller = LockOverlayController()
         overlayController = controller
-        controller.show(state: state)
+        controller.show(lock: state.lock)
     }
 
     private func endLockSession(reason: LockEndReason) {

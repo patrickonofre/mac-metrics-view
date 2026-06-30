@@ -13,6 +13,11 @@ struct PopoverView: View {
     /// AppKit-imperative refresh path (unlike the menu bar), so it must react to
     /// `AmbientThemeModel`'s own publisher directly to stay live within an open popover.
     @ObservedObject var ambient: AmbientThemeModel
+    /// Observed separately from `state` (task-004): the recovery banner and the 1Hz
+    /// lock countdown have no AppKit-imperative refresh path either, so this view reacts
+    /// to `CleaningLockModel`'s own publisher directly (which itself bridges its nested
+    /// `AccessibilityRecoveryModel` — see the comment on `CleaningLockModel`).
+    @ObservedObject var lock: CleaningLockModel
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
     let dismissPopover: () -> Void
     let quit: () -> Void
@@ -44,8 +49,8 @@ struct PopoverView: View {
                     }
                 }
 
-                if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: state.isAccessibilityGranted) {
-                    RecoveryBanner(wasResetByUpdate: state.accessibilityResetByUpdate)
+                if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: lock.recovery.isGranted) {
+                    RecoveryBanner(wasResetByUpdate: lock.recovery.resetByUpdate)
                 }
 
                 let ambientBanner = AmbientSuggestionPresentation.bannerState(
@@ -73,7 +78,7 @@ struct PopoverView: View {
             .padding(.vertical, 12)
             .frame(width: popoverWidth, alignment: .topLeading)
             .onAppear {
-                state.refreshAccessibilityAuthorization()
+                lock.recovery.refreshAuthorization()
                 // Time-derived token figures (burn rate, rolling windows) refresh on a
                 // ~30s timer only while the popover is open (ADR-005).
                 state.beginTokenAutoRefresh()
@@ -82,7 +87,7 @@ struct PopoverView: View {
             .onDisappear {
                 // If the popover is dismissed mid-recovery, stop the probe poll loop.
                 // No-op unless we were awaiting a grant.
-                state.cancelAccessibilityRecovery()
+                lock.recovery.cancelRecovery()
                 state.endTokenAutoRefresh()
                 state.endProcessSampling()
             }
@@ -132,8 +137,7 @@ struct PopoverView: View {
         case .actions:
             ActionsTab(
                 state: state,
-                isAccessibilityGranted: state.isAccessibilityGranted,
-                wasResetByUpdate: state.accessibilityResetByUpdate,
+                lock: lock,
                 dismissPopover: dismissPopover
             )
         }

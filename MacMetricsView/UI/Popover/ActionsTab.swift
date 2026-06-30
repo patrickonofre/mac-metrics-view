@@ -5,18 +5,15 @@ import SwiftUI
 /// relocated verbatim from `PopoverView.swift` (task_06); no settings live here.
 struct ActionsTab: View {
     @ObservedObject var state: CPUState
-    let isAccessibilityGranted: Bool
-    let wasResetByUpdate: Bool
+    @ObservedObject var lock: CleaningLockModel
     let dismissPopover: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             CleaningLockSection(
-                state: state,
-                isAccessibilityGranted: isAccessibilityGranted,
-                wasResetByUpdate: wasResetByUpdate,
+                lock: lock,
                 onStart: {
-                    state.startCleaningLock()
+                    lock.start()
                     dismissPopover()
                 }
             )
@@ -54,9 +51,7 @@ struct UpdatesControl: View {
 /// Relocated from `PopoverView.swift` (task_06). The card-state/guidance machine is
 /// already factored through `CleaningRecoveryPresentation`, so no logic moves.
 struct CleaningLockSection: View {
-    @ObservedObject var state: CPUState
-    let isAccessibilityGranted: Bool
-    let wasResetByUpdate: Bool
+    @ObservedObject var lock: CleaningLockModel
     let onStart: () -> Void
 
     private static let presetLabels: [(TimeInterval, String)] = [
@@ -69,8 +64,8 @@ struct CleaningLockSection: View {
 
     private var durationBinding: Binding<TimeInterval> {
         Binding<TimeInterval>(
-            get: { state.cleaningLockSettings.selectedDuration },
-            set: { state.selectLockDuration($0) }
+            get: { lock.settings.selectedDuration },
+            set: { lock.selectDuration($0) }
         )
     }
 
@@ -81,8 +76,8 @@ struct CleaningLockSection: View {
                 .foregroundStyle(.primary)
 
             switch CleaningRecoveryPresentation.cardState(
-                isAccessibilityGranted: isAccessibilityGranted,
-                recoveryPhase: state.recoveryPhase
+                isAccessibilityGranted: lock.recovery.isGranted,
+                recoveryPhase: lock.recovery.phase
             ) {
             case .granted:
                 grantedControls
@@ -113,7 +108,7 @@ struct CleaningLockSection: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
-            .disabled(state.lockPhase == .locked)
+            .disabled(lock.phase == .locked)
         }
     }
 
@@ -139,18 +134,18 @@ struct CleaningLockSection: View {
                     .foregroundStyle(.secondary)
                 Spacer()
                 Button(Strings.cleaningOpenAccessibility()) {
-                    state.beginAccessibilityRecovery()
+                    lock.recovery.beginRecovery()
                 }
                 .buttonStyle(.borderless)
                 .foregroundStyle(Color.accentColor)
             }
 
-            Text(CleaningRecoveryPresentation.guidance(wasResetByUpdate: wasResetByUpdate)())
+            Text(CleaningRecoveryPresentation.guidance(wasResetByUpdate: lock.recovery.resetByUpdate)())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
-            if state.recoveryPhase == .awaitingGrant {
+            if lock.recovery.phase == .awaitingGrant {
                 HStack(spacing: 6) {
                     ProgressView()
                         .controlSize(.small)
