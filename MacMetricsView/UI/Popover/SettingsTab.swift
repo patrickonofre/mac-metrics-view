@@ -6,56 +6,59 @@ import SwiftUI
 /// (task_05); no cleaning/update actions live here (those are in `ActionsTab`).
 struct SettingsTab: View {
     @ObservedObject var state: CPUState
+    /// Observed separately from `state` (task-005): the controls below are the data
+    /// `metrics` owns, so this tab reads/writes it at the point of use.
+    @ObservedObject var metrics: SystemMetricsModel
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             MetricVisibilityControls(
                 cpuVisible: Binding(
-                    get: { state.visibility.showCPU },
-                    set: { state.setCPUVisible($0) }
+                    get: { metrics.visibility.showCPU },
+                    set: { metrics.setCPUVisible($0) }
                 ),
                 ramVisible: Binding(
-                    get: { state.visibility.showRAM },
-                    set: { state.setRAMVisible($0) }
+                    get: { metrics.visibility.showRAM },
+                    set: { metrics.setRAMVisible($0) }
                 ),
                 networkVisible: Binding(
-                    get: { state.visibility.showNetwork },
-                    set: { state.setNetworkVisible($0) }
+                    get: { metrics.visibility.showNetwork },
+                    set: { metrics.setNetworkVisible($0) }
                 ),
                 temperatureVisible: Binding(
-                    get: { state.visibility.showTemperature },
-                    set: { state.setTemperatureVisible($0) }
+                    get: { metrics.visibility.showTemperature },
+                    set: { metrics.setTemperatureVisible($0) }
                 ),
                 diskVisible: Binding(
-                    get: { state.visibility.showDisk },
-                    set: { state.setDiskVisible($0) }
+                    get: { metrics.visibility.showDisk },
+                    set: { metrics.setDiskVisible($0) }
                 ),
                 batteryVisible: Binding(
-                    get: { state.visibility.showBattery },
-                    set: { state.setBatteryVisible($0) }
+                    get: { metrics.visibility.showBattery },
+                    set: { metrics.setBatteryVisible($0) }
                 ),
                 identifierStyle: Binding(
-                    get: { state.display.identifierStyle },
-                    set: { state.setMetricIdentifierStyle($0) }
+                    get: { metrics.display.identifierStyle },
+                    set: { metrics.setMetricIdentifierStyle($0) }
                 ),
                 ramMenuBarMetric: Binding(
-                    get: { state.display.ramMenuBarMetric },
-                    set: { state.setRAMMenuBarMetric($0) }
+                    get: { metrics.display.ramMenuBarMetric },
+                    set: { metrics.setRAMMenuBarMetric($0) }
                 ),
                 diskMenuBarMetric: Binding(
-                    get: { state.display.diskMenuBarMetric },
-                    set: { state.setDiskMenuBarMetric($0) }
+                    get: { metrics.display.diskMenuBarMetric },
+                    set: { metrics.setDiskMenuBarMetric($0) }
                 ),
                 updateRate: Binding(
-                    get: { state.updateRate },
-                    set: { state.setUpdateRate($0) }
+                    get: { metrics.updateRate },
+                    set: { metrics.setUpdateRate($0) }
                 )
             )
 
             Divider()
 
-            TokenControls(state: state)
+            TokenControls(state: state, metrics: metrics)
 
             Divider()
 
@@ -77,6 +80,8 @@ struct SettingsTab: View {
 /// Relocated from `PopoverView.swift` (task_05).
 struct TokenControls: View {
     @ObservedObject var state: CPUState
+    /// Only for the menu-bar visibility toggle below, which lives in `metrics` (task-005).
+    @ObservedObject var metrics: SystemMetricsModel
 
     @State private var showHelp = false
 
@@ -100,13 +105,13 @@ struct TokenControls: View {
                 .frame(width: 88, alignment: .leading)
 
                 Toggle(Strings.tokens(), isOn: Binding(
-                    get: { state.visibility.showTokens },
-                    set: { state.setTokenVisible($0) }
+                    get: { metrics.visibility.showTokens },
+                    set: { metrics.setTokenVisible($0) }
                 ))
                 .labelsHidden()
                 .toggleStyle(.switch)
 
-                if let models = state.tokenActiveModels {
+                if let models = state.token.activeModels {
                     Text(models)
                         .font(.caption2)
                         .foregroundStyle(.tertiary)

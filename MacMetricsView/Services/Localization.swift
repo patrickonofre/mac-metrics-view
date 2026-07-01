@@ -49,6 +49,7 @@ enum Strings {
     static let cardCollapse = LocalizedText(en: "Collapse", pt: "Recolher")
     static let temperature = LocalizedText(en: "Temperature", pt: "Temperatura")
     static let disk = LocalizedText(en: "Disk", pt: "Disco")
+    static let gpu = LocalizedText(en: "GPU", pt: "GPU")
 
     // Battery
     static let battery = LocalizedText(en: "Battery", pt: "Bateria")

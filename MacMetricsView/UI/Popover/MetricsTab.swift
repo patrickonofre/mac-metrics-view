@@ -53,7 +53,13 @@ enum MetricGridLayout {
 /// columns when their kind is in the bound `expandedCards` set (ADR-004); expansion
 /// state is ephemeral and owned by the shell (ADR-002). Read-only — no settings here.
 struct MetricsTab: View {
-    @ObservedObject var state: CPUState
+    /// This is the data the grid actually renders, so MetricsTab reads it at the point
+    /// of use (task-005) — no `CPUState` reference needed here at all.
+    @ObservedObject var metrics: SystemMetricsModel
+    /// Observed separately (task-002): the Dev/AI pillar's popover-open 30s refresh
+    /// (ADR-005) mutates only this object, so isolating the observation here keeps that
+    /// tick from re-rendering the rest of the metrics grid.
+    @ObservedObject var token: TokenUsageModel
     @Binding var expandedCards: Set<MetricCardKind>
 
     private var layoutRows: [[MetricCardKind]] {
@@ -91,27 +97,38 @@ struct MetricsTab: View {
                 kind: .cpu,
                 symbol: "cpu",
                 title: "CPU",
-                value: CPUFormatter.percentageString(state.latestSample?.totalUsagePercent),
-                sparkline: state.history.samples.map(\.totalUsagePercent),
-                severity: state.menuBarTextStyle,
+                value: CPUFormatter.percentageString(metrics.latestSample?.totalUsagePercent),
+                sparkline: metrics.history.samples.map(\.totalUsagePercent),
+                severity: metrics.menuBarTextStyle,
                 isExpanded: expansionBinding(for: .cpu)
             ) {
                 cpuDetail
             }
+
+        case .gpu:
+            MetricCard(
+                kind: .gpu,
+                symbol: "square.stack.3d.up",
+                title: Strings.gpu(),
+                value: metrics.gpuCardValue,
+                sparkline: metrics.gpuHistory.samples.map(\.utilizationPercent),
+                severity: metrics.gpuMenuBarTextStyle,
+                isExpanded: expansionBinding(for: .gpu)
+            ) { EmptyView() }
 
         case .ram:
             MetricCard(
                 kind: .ram,
                 symbol: "memorychip",
                 title: "RAM",
-                value: state.ramCardValue,
+                value: metrics.ramCardValue,
                 sparkline: MetricTrend.ramSeries(
-                    metric: state.ramMenuBarMetric,
-                    pressure: state.ramHistory.samples.map(\.pressurePercent),
-                    appMemory: state.ramHistory.samples.map(\.appMemoryPercent),
-                    usedTotal: state.ramHistory.samples.map(\.usedPercent)
+                    metric: metrics.ramMenuBarMetric,
+                    pressure: metrics.ramHistory.samples.map(\.pressurePercent),
+                    appMemory: metrics.ramHistory.samples.map(\.appMemoryPercent),
+                    usedTotal: metrics.ramHistory.samples.map(\.usedPercent)
                 ),
-                severity: state.ramMenuBarTextStyle,
+                severity: metrics.ramMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .ram)
             ) {
                 ramDetail
@@ -123,7 +140,7 @@ struct MetricsTab: View {
                 symbol: "network",
                 title: Strings.network(),
                 value: networkSummary,
-                sparkline: MetricTrend.normalized(state.networkHistory.samples.map(\.totalBytesPerSecond)),
+                sparkline: MetricTrend.normalized(metrics.networkHistory.samples.map(\.totalBytesPerSecond)),
                 severity: .normal,
                 isExpanded: expansionBinding(for: .network)
             ) {
@@ -135,9 +152,9 @@ struct MetricsTab: View {
                 kind: .temperature,
                 symbol: "thermometer",
                 title: Strings.temperature(),
-                value: TemperatureFormatter.displayString(for: state.latestTemperatureSample),
-                sparkline: state.temperatureHistory.samples.map(\.trendValue),
-                severity: state.temperatureMenuBarTextStyle,
+                value: TemperatureFormatter.displayString(for: metrics.latestTemperatureSample),
+                sparkline: metrics.temperatureHistory.samples.map(\.trendValue),
+                severity: metrics.temperatureMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .temperature)
             ) { EmptyView() }
 
@@ -147,12 +164,12 @@ struct MetricsTab: View {
                 symbol: "internaldrive",
                 title: Strings.disk(),
                 value: DiskFormatter.menuBarTitle(
-                    for: state.latestDiskSample,
-                    metric: state.diskMenuBarMetric,
+                    for: metrics.latestDiskSample,
+                    metric: metrics.diskMenuBarMetric,
                     showLabel: false
                 ),
-                sparkline: MetricTrend.normalized(state.diskHistory.samples.map(\.totalBytesPerSecond)),
-                severity: state.diskMenuBarTextStyle,
+                sparkline: MetricTrend.normalized(metrics.diskHistory.samples.map(\.totalBytesPerSecond)),
+                severity: metrics.diskMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .disk)
             ) {
                 diskDetail
@@ -161,11 +178,11 @@ struct MetricsTab: View {
         case .battery:
             MetricCard(
                 kind: .battery,
-                symbol: state.batterySymbolName,
+                symbol: metrics.batterySymbolName,
                 title: Strings.battery(),
-                value: state.batteryRowValue,
+                value: metrics.batteryRowValue,
                 sparkline: [],
-                severity: state.batteryMenuBarTextStyle,
+                severity: metrics.batteryMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .battery)
             ) {
                 batteryDetail
@@ -176,8 +193,8 @@ struct MetricsTab: View {
                 kind: .tokens,
                 symbol: "number",
                 title: Strings.tokens(),
-                value: state.tokenRowValue,
-                sparkline: state.tokenSparkline,
+                value: token.rowValue,
+                sparkline: token.sparkline,
                 severity: .normal,
                 isExpanded: expansionBinding(for: .tokens)
             ) {
@@ -190,60 +207,60 @@ struct MetricsTab: View {
 
     @ViewBuilder
     private var cpuDetail: some View {
-        if state.topCPUProcesses.isEmpty {
+        if metrics.topCPUProcesses.isEmpty {
             Text(Strings.cpuSampling())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            TopProcessRow(processes: state.topCPUProcesses)
+            TopProcessRow(processes: metrics.topCPUProcesses)
         }
     }
 
     @ViewBuilder
     private var ramDetail: some View {
-        if state.ramDetailRows.isEmpty {
+        if metrics.ramDetailRows.isEmpty {
             Text(Strings.cpuSampling())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            RAMDetailRow(details: state.ramDetailRows)
+            RAMDetailRow(details: metrics.ramDetailRows)
         }
     }
 
     @ViewBuilder
     private var batteryDetail: some View {
-        if state.batteryDetailRows.isEmpty {
+        if metrics.batteryDetailRows.isEmpty {
             Text(Strings.batteryNoBattery())
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
         } else {
-            BatteryDetailRow(details: state.batteryDetailRows)
+            BatteryDetailRow(details: metrics.batteryDetailRows)
         }
     }
 
     @ViewBuilder
     private var tokenDetail: some View {
         VStack(alignment: .leading, spacing: 4) {
-            if state.tokenIsEmpty {
+            if token.isEmpty {
                 Text(Strings.tokenEmptyState())
                     .font(.caption2)
                     .foregroundStyle(.secondary)
             } else {
-                TokenBreakdownRow(breakdown: state.tokenBreakdown)
+                TokenBreakdownRow(breakdown: token.breakdown)
             }
 
-            if let totalCost = state.tokenCostRowValue {
+            if let totalCost = token.costRowValue {
                 TokenCostRow(
                     total: totalCost,
-                    perModel: state.tokenCostPerModel,
-                    showsUnpricedNote: state.tokenCostHasUnpricedTokens
+                    perModel: token.costPerModel,
+                    showsUnpricedNote: token.costHasUnpricedTokens
                 )
             }
 
-            if let pace = state.tokenPaceRowValue {
+            if let pace = token.paceRowValue {
                 TokenPaceRow(value: pace)
             }
         }
@@ -252,16 +269,16 @@ struct MetricsTab: View {
 
     @ViewBuilder
     private var networkDetail: some View {
-        NetworkDetailRow(details: state.networkDetailRows)
+        NetworkDetailRow(details: metrics.networkDetailRows)
     }
 
     @ViewBuilder
     private var diskDetail: some View {
-        DiskDetailRow(details: state.diskDetailRows)
+        DiskDetailRow(details: metrics.diskDetailRows)
     }
 
     private var networkSummary: String {
-        "↓ \(NetworkFormatter.byteRateString(state.latestNetworkSample?.downloadBytesPerSecond)) ↑ \(NetworkFormatter.byteRateString(state.latestNetworkSample?.uploadBytesPerSecond))"
+        "↓ \(NetworkFormatter.byteRateString(metrics.latestNetworkSample?.downloadBytesPerSecond)) ↑ \(NetworkFormatter.byteRateString(metrics.latestNetworkSample?.uploadBytesPerSecond))"
     }
 }
 

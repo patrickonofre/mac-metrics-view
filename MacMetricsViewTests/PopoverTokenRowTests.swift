@@ -47,7 +47,7 @@ final class PopoverTokenRowTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 1_000, output: 2_000, cacheRead: 1_500, cacheCreation: 1_500)])
 
-        let rows = state.tokenBreakdown
+        let rows = state.token.breakdown
         XCTAssertEqual(rows.map(\.label), [Strings.tokenInput(), Strings.tokenOutput(), Strings.tokenCache()])
         XCTAssertEqual(rows.map(\.value), ["1.0k", "2.0k", "3.0k"])   // cache = read + creation
     }
@@ -56,8 +56,8 @@ final class PopoverTokenRowTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 12_300)])
 
-        XCTAssertFalse(state.tokenIsEmpty)
-        XCTAssertEqual(state.tokenRowValue, "12.3k")
+        XCTAssertFalse(state.token.isEmpty)
+        XCTAssertEqual(state.token.rowValue, "12.3k")
     }
 
     func testRowValueExcludesCacheButBreakdownKeepsIt() {
@@ -65,18 +65,18 @@ final class PopoverTokenRowTests: XCTestCase {
         state.update(with: [event(input: 1_000, output: 2_000, cacheRead: 5_000, cacheCreation: 5_000)])
 
         // Headline = input + output only.
-        XCTAssertEqual(state.tokenRowValue, "3.0k")
+        XCTAssertEqual(state.token.rowValue, "3.0k")
         // Popover breakdown still shows the cache total (read + creation = 10k).
-        XCTAssertEqual(state.tokenBreakdown.map(\.value), ["1.0k", "2.0k", "10.0k"])
+        XCTAssertEqual(state.token.breakdown.map(\.value), ["1.0k", "2.0k", "10.0k"])
     }
 
     func testRowValueShowsLocalizedEmptyStateWhenNoData() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        XCTAssertTrue(state.tokenIsEmpty)
-        XCTAssertEqual(state.tokenRowValue, Strings.tokenEmptyState())
-        XCTAssertNotEqual(state.tokenRowValue, "0")
-        XCTAssertTrue(state.tokenSparkline.isEmpty)   // no flat-line noise
+        XCTAssertTrue(state.token.isEmpty)
+        XCTAssertEqual(state.token.rowValue, Strings.tokenEmptyState())
+        XCTAssertNotEqual(state.token.rowValue, "0")
+        XCTAssertTrue(state.token.sparkline.isEmpty)   // no flat-line noise
     }
 
     func testSparklineIsNormalizedToPeak() {
@@ -86,7 +86,7 @@ final class PopoverTokenRowTests: XCTestCase {
             event(at: Date(), input: 400)
         ])
 
-        let sparkline = state.tokenSparkline
+        let sparkline = state.token.sparkline
         XCTAssertFalse(sparkline.isEmpty)
         XCTAssertEqual(sparkline.max(), 100)
     }
@@ -113,7 +113,7 @@ final class PopoverTokenRowTests: XCTestCase {
 
         state.setTokenMenuBarWindow(.last24h)
 
-        XCTAssertEqual(state.tokenAggregate.input, 60)
+        XCTAssertEqual(state.token.aggregate.input, 60)
         XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).tokenMenuBarWindow, .last24h)
     }
 
@@ -121,11 +121,11 @@ final class PopoverTokenRowTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 100)])
         state.setTokenMenuBarWindow(.sinceReset)
-        XCTAssertEqual(state.tokenAggregate.input, 100)
+        XCTAssertEqual(state.token.aggregate.input, 100)
 
         state.resetTokenCounter()
 
-        XCTAssertEqual(state.tokenAggregate.input, 0)
+        XCTAssertEqual(state.token.aggregate.input, 0)
     }
 
     // MARK: - Provider picker (task_09)
@@ -146,10 +146,10 @@ final class PopoverTokenRowTests: XCTestCase {
         state.update(provider: .codex, with: [codexEvent(input: 300, output: 100, reasoning: 200)])
 
         state.setTokenProvider(.codex)
-        XCTAssertTrue(state.tokenBreakdown.map(\.label).contains(Strings.tokenReasoning()))
+        XCTAssertTrue(state.token.breakdown.map(\.label).contains(Strings.tokenReasoning()))
 
         state.setTokenProvider(.claude)
-        XCTAssertFalse(state.tokenBreakdown.map(\.label).contains(Strings.tokenReasoning()))
+        XCTAssertFalse(state.token.breakdown.map(\.label).contains(Strings.tokenReasoning()))
     }
 
     func testRowContentFollowsSelectedProvider() {
@@ -158,12 +158,12 @@ final class PopoverTokenRowTests: XCTestCase {
         state.update(provider: .codex, with: [codexEvent(input: 3_000)])
 
         state.setTokenProvider(.claude)
-        XCTAssertEqual(state.tokenRowValue, "1.0k")
-        XCTAssertEqual(state.tokenActiveModels, "Opus 4.8")
+        XCTAssertEqual(state.token.rowValue, "1.0k")
+        XCTAssertEqual(state.token.activeModels, "Opus 4.8")
 
         state.setTokenProvider(.codex)
-        XCTAssertEqual(state.tokenRowValue, "3.0k")
-        XCTAssertEqual(state.tokenActiveModels, "GPT-5 Codex")
+        XCTAssertEqual(state.token.rowValue, "3.0k")
+        XCTAssertEqual(state.token.activeModels, "GPT-5 Codex")
     }
 
     func testEmptyStateShownForProviderWithNoLogs() {
@@ -172,9 +172,9 @@ final class PopoverTokenRowTests: XCTestCase {
 
         // Codex selected but no Codex logs → empty/zero state, not an error or stale Claude data.
         state.setTokenProvider(.codex)
-        XCTAssertTrue(state.tokenIsEmpty)
-        XCTAssertEqual(state.tokenRowValue, Strings.tokenEmptyState())
-        XCTAssertTrue(state.tokenSparkline.isEmpty)
+        XCTAssertTrue(state.token.isEmpty)
+        XCTAssertEqual(state.token.rowValue, Strings.tokenEmptyState())
+        XCTAssertTrue(state.token.sparkline.isEmpty)
     }
 
     // MARK: - Estimated cost row (Phase 1)
@@ -182,16 +182,16 @@ final class PopoverTokenRowTests: XCTestCase {
     func testCostRowValueNilWithoutEventsSoTheRowHides() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        XCTAssertNil(state.tokenCostRowValue)
-        XCTAssertTrue(state.tokenCostPerModel.isEmpty)
-        XCTAssertFalse(state.tokenCostHasUnpricedTokens)
+        XCTAssertNil(state.token.costRowValue)
+        XCTAssertTrue(state.token.costPerModel.isEmpty)
+        XCTAssertFalse(state.token.costHasUnpricedTokens)
     }
 
     func testCostRowValueFormatsTheBreakdownTotal() {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 1_000_000, output: 100_000)])   // $5 + $2.50
 
-        XCTAssertEqual(state.tokenCostRowValue, "$7.50")
+        XCTAssertEqual(state.token.costRowValue, "$7.50")
     }
 
     func testCostPerModelPairsFriendlyNamesWithFormattedValuesLargestFirst() {
@@ -199,7 +199,7 @@ final class PopoverTokenRowTests: XCTestCase {
         state.update(provider: .claude, with: [event(input: 1_000_000)])        // $5
         state.update(provider: .codex, with: [codexEvent(input: 1_000_000)])    // $1.25
 
-        let perModel = state.tokenCostPerModel
+        let perModel = state.token.costPerModel
         XCTAssertEqual(perModel.map { $0.label }, ["Opus 4.8", "GPT-5 Codex"])
         XCTAssertEqual(perModel.map { $0.value }, ["$5.00", "$1.25"])
     }
@@ -207,7 +207,7 @@ final class PopoverTokenRowTests: XCTestCase {
     func testUnpricedIndicatorConditionFollowsUnpricedTokens() {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 1_000_000)])
-        XCTAssertFalse(state.tokenCostHasUnpricedTokens)
+        XCTAssertFalse(state.token.costHasUnpricedTokens)
 
         state.update(with: [TokenUsageEvent(
             timestamp: Date(),
@@ -219,14 +219,14 @@ final class PopoverTokenRowTests: XCTestCase {
             sessionID: "s1.jsonl",
             projectDir: "p1"
         )])
-        XCTAssertTrue(state.tokenCostHasUnpricedTokens)
+        XCTAssertTrue(state.token.costHasUnpricedTokens)
     }
 
     func testSubCentUsageRendersTheSubCentForm() {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(input: 100)])   // 100 tokens × $5/MTok = $0.0005
 
-        XCTAssertEqual(state.tokenCostRowValue, "< $0.01")
+        XCTAssertEqual(state.token.costRowValue, "< $0.01")
     }
 
     // MARK: - Pace row (Phase 2)
@@ -234,8 +234,8 @@ final class PopoverTokenRowTests: XCTestCase {
     func testPaceRowValueNilWithoutBurnRateSoTheRowHides() {
         let state = CPUState(userDefaults: makeUserDefaults())
 
-        XCTAssertNil(state.tokenBurnRate)
-        XCTAssertNil(state.tokenPaceRowValue)
+        XCTAssertNil(state.token.burnRate)
+        XCTAssertNil(state.token.paceRowValue)
     }
 
     func testPaceRowValueMatchesFormatterOutputExactly() throws {
@@ -244,8 +244,8 @@ final class PopoverTokenRowTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         state.update(with: [event(at: Date().addingTimeInterval(-300), input: 1_000_000, output: 200_000)])
 
-        let breakdown = try XCTUnwrap(state.tokenBurnRate)
-        XCTAssertEqual(state.tokenPaceRowValue, TokenFormatter.burnRateString(breakdown))
+        let breakdown = try XCTUnwrap(state.token.burnRate)
+        XCTAssertEqual(state.token.paceRowValue, TokenFormatter.burnRateString(breakdown))
     }
 
     func testPaceLabelResolvesPerLanguage() {
@@ -259,13 +259,13 @@ final class PopoverTokenRowTests: XCTestCase {
         // Simulated appear: begin starts the refresh; ingest lands fresh data.
         state.beginTokenAutoRefresh()
         state.update(with: [event(input: 120_000)])
-        XCTAssertNotNil(state.tokenPaceRowValue)
+        XCTAssertNotNil(state.token.paceRowValue)
 
         // Simulated disappear: end kills the timer; a time-advanced tick no longer
         // fires, so the pace row keeps its last value instead of decaying.
         state.endTokenAutoRefresh()
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
-        XCTAssertNotNil(state.tokenPaceRowValue)
+        XCTAssertNotNil(state.token.paceRowValue)
     }
 
     func testPaceDecaysWhileOpenViaTick() {
@@ -276,17 +276,17 @@ final class PopoverTokenRowTests: XCTestCase {
 
         state.tokenAutoRefreshTick(now: Date().addingTimeInterval(61 * 60))
 
-        XCTAssertNil(state.tokenPaceRowValue)   // row hides once the hour empties
+        XCTAssertNil(state.token.paceRowValue)   // row hides once the hour empties
     }
 
     func testTokenRowDataSurvivesMenuBarVisibilityOff() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setTokenVisible(false)   // hidden from the menu bar
+        state.metrics.setTokenVisible(false)   // hidden from the menu bar
         state.update(with: [event(input: 100)])
 
         // The popover row binds to these regardless of menu-bar visibility.
-        XCTAssertFalse(state.tokenIsEmpty)
-        XCTAssertEqual(state.tokenRowValue, "100")
-        XCTAssertFalse(state.visibility.showTokens)
+        XCTAssertFalse(state.token.isEmpty)
+        XCTAssertEqual(state.token.rowValue, "100")
+        XCTAssertFalse(state.metrics.visibility.showTokens)
     }
 }

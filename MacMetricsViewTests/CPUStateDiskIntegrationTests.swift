@@ -18,32 +18,32 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults())
         // Disk defaults to hidden from the menu bar (ADR-005), but the popover still
         // shows it, so samples are recorded regardless of visibility.
-        state.update(with: makeSample())
+        state.metrics.update(with: makeSample())
 
-        XCTAssertEqual(state.latestDiskSample?.readBytesPerSecond, 1_000)
-        XCTAssertEqual(state.diskHistory.samples.count, 1)
+        XCTAssertEqual(state.metrics.latestDiskSample?.readBytesPerSecond, 1_000)
+        XCTAssertEqual(state.metrics.diskHistory.samples.count, 1)
     }
 
     func testUpdatePublishesAndAppendsWhileVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setDiskVisible(true)
+        state.metrics.setDiskVisible(true)
 
-        state.update(with: makeSample(read: 1_500, write: 250))
+        state.metrics.update(with: makeSample(read: 1_500, write: 250))
 
-        XCTAssertEqual(state.latestDiskSample?.readBytesPerSecond, 1_500)
-        XCTAssertEqual(state.latestDiskSample?.writeBytesPerSecond, 250)
-        XCTAssertEqual(state.diskHistory.samples.count, 1)
+        XCTAssertEqual(state.metrics.latestDiskSample?.readBytesPerSecond, 1_500)
+        XCTAssertEqual(state.metrics.latestDiskSample?.writeBytesPerSecond, 250)
+        XCTAssertEqual(state.metrics.diskHistory.samples.count, 1)
     }
 
     func testTogglingDiskMenuBarVisibilityKeepsSampleAndHistory() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.update(with: makeSample())
-        state.setDiskVisible(true)
-        state.setDiskVisible(false)
+        state.metrics.update(with: makeSample())
+        state.metrics.setDiskVisible(true)
+        state.metrics.setDiskVisible(false)
 
         // Visibility only curates the menu bar; the popover's data survives the toggle.
-        XCTAssertEqual(state.latestDiskSample?.readBytesPerSecond, 1_000)
-        XCTAssertEqual(state.diskHistory.samples.count, 1)
+        XCTAssertEqual(state.metrics.latestDiskSample?.readBytesPerSecond, 1_000)
+        XCTAssertEqual(state.metrics.diskHistory.samples.count, 1)
     }
 
     func testDiskSessionTotalsAccumulateFromConsecutiveSampleGaps() {
@@ -51,14 +51,14 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         let t0 = Date(timeIntervalSince1970: 1_000)
 
         // First sample is the baseline — no previous timestamp, so it adds nothing.
-        state.update(with: DiskSample(timestamp: t0, readBytesPerSecond: 1_000, writeBytesPerSecond: 500))
-        XCTAssertEqual(state.diskSessionTotals.inbound, 0)
-        XCTAssertEqual(state.diskSessionTotals.outbound, 0)
+        state.metrics.update(with: DiskSample(timestamp: t0, readBytesPerSecond: 1_000, writeBytesPerSecond: 500))
+        XCTAssertEqual(state.metrics.diskSessionTotals.inbound, 0)
+        XCTAssertEqual(state.metrics.diskSessionTotals.outbound, 0)
 
         // Second sample 2 s later: rate × elapsed folds into the running total.
-        state.update(with: DiskSample(timestamp: t0.addingTimeInterval(2), readBytesPerSecond: 1_500, writeBytesPerSecond: 250))
-        XCTAssertEqual(state.diskSessionTotals.inbound, 3_000)
-        XCTAssertEqual(state.diskSessionTotals.outbound, 500)
+        state.metrics.update(with: DiskSample(timestamp: t0.addingTimeInterval(2), readBytesPerSecond: 1_500, writeBytesPerSecond: 250))
+        XCTAssertEqual(state.metrics.diskSessionTotals.inbound, 3_000)
+        XCTAssertEqual(state.metrics.diskSessionTotals.outbound, 500)
     }
 
     func testSetDiskMenuBarMetricUpdatesDisplayAndFiresCallbackAndPersists() {
@@ -67,52 +67,52 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         var displayChangeCount = 0
         state.onDisplayChange = { displayChangeCount += 1 }
 
-        state.setDiskMenuBarMetric(.split)
+        state.metrics.setDiskMenuBarMetric(.split)
 
-        XCTAssertEqual(state.diskMenuBarMetric, .split)
+        XCTAssertEqual(state.metrics.diskMenuBarMetric, .split)
         XCTAssertEqual(displayChangeCount, 1)
         XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).diskMenuBarMetric, .split)
 
         // Idempotent: setting the same value again does not re-fire.
-        state.setDiskMenuBarMetric(.split)
+        state.metrics.setDiskMenuBarMetric(.split)
         XCTAssertEqual(displayChangeCount, 1)
     }
 
     func testVisibleMenuBarTitlesIncludesDiskSegmentWhenVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setMetricIdentifierStyle(.labels)
-        state.setDiskVisible(true)
-        state.update(with: makeSample())
+        state.metrics.setMetricIdentifierStyle(.labels)
+        state.metrics.setDiskVisible(true)
+        state.metrics.update(with: makeSample())
 
         XCTAssertTrue(state.visibleMenuBarTitles.contains { $0.contains("DISK") })
     }
 
     func testAccessibilityMenuBarTitleIncludesDiskWordingWhenVisible() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setDiskVisible(true)
-        state.update(with: makeSample())
+        state.metrics.setDiskVisible(true)
+        state.metrics.update(with: makeSample())
 
         XCTAssertTrue(state.accessibilityMenuBarTitle.contains(Strings.disk()))
     }
 
     func testDiskMenuBarTextStyleMatchesFormatter() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setDiskVisible(true)
+        state.metrics.setDiskVisible(true)
         // 900 MB/s combined → red (high).
-        state.update(with: makeSample(read: 900 * 1_048_576, write: 0))
+        state.metrics.update(with: makeSample(read: 900 * 1_048_576, write: 0))
 
-        XCTAssertEqual(state.diskMenuBarTextStyle, .highCPU)
-        XCTAssertEqual(state.diskMenuBarTextStyle, DiskFormatter.menuBarTextStyle(for: state.latestDiskSample))
+        XCTAssertEqual(state.metrics.diskMenuBarTextStyle, .highCPU)
+        XCTAssertEqual(state.metrics.diskMenuBarTextStyle, DiskFormatter.menuBarTextStyle(for: state.metrics.latestDiskSample))
     }
 
     func testDiskCountsAsVisibleMetricWhenAloneEnabled() {
         let state = CPUState(userDefaults: makeUserDefaults())
-        state.setCPUVisible(false)
-        state.setRAMVisible(false)
-        state.setNetworkVisible(false)
-        state.setDiskVisible(true)
+        state.metrics.setCPUVisible(false)
+        state.metrics.setRAMVisible(false)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setDiskVisible(true)
 
-        XCTAssertTrue(state.hasVisibleMetric)
+        XCTAssertTrue(state.metrics.hasVisibleMetric)
     }
 
     func testTogglingDiskNotifiesSamplerCoordinator() {
@@ -122,8 +122,8 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
             changes.append((metric, isVisible))
         }
 
-        state.setDiskVisible(true)
-        state.setDiskVisible(false)
+        state.metrics.setDiskVisible(true)
+        state.metrics.setDiskVisible(false)
 
         XCTAssertEqual(changes.count, 2)
         XCTAssertEqual(changes[0].0, .disk)

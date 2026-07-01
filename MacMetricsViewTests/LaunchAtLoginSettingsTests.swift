@@ -104,8 +104,8 @@ final class LaunchAtLoginSettingsTests: XCTestCase {
         let manager = FakeLaunchAtLoginManager(status: .disabled)
         let launchSettings = LaunchAtLoginSettings(manager: manager)
         let metricState = CPUState(userDefaults: makeUserDefaults())
-        let originalVisibility = metricState.visibility
-        let originalDisplay = metricState.display
+        let originalVisibility = metricState.metrics.visibility
+        let originalDisplay = metricState.metrics.display
         var visibilityChangeCount = 0
         var displayChangeCount = 0
         metricState.onVisibilityChange = { _, _ in visibilityChangeCount += 1 }
@@ -114,8 +114,8 @@ final class LaunchAtLoginSettingsTests: XCTestCase {
         launchSettings.setEnabled(true)
         launchSettings.setEnabled(false)
 
-        XCTAssertEqual(metricState.visibility, originalVisibility)
-        XCTAssertEqual(metricState.display, originalDisplay)
+        XCTAssertEqual(metricState.metrics.visibility, originalVisibility)
+        XCTAssertEqual(metricState.metrics.display, originalDisplay)
         XCTAssertEqual(visibilityChangeCount, 0)
         XCTAssertEqual(displayChangeCount, 0)
     }

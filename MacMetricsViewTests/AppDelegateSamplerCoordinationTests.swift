@@ -76,16 +76,16 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
     
     func testClosingPopoverStartsVisibleSamplersAtBackgroundRateAndStopsHiddenSamplers() {
         // Set background update rate to 3s
-        appDelegate.state.setUpdateRate(3)
+        appDelegate.state.metrics.setUpdateRate(3)
         
         // Let's set some visible and some hidden
-        appDelegate.state.setCPUVisible(true)
-        appDelegate.state.setRAMVisible(false)
-        appDelegate.state.setNetworkVisible(true)
-        appDelegate.state.setTemperatureVisible(false)
-        appDelegate.state.setDiskVisible(true)
-        appDelegate.state.setTokenVisible(false)
-        appDelegate.state.setBatteryVisible(false)
+        appDelegate.state.metrics.setCPUVisible(true)
+        appDelegate.state.metrics.setRAMVisible(false)
+        appDelegate.state.metrics.setNetworkVisible(true)
+        appDelegate.state.metrics.setTemperatureVisible(false)
+        appDelegate.state.metrics.setDiskVisible(true)
+        appDelegate.state.metrics.setTokenVisible(false)
+        appDelegate.state.metrics.setBatteryVisible(false)
         
         // Close popover
         appDelegate.state.isPopoverOpen = false
@@ -112,22 +112,22 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
     }
     
     func testTogglingVisibilityWhenClosedUpdatesSamplerState() {
-        appDelegate.state.setUpdateRate(2)
+        appDelegate.state.metrics.setUpdateRate(2)
         appDelegate.state.isPopoverOpen = false
         
         // Start showing CPU
-        appDelegate.state.setCPUVisible(true)
+        appDelegate.state.metrics.setCPUVisible(true)
         XCTAssertTrue(appDelegate.cpuSampler.isRunning)
         XCTAssertEqual(appDelegate.cpuSampler.interval, 2.0)
         // 2s background interval -> 25% tolerance = 0.5.
         XCTAssertEqual(appDelegate.cpuSampler.tolerance, 0.5)
 
         // Hide CPU
-        appDelegate.state.setCPUVisible(false)
+        appDelegate.state.metrics.setCPUVisible(false)
         XCTAssertFalse(appDelegate.cpuSampler.isRunning)
 
         // Start showing Tokens (which run at 5 * background rate in background)
-        appDelegate.state.setTokenVisible(true)
+        appDelegate.state.metrics.setTokenVisible(true)
         XCTAssertTrue(appDelegate.tokenSampler.isRunning)
         XCTAssertEqual(appDelegate.tokenSampler.interval, 10.0)
         // Token interval is 10s -> 25% tolerance = 2.5.
@@ -136,20 +136,20 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertEqual(appDelegate.codexTokenSampler.interval, 10.0)
 
         // Hide Tokens
-        appDelegate.state.setTokenVisible(false)
+        appDelegate.state.metrics.setTokenVisible(false)
         XCTAssertFalse(appDelegate.tokenSampler.isRunning)
         XCTAssertFalse(appDelegate.codexTokenSampler.isRunning)
     }
 
     func testChangingUpdateRateWhileClosedReschedulesActiveSamplers() {
         appDelegate.state.isPopoverOpen = false
-        appDelegate.state.setCPUVisible(true)
-        appDelegate.state.setRAMVisible(false)
-        appDelegate.state.setUpdateRate(3)
+        appDelegate.state.metrics.setCPUVisible(true)
+        appDelegate.state.metrics.setRAMVisible(false)
+        appDelegate.state.metrics.setUpdateRate(3)
         
         XCTAssertEqual(appDelegate.cpuSampler.interval, 3.0)
         
-        appDelegate.state.setUpdateRate(2)
+        appDelegate.state.metrics.setUpdateRate(2)
         XCTAssertEqual(appDelegate.cpuSampler.interval, 2.0)
         
         // Hidden sampler stays stopped

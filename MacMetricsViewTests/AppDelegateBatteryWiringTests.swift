@@ -22,12 +22,12 @@ final class AppDelegateBatteryWiringTests: XCTestCase {
     func testDelegateCallbackForwardsSampleIntoState() {
         let appDelegate = AppDelegate()
         appDelegate.batterySampler(appDelegate.batterySampler, didProduce: sample(charge: 77))
-        XCTAssertEqual(appDelegate.state.latestBatterySample?.chargePercent, 77)
+        XCTAssertEqual(appDelegate.state.metrics.latestBatterySample?.chargePercent, 77)
     }
 
     func testForwardedSampleRendersInMenuBarTitleWhenVisible() {
         let appDelegate = AppDelegate()
-        appDelegate.state.setBatteryVisible(true)
+        appDelegate.state.metrics.setBatteryVisible(true)
         appDelegate.batterySampler(appDelegate.batterySampler, didProduce: sample(charge: 64))
         XCTAssertTrue(appDelegate.state.visibleMenuBarTitles.contains("64%"))
     }
@@ -36,7 +36,7 @@ final class AppDelegateBatteryWiringTests: XCTestCase {
     // AppDelegate delegate method into CPUState.
     func testFakeReaderPollFlowsThroughAppDelegateIntoState() {
         let appDelegate = AppDelegate()
-        appDelegate.state.setBatteryVisible(true)
+        appDelegate.state.metrics.setBatteryVisible(true)
 
         let reader = FixedBatteryReader(sample: sample(charge: 91))
         let scheduler = ManualBatteryPollScheduler()
@@ -46,7 +46,7 @@ final class AppDelegateBatteryWiringTests: XCTestCase {
         sampler.start()
         scheduler.fire()
 
-        XCTAssertEqual(appDelegate.state.latestBatterySample?.chargePercent, 91)
+        XCTAssertEqual(appDelegate.state.metrics.latestBatterySample?.chargePercent, 91)
         XCTAssertTrue(appDelegate.state.visibleMenuBarTitles.contains("91%"))
         sampler.stop()
     }

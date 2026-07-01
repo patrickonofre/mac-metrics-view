@@ -35,9 +35,9 @@ final class LockOverlayController {
     private var windows: [LockOverlayWindow] = []
     private var screenObserver: NSObjectProtocol?
 
-    func show(state: CPUState) {
-        createWindows(for: state)
-        startObservingScreenChanges(state: state)
+    func show(lock: CleaningLockModel) {
+        createWindows(for: lock)
+        startObservingScreenChanges(lock: lock)
     }
 
     func hide() {
@@ -51,18 +51,18 @@ final class LockOverlayController {
 
     // MARK: - Private
 
-    private func createWindows(for state: CPUState) {
+    private func createWindows(for lock: CleaningLockModel) {
         // Tear down any existing windows before rebuilding (handles screen-config changes).
         windows.forEach { $0.orderOut(nil) }
         windows = NSScreen.screens.map { screen in
             let window = LockOverlayWindow(screen: screen)
-            window.contentView = NSHostingView(rootView: LockOverlayView(state: state))
+            window.contentView = NSHostingView(rootView: LockOverlayView(lock: lock))
             window.orderFrontRegardless()
             return window
         }
     }
 
-    private func startObservingScreenChanges(state: CPUState) {
+    private func startObservingScreenChanges(lock: CleaningLockModel) {
         if let existing = screenObserver {
             NotificationCenter.default.removeObserver(existing)
         }
@@ -72,7 +72,7 @@ final class LockOverlayController {
             queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated {
-                self?.createWindows(for: state)
+                self?.createWindows(for: lock)
             }
         }
     }

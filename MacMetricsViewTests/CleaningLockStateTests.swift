@@ -51,15 +51,15 @@ final class CleaningLockStateTests: XCTestCase {
     // MARK: - Initial state
 
     func testInitialLockPhaseIsIdle() {
-        XCTAssertEqual(makeState().lockPhase, .idle)
+        XCTAssertEqual(makeState().lock.phase, .idle)
     }
 
     func testInitialLockRemainingIsZero() {
-        XCTAssertEqual(makeState().lockRemaining, 0)
+        XCTAssertEqual(makeState().lock.remaining, 0)
     }
 
     func testInitialCleaningLockSettingsUsesDefault() {
-        XCTAssertEqual(makeState().cleaningLockSettings.selectedDuration,
+        XCTAssertEqual(makeState().lock.settings.selectedDuration,
                        CleaningLockSettings.defaultDuration)
     }
 
@@ -68,16 +68,16 @@ final class CleaningLockStateTests: XCTestCase {
     func testUpdateLockStateReflectsLockedPhase() {
         let state = makeState()
         state.updateLockState(phase: .locked, remaining: 30)
-        XCTAssertEqual(state.lockPhase, .locked)
-        XCTAssertEqual(state.lockRemaining, 30)
+        XCTAssertEqual(state.lock.phase, .locked)
+        XCTAssertEqual(state.lock.remaining, 30)
     }
 
     func testUpdateLockStateReflectsIdlePhase() {
         let state = makeState()
         state.updateLockState(phase: .locked, remaining: 30)
         state.updateLockState(phase: .idle, remaining: 0)
-        XCTAssertEqual(state.lockPhase, .idle)
-        XCTAssertEqual(state.lockRemaining, 0)
+        XCTAssertEqual(state.lock.phase, .idle)
+        XCTAssertEqual(state.lock.remaining, 0)
     }
 
     // MARK: - startCleaningLock
@@ -108,14 +108,14 @@ final class CleaningLockStateTests: XCTestCase {
     func testSelectLockDurationUpdatesSettings() {
         let state = makeState()
         state.selectLockDuration(60)
-        XCTAssertEqual(state.cleaningLockSettings.selectedDuration, 60)
+        XCTAssertEqual(state.lock.settings.selectedDuration, 60)
     }
 
     func testSelectLockDurationIgnoresNonPresetValues() {
         let state = makeState()
-        let before = state.cleaningLockSettings.selectedDuration
+        let before = state.lock.settings.selectedDuration
         state.selectLockDuration(999)
-        XCTAssertEqual(state.cleaningLockSettings.selectedDuration, before)
+        XCTAssertEqual(state.lock.settings.selectedDuration, before)
     }
 
     func testSelectLockDurationPersists() {
@@ -124,7 +124,7 @@ final class CleaningLockStateTests: XCTestCase {
         state1.selectLockDuration(300)
 
         let state2 = CPUState(userDefaults: ud)
-        XCTAssertEqual(state2.cleaningLockSettings.selectedDuration, 300)
+        XCTAssertEqual(state2.lock.settings.selectedDuration, 300)
     }
 
     // MARK: - Lock wiring with fake service (mirrors AppDelegate logic)
@@ -146,14 +146,14 @@ final class CleaningLockStateTests: XCTestCase {
         }
 
         state.startCleaningLock() // fires onStartLock → service.start
-        XCTAssertEqual(state.lockPhase, .locked)
+        XCTAssertEqual(state.lock.phase, .locked)
 
         // Drain the timer down to expiry.
         let ticks = Int(CleaningLockSettings.defaultDuration)
         for _ in 0..<ticks { service.tick() }
 
-        XCTAssertEqual(state.lockPhase, .idle)
-        XCTAssertEqual(state.lockRemaining, 0)
+        XCTAssertEqual(state.lock.phase, .idle)
+        XCTAssertEqual(state.lock.remaining, 0)
     }
 
     func testFakeServiceAbortUpdatesStateToIdle() {
@@ -171,8 +171,8 @@ final class CleaningLockStateTests: XCTestCase {
         state.startCleaningLock()
         service.stop(reason: .aborted)
 
-        XCTAssertEqual(state.lockPhase, .idle)
-        XCTAssertEqual(state.lockRemaining, 0)
+        XCTAssertEqual(state.lock.phase, .idle)
+        XCTAssertEqual(state.lock.remaining, 0)
     }
 
     func testAccessibilityDeniedPreventsOnStartLockFiring() {
@@ -197,8 +197,8 @@ final class CleaningLockStateTests: XCTestCase {
                                accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true))
         let denied = CPUState(userDefaults: makeUserDefaults(),
                               accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false))
-        XCTAssertTrue(granted.isAccessibilityGranted)
-        XCTAssertFalse(denied.isAccessibilityGranted)
+        XCTAssertTrue(granted.lock.recovery.isGranted)
+        XCTAssertFalse(denied.lock.recovery.isGranted)
     }
 
     func testRefreshPicksUpGrantMadeAfterLaunch() {
@@ -206,23 +206,23 @@ final class CleaningLockStateTests: XCTestCase {
         // in System Settings, then reopens the popover. The gate must flip.
         let auth = FakeAccessibilityAuthorization(isTrusted: false)
         let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
-        XCTAssertFalse(state.isAccessibilityGranted)
+        XCTAssertFalse(state.lock.recovery.isGranted)
 
         auth.isTrusted = true
         state.refreshAccessibilityAuthorization()
 
-        XCTAssertTrue(state.isAccessibilityGranted)
+        XCTAssertTrue(state.lock.recovery.isGranted)
     }
 
     func testRefreshPicksUpRevokedPermission() {
         let auth = FakeAccessibilityAuthorization(isTrusted: true)
         let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
-        XCTAssertTrue(state.isAccessibilityGranted)
+        XCTAssertTrue(state.lock.recovery.isGranted)
 
         auth.isTrusted = false
         state.refreshAccessibilityAuthorization()
 
-        XCTAssertFalse(state.isAccessibilityGranted)
+        XCTAssertFalse(state.lock.recovery.isGranted)
     }
 
     // MARK: - Grant reset by update (ad-hoc signing, TD-010)
@@ -232,14 +232,14 @@ final class CleaningLockStateTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults(),
                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                              currentAppVersion: "1.0.0")
-        XCTAssertFalse(state.accessibilityResetByUpdate)
+        XCTAssertFalse(state.lock.recovery.resetByUpdate)
     }
 
     func testGrantedStateNeverFlagsReset() {
         let state = CPUState(userDefaults: makeUserDefaults(),
                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true),
                              currentAppVersion: "1.0.0")
-        XCTAssertFalse(state.accessibilityResetByUpdate)
+        XCTAssertFalse(state.lock.recovery.resetByUpdate)
     }
 
     func testManualRevokeOnSameVersionDoesNotFlagReset() {
@@ -250,8 +250,8 @@ final class CleaningLockStateTests: XCTestCase {
         auth.isTrusted = false
         state.refreshAccessibilityAuthorization()
 
-        XCTAssertTrue(state.isAccessibilityGranted == false)
-        XCTAssertFalse(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.isGranted == false)
+        XCTAssertFalse(state.lock.recovery.resetByUpdate)
     }
 
     func testGrantLostAfterUpdateFlagsReset() {
@@ -265,8 +265,8 @@ final class CleaningLockStateTests: XCTestCase {
                                    accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                                    currentAppVersion: "1.1.0")
 
-        XCTAssertFalse(afterUpdate.isAccessibilityGranted)
-        XCTAssertTrue(afterUpdate.accessibilityResetByUpdate)
+        XCTAssertFalse(afterUpdate.lock.recovery.isGranted)
+        XCTAssertTrue(afterUpdate.lock.recovery.resetByUpdate)
     }
 
     func testUpdateFromNeverGrantedVersionFlagsReset() {
@@ -282,8 +282,8 @@ final class CleaningLockStateTests: XCTestCase {
                                    accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                                    currentAppVersion: "1.0.2")
 
-        XCTAssertFalse(afterUpdate.isAccessibilityGranted)
-        XCTAssertTrue(afterUpdate.accessibilityResetByUpdate)
+        XCTAssertFalse(afterUpdate.lock.recovery.isGranted)
+        XCTAssertTrue(afterUpdate.lock.recovery.resetByUpdate)
     }
 
     func testResetFlagStaysSetAcrossRefreshesWhileUngranted() {
@@ -297,12 +297,12 @@ final class CleaningLockStateTests: XCTestCase {
         let state = CPUState(userDefaults: ud,
                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                              currentAppVersion: "1.0.2")
-        XCTAssertTrue(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.resetByUpdate)
 
         state.refreshAccessibilityAuthorization()
         state.refreshAccessibilityAuthorization()
 
-        XCTAssertTrue(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.resetByUpdate)
     }
 
     // MARK: - Access request + relaunch (free mitigations)
@@ -341,13 +341,13 @@ final class CleaningLockStateTests: XCTestCase {
 
         let auth = FakeAccessibilityAuthorization(isTrusted: false)
         let state = CPUState(userDefaults: ud, accessibilityAuthorization: auth, currentAppVersion: "1.1.0")
-        XCTAssertTrue(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.resetByUpdate)
 
         auth.isTrusted = true
         state.refreshAccessibilityAuthorization()
 
-        XCTAssertTrue(state.isAccessibilityGranted)
-        XCTAssertFalse(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.isGranted)
+        XCTAssertFalse(state.lock.recovery.resetByUpdate)
     }
 
     // MARK: - Recovery state machine (probe poll loop)
@@ -366,7 +366,7 @@ final class CleaningLockStateTests: XCTestCase {
 
         state.beginAccessibilityRecovery()
 
-        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(state.lock.recovery.phase, .awaitingGrant)
         XCTAssertEqual(auth.openSettingsCallCount, 1)
 
         // Polling started: a tick spawns the probe.
@@ -383,7 +383,7 @@ final class CleaningLockStateTests: XCTestCase {
         state.beginAccessibilityRecovery()
         state.pollAccessibilityRecovery()
 
-        XCTAssertEqual(state.recoveryPhase, .applying)
+        XCTAssertEqual(state.lock.recovery.phase, .applying)
         XCTAssertEqual(relaunchCount, 1)
 
         // A further tick is a no-op (not awaitingGrant) — relaunch fires only once.
@@ -401,7 +401,7 @@ final class CleaningLockStateTests: XCTestCase {
         state.pollAccessibilityRecovery()
         state.pollAccessibilityRecovery()
 
-        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(state.lock.recovery.phase, .awaitingGrant)
         XCTAssertEqual(relaunchCount, 0)
     }
 
@@ -416,7 +416,7 @@ final class CleaningLockStateTests: XCTestCase {
         XCTAssertEqual(probe.probeCallCount, 1)
 
         state.cancelAccessibilityRecovery()
-        XCTAssertEqual(state.recoveryPhase, .idle)
+        XCTAssertEqual(state.lock.recovery.phase, .idle)
 
         // Even if the grant arrives now, a tick after cancel must not probe or relaunch.
         probe.result = true
@@ -429,7 +429,7 @@ final class CleaningLockStateTests: XCTestCase {
         let probe = FakeAccessibilityProbe(result: true)
         let state = makeRecoveryState(probe: probe)
 
-        XCTAssertEqual(state.recoveryPhase, .idle)
+        XCTAssertEqual(state.lock.recovery.phase, .idle)
         state.pollAccessibilityRecovery()
 
         XCTAssertEqual(probe.probeCallCount, 0)
@@ -445,7 +445,7 @@ final class CleaningLockStateTests: XCTestCase {
 
         // Second begin is a no-op: Settings opened once, still a single recovery.
         XCTAssertEqual(auth.openSettingsCallCount, 1)
-        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(state.lock.recovery.phase, .awaitingGrant)
     }
 
     func testLateProbeResultAfterCancelDoesNotRelaunch() {
@@ -462,7 +462,7 @@ final class CleaningLockStateTests: XCTestCase {
         state.cancelAccessibilityRecovery()      // user dismissed
         probe.flush()                             // probe result lands late
 
-        XCTAssertEqual(state.recoveryPhase, .idle)
+        XCTAssertEqual(state.lock.recovery.phase, .idle)
         XCTAssertEqual(relaunchCount, 0)
     }
 
@@ -476,14 +476,14 @@ final class CleaningLockStateTests: XCTestCase {
 
         state.beginAccessibilityRecovery()
         state.pollAccessibilityRecovery()         // not granted yet
-        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(state.lock.recovery.phase, .awaitingGrant)
         XCTAssertEqual(relaunchCount, 0)
 
         probe.result = true                         // user removed + re-added the entry
         state.pollAccessibilityRecovery()
 
         XCTAssertEqual(relaunchCount, 1)
-        XCTAssertEqual(state.recoveryPhase, .applying)
+        XCTAssertEqual(state.lock.recovery.phase, .applying)
     }
 
     // MARK: - One-time launch nudge
@@ -503,7 +503,7 @@ final class CleaningLockStateTests: XCTestCase {
     func testLaunchNudgeFiresOnceWhenResetAndFlagUnset() {
         let ud = makeUserDefaults()
         let state = makeResetState(userDefaults: ud)
-        XCTAssertTrue(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.resetByUpdate)
 
         var openCount = 0
         state.onRequestOpenPopover = { openCount += 1 }
@@ -543,7 +543,7 @@ final class CleaningLockStateTests: XCTestCase {
         let state = CPUState(userDefaults: makeUserDefaults(),
                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                              currentAppVersion: "1.0.0")
-        XCTAssertFalse(state.accessibilityResetByUpdate)
+        XCTAssertFalse(state.lock.recovery.resetByUpdate)
 
         var openCount = 0
         state.onRequestOpenPopover = { openCount += 1 }
@@ -557,7 +557,7 @@ final class CleaningLockStateTests: XCTestCase {
         let ud = makeUserDefaults()
         AccessibilityNudgeTracker(lastNudgedVersion: "1.1.0").save(to: ud)
         let state = makeResetState(userDefaults: ud)
-        XCTAssertTrue(state.accessibilityResetByUpdate)
+        XCTAssertTrue(state.lock.recovery.resetByUpdate)
 
         var openCount = 0
         state.onRequestOpenPopover = { openCount += 1 }
@@ -593,6 +593,6 @@ final class CleaningLockStateTests: XCTestCase {
         state.pollAccessibilityRecovery()
 
         XCTAssertEqual(relaunchCount, 1)
-        XCTAssertEqual(state.recoveryPhase, .applying)
+        XCTAssertEqual(state.lock.recovery.phase, .applying)
     }
 }

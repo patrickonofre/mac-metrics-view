@@ -1,150 +1,45 @@
 import Foundation
 import Combine
 
-/// Rate-limit estimate published to the popover in one value (Phase 3): the
-/// active 5h block (or `nil` between blocks), the rolling-week figures from the
-/// daily ledger, and the user-set budgets (0 = off, ADR-008). Always
-/// Claude-scoped regardless of the provider picker (ADR-006). Defined here — not
-/// in its own file — so it adds no Xcode-target-membership risk.
-struct TokenRateLimitSnapshot: Equatable {
-    let block: TokenRateLimitBlock?
-    let weeklyUsage: TokenAggregate
-    let weeklyCostUSD: Double
-    let sessionBudget: Int
-    let weeklyBudget: Int
-}
-
-/// Where the cleaning-permission recovery flow is, for the UI to render and for the
-/// state machine to gate its probe poll loop and one-shot relaunch (see ADR-002).
-enum AccessibilityRecoveryPhase: Equatable {
-    /// Not recovering — no probing happens.
-    case idle
-    /// Settings opened; the probe poll loop is running, watching for a valid grant.
-    case awaitingGrant
-    /// A valid grant was detected; the relaunch that applies it is in flight.
-    case applying
-}
-
 @MainActor
 final class CPUState: ObservableObject {
-    @Published private(set) var visibility: MetricVisibilitySettings
-    @Published private(set) var display: MetricDisplaySettings
-    @Published private(set) var updateRate: Int
-    @Published private(set) var latestSample: CPUSample?
-    @Published private(set) var latestRAMSample: RAMSample?
-    @Published private(set) var latestNetworkSample: NetworkSample?
-    @Published private(set) var latestTemperatureSample: TemperatureSample?
-    @Published private(set) var latestDiskSample: DiskSample?
-    /// Latest battery reading, or `nil` when no battery is present / not yet sampled.
-    /// No history is kept (ADR-002 — no charge sparkline).
-    @Published private(set) var latestBatterySample: BatterySample?
-    /// Latest ambient-light reading, or `nil` when no ALS is present / not yet sampled.
-    @Published private(set) var latestAmbientSample: AmbientLightSample?
-    /// Current ambient-light theme suggestion (FR-7), or `.none`. Recomputed on each
-    /// ambient sample through `ThemeSuggestionEngine`; only ever proposes the mode not
-    /// currently active (FR-6).
-    @Published private(set) var themeSuggestion: ThemeSuggestion = .none
-    /// Result of the most recent apply attempt, so the banner can show the
-    /// denied-Automation guidance (`.notAuthorized`). `nil` until the user applies.
-    @Published private(set) var lastAppearanceApplyResult: AppearanceApplyResult?
-    /// Ambient-light theme settings (opt-in flag, thresholds, dwell). Default off.
-    @Published private(set) var ambientThemeSettings: AmbientThemeSettings
-    @Published private(set) var topCPUProcesses: [ProcessCPUSample] = []
-    @Published private(set) var history = CPUHistory()
-    @Published private(set) var ramHistory = RAMHistory()
-    @Published private(set) var networkHistory = NetworkHistory()
-    @Published private(set) var temperatureHistory = TemperatureHistory()
-    @Published private(set) var diskHistory = DiskHistory()
+    /// The System metrics pillar (TD-012): CPU/RAM/network/disk/temperature/battery/GPU
+    /// samples, history, and visibility/display settings. Extracted to `SystemMetricsModel`
+    /// (task-005) — like `token`, `StatusItemController` reads it imperatively (no
+    /// observation needed; `AppDelegate`'s sampler delegates push `setNeedsTitleUpdate()`).
+    /// SwiftUI consumers (`MetricsTab`, `SettingsTab`) observe `metrics` directly.
+    let metrics: SystemMetricsModel
 
-    /// Cumulative download/upload and read/write byte totals since launch (in-memory,
-    /// reset each launch), folded from consecutive sample gaps. Surface the since-launch
-    /// rows in the expanded network/disk cards, distinct from the ~45s window stats.
-    @Published private(set) var networkSessionTotals = TrafficSessionTotals()
-    @Published private(set) var diskSessionTotals = TrafficSessionTotals()
-    private var lastNetworkSampleTimestamp: Date?
-    private var lastDiskSampleTimestamp: Date?
+    /// The Ambient pillar (TD-012): the latest ambient-light reading, the derived theme
+    /// suggestion, and the opt-in settings. Extracted to `AmbientThemeModel` (task-003).
+    /// `PopoverView` observes `ambient` directly (its own `@ObservedObject`) because, unlike
+    /// the menu bar, the theme-suggestion banner has no AppKit-imperative refresh path —
+    /// it only exists in SwiftUI, so it must react to the model's own publisher.
+    let ambient: AmbientThemeModel
 
-    /// One bounded token event store + since-reset accumulator per provider (ADR-003).
-    /// Ingested via `update(provider:with:)`; the popover/menu bar read the selected
-    /// provider's store (or both, summed, for `combined`).
-    @Published private(set) var tokenStores: [TokenProvider: TokenUsageStore]
-    /// Token breakdown for the currently selected provider + scope + window, recomputed
-    /// whenever events arrive or the provider/scope/window changes. For `combined` it is the
-    /// sum of each provider's aggregate. Drives the menu bar and popover.
-    @Published private(set) var tokenAggregate: TokenAggregate = .zero
-    /// Estimated USD cost over the same selection, or `nil` when no events fall in the
-    /// window (ADR-003). For `combined` it is the sum of per-provider costs. Since-reset
-    /// cost only covers the retained-events horizon — same caveat as the sparkline.
-    @Published private(set) var tokenCost: TokenCostBreakdown?
-    /// Events backing the per-model attribution and the cost figure, merged across the
-    /// selected providers, newest first. Filtered once per recompute so attribution and
-    /// cost never trigger a second filtering pass on the hot path (TechSpec).
-    @Published private(set) var tokenFilteredEvents: [TokenUsageEvent] = []
-    /// Pace over the fixed trailing hour for the selected provider(s), or `nil` when no
-    /// event falls in that window — the popover row hides (ADR-004). Deliberately
-    /// ignores the scope/window pickers: it sources the providers' raw events filtered
-    /// by timestamp only, always answering "pace right now".
-    @Published private(set) var tokenBurnRate: TokenBurnRateBreakdown?
-    /// Claude rate-limit estimate (5h block + rolling week + budgets), or `nil`
-    /// when there is no data at all — no active block AND an empty week. A
-    /// missing block with a populated week still publishes, so the weekly row
-    /// stays meaningful (ADR-006/007/008). Ignores the scope/window/provider
-    /// pickers; refreshed on the same recompute pass and ADR-005 tick.
-    @Published private(set) var tokenRateLimit: TokenRateLimitSnapshot?
+    /// The Dev/AI pillar (TD-012): token stores, the derived aggregate/cost/burn-rate/
+    /// rate-limit surfaces, the daily ledger and the popover-open refresh (ADR-005).
+    /// Extracted to `TokenUsageModel` (task-001/002). Deliberately **not** bridged to this
+    /// coordinator's `objectWillChange`: `StatusItemController` is AppKit-imperative and
+    /// learns about token changes via an explicit `setNeedsTitleUpdate()` push from
+    /// `AppDelegate.tokenUsageSampler(_:didProduce:)`, never through Combine. SwiftUI
+    /// consumers that need live token reactivity observe `token` directly at the point of
+    /// use (e.g. `MetricsTab`) — bridging here would re-invalidate every `CPUState`
+    /// observer (Settings/Actions tabs) on every token tick, including the popover-open
+    /// 30s auto-refresh (ADR-005), defeating the churn isolation this split exists for.
+    let token: TokenUsageModel
 
-    /// Interval the disk sampler ticks at, used to convert rolling-window rate
-    /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
-    let diskSampleInterval: TimeInterval = 1
-
-    private enum TokenKeys {
-        /// Legacy single reset key (pre-Codex). Migrated once into the Claude slot.
-        static let legacyResetAt = "CPUState.tokenResetAt"
-        static func resetAt(_ provider: TokenProvider) -> String {
-            "CPUState.tokenResetAt.\(provider.rawValue)"
-        }
-        /// JSON-encoded `TokenDailyLedger` backing the weekly figure (ADR-007).
-        static let dailyLedger = "CPUState.tokenDailyLedger.claude"
-        /// Newest Claude event timestamp already folded into the ledger. Guards the
-        /// reader's cold-start tail re-emission after a relaunch — without it every
-        /// restart would re-fold up to 24h of already-counted events (ADR-007's
-        /// no-double-count rule applied at the persistence boundary).
-        static let ledgerWatermark = "CPUState.tokenLedgerWatermark.claude"
-        /// One-shot guard for the historical backfill scan (ADR-007).
-        static let ledgerBackfilled = "CPUState.tokenLedgerBackfilled.claude"
-    }
-
-    /// Per-day Claude usage + cost buckets behind the weekly rate-limit figure
-    /// (ADR-007). Loaded at init, folded on ingest, persisted once per batch.
-    /// Not published — the UI reads it through the `tokenRateLimit` snapshot.
-    private(set) var tokenDailyLedger = TokenDailyLedger()
-    /// Newest folded event timestamp; events at or before it are skipped on fold.
-    private var tokenLedgerWatermark: Date?
-
-    // Cleaning-lock state — updated by AppDelegate via updateLockState(phase:remaining:)
-    @Published private(set) var lockPhase: LockPhase = .idle
-    @Published private(set) var lockRemaining: TimeInterval = 0
-    @Published private(set) var cleaningLockSettings: CleaningLockSettings
+    /// The Utilities pillar (TD-012): cleaning-mode input lock + the Accessibility
+    /// recovery flow that gates it. Extracted to `CleaningLockModel` (task-004), which
+    /// composes `AccessibilityRecoveryModel` and bridges its changes internally. UI
+    /// observes `lock` directly at the point of use (`ActionsTab`, `LockOverlayView`,
+    /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `token`/`ambient`.
+    let lock: CleaningLockModel
 
     /// Newest version announced by the appcast when it is more recent than the
     /// installed build, or `nil` when the app is up to date. Fed by a passive
     /// Sparkle probe (no dialog) via `setAvailableUpdateVersion(_:)`.
     @Published private(set) var availableUpdateVersion: String?
-
-    /// Live Accessibility (AX) permission gate for the cleaning lock.
-    /// Refreshed on each popover show so a grant made in System Settings is
-    /// reflected without relaunching the app.
-    @Published private(set) var isAccessibilityGranted: Bool = false
-
-    /// True when AX is not currently granted but a *previous* app version had
-    /// it — i.e. an update reset the permission (ad-hoc signing, TD-010). The UI
-    /// uses this to tell the user the stale System Settings entry must be removed
-    /// and re-added, not merely toggled.
-    @Published private(set) var accessibilityResetByUpdate: Bool = false
-
-    /// Where the self-healing recovery flow is. Drives the popover's recovery card
-    /// (awaiting vs applying) and gates the probe poll loop: probing happens only
-    /// while `.awaitingGrant`.
-    @Published private(set) var recoveryPhase: AccessibilityRecoveryPhase = .idle
 
     /// Tracks if the popover is currently open. Used to lazy-load PopoverView content
     /// and completely bypass SwiftUI view graph updates when the popover is closed.
@@ -157,69 +52,39 @@ final class CPUState: ObservableObject {
     }
 
 
-    var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
-    var onDisplayChange: (() -> Void)?
     var onPopoverOpenChange: ((Bool) -> Void)?
-    /// Called by the UI when the user taps Iniciar; AppDelegate wires the actual lock start.
-    var onStartLock: ((TimeInterval) -> Void)?
     /// Called when the user requests a manual update check; AppDelegate forwards to the updater.
     var onCheckForUpdates: (() -> Void)?
-    /// Called when the user asks to relaunch after granting Accessibility; AppDelegate owns the relaunch.
-    var onRelaunch: (() -> Void)?
-    /// Asks the UI to open the popover programmatically (for the one-time post-update
-    /// nudge). AppDelegate wires this to `StatusItemController.openPopover()`.
-    var onRequestOpenPopover: (() -> Void)?
     /// Fires when the ambient theme settings change so AppDelegate can start/stop the
     /// ambient sampler in step with the opt-in flag.
     var onAmbientThemeSettingsChange: ((AmbientThemeSettings) -> Void)?
 
+    /// `AppDelegate` wires these against `CPUState` directly; forwarded to `lock`/
+    /// `lock.recovery` so the wiring call sites need no change.
+    var onStartLock: ((TimeInterval) -> Void)? {
+        get { lock.onStartLock }
+        set { lock.onStartLock = newValue }
+    }
+    var onRelaunch: (() -> Void)? {
+        get { lock.recovery.onRelaunch }
+        set { lock.recovery.onRelaunch = newValue }
+    }
+    var onRequestOpenPopover: (() -> Void)? {
+        get { lock.recovery.onRequestOpenPopover }
+        set { lock.recovery.onRequestOpenPopover = newValue }
+    }
+    /// `AppDelegate` wires these against `CPUState` directly; forwarded to `metrics` so
+    /// the wiring call sites need no change.
+    var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)? {
+        get { metrics.onVisibilityChange }
+        set { metrics.onVisibilityChange = newValue }
+    }
+    var onDisplayChange: (() -> Void)? {
+        get { metrics.onDisplayChange }
+        set { metrics.onDisplayChange = newValue }
+    }
+
     private let userDefaults: UserDefaults
-    private let accessibilityAuthorization: AccessibilityAuthorizationProtocol
-    private let accessibilityProbe: AccessibilityProbing
-    private let currentAppVersion: String
-    private var grantTracker: AccessibilityGrantTracker
-    /// One-time auto-open nudge persistence (fires once per reset event).
-    private var nudgeTracker: AccessibilityNudgeTracker
-    /// Active only while `recoveryPhase == .awaitingGrant`; spawns a probe each tick.
-    private var recoveryPollTimer: Timer?
-    /// Active only while the popover is open (ADR-005); each tick re-runs the token
-    /// recompute with a fresh `now` so the trailing-hour burn rate and the rolling
-    /// windows keep sliding without new ingest.
-    private var tokenAutoRefreshTimer: Timer?
-    /// Refresh cadence while the popover is open: fast enough that the 60-minute
-    /// window moves visibly, slow enough to be free (ADR-005). Not configurable.
-    private let tokenAutoRefreshInterval: TimeInterval = 30
-    private let processReader: ProcessReading
-    /// Runs the all-PID process enumeration off the main thread (PERF-01). The reader's mutable
-    /// state (its PID→name cache) is touched only inside the executor; `previousProcessSnapshot`
-    /// stays main-confined and is read/written only in the main-actor delivery closure.
-    private let samplingExecutor: SamplingExecutor
-    private var previousProcessSnapshot: ProcessCPUSnapshot?
-    private var processSamplingTimer: Timer?
-    /// Probe cadence during recovery. Slow enough to stay cheap (a process spawn per
-    /// tick), fast enough that re-adding the entry is noticed promptly.
-    private let recoveryPollInterval: TimeInterval = 1.5
-    /// True once the native AX prompt has been shown this session. macOS only
-    /// surfaces that prompt once per launch, so later taps fall back to opening
-    /// the Settings pane directly instead of doing nothing.
-    private var hasPromptedForAccess = false
-    /// Snapshot of the tracker as it was *before this launch* recorded the
-    /// current version. Reset detection is computed against this frozen baseline
-    /// so the flag stays stable across in-session refreshes — once the current
-    /// version is recorded as "seen", the live tracker would no longer report a
-    /// reset, but the user still needs the recovery guidance until they grant.
-    private let resetBaselineTracker: AccessibilityGrantTracker
-    /// One-shot battery reader used to refresh the popover row on open, so the popover
-    /// shows live battery data like every other metric even while the menu-bar segment
-    /// is hidden and the continuous sampler is gated off (ADR-003). Returns nil on Macs
-    /// with no battery, so `latestBatterySample` stays nil → "no battery" row.
-    private let batteryReader: BatteryReading
-    /// Reads/writes the macOS system appearance for the ambient theme suggestion.
-    /// Injected so tests can fake the apply without running osascript / needing NSApp.
-    private let systemAppearance: SystemAppearanceControlling
-    /// Pure decision engine for the ambient theme suggestion; rebuilt when the
-    /// thresholds/dwell change so a settings edit takes effect immediately.
-    private var themeSuggestionEngine: ThemeSuggestionEngine
 
     init(
         userDefaults: UserDefaults = .standard,
@@ -231,61 +96,37 @@ final class CPUState: ObservableObject {
         samplingExecutor: SamplingExecutor = BackgroundSamplingExecutor(),
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
-        self.processReader = processReader
-        self.samplingExecutor = samplingExecutor
         self.userDefaults = userDefaults
-        self.batteryReader = batteryReader
-        self.systemAppearance = systemAppearance ?? SystemAppearanceController()
-        let loadedAmbientSettings = AmbientThemeSettings.load(from: userDefaults)
-        ambientThemeSettings = loadedAmbientSettings
-        themeSuggestionEngine = ThemeSuggestionEngine(settings: loadedAmbientSettings)
-        self.accessibilityAuthorization = accessibilityAuthorization
+        metrics = SystemMetricsModel(
+            userDefaults: userDefaults,
+            processReader: processReader,
+            samplingExecutor: samplingExecutor,
+            batteryReader: batteryReader
+        )
+        ambient = AmbientThemeModel(
+            userDefaults: userDefaults,
+            systemAppearance: systemAppearance ?? SystemAppearanceController()
+        )
         // `SystemAccessibilityProbe` is `@MainActor`, so it cannot be a default
         // argument (those are evaluated in a nonisolated context); build it here in
         // the main-actor init instead. Tests inject a `FakeAccessibilityProbe`.
-        self.accessibilityProbe = accessibilityProbe ?? SystemAccessibilityProbe()
-        self.currentAppVersion = currentAppVersion
-        let loadedTracker = AccessibilityGrantTracker.load(from: userDefaults)
-        grantTracker = loadedTracker
-        resetBaselineTracker = loadedTracker
-        nudgeTracker = AccessibilityNudgeTracker.load(from: userDefaults)
-        visibility = MetricVisibilitySettings.load(from: userDefaults)
-        let loadedDisplay = MetricDisplaySettings.resolved(from: userDefaults)
-        display = loadedDisplay
-        updateRate = loadedDisplay.updateRate
-        cleaningLockSettings = CleaningLockSettings.load(from: userDefaults)
+        lock = CleaningLockModel(
+            userDefaults: userDefaults,
+            accessibilityAuthorization: accessibilityAuthorization,
+            accessibilityProbe: accessibilityProbe ?? SystemAccessibilityProbe(),
+            currentAppVersion: currentAppVersion
+        )
 
-        // Per-provider reset times. Migrate the legacy single key into the Claude slot once
-        // (ADR-003), so an existing install's since-reset measurement carries over.
-        let legacyResetAt = userDefaults.object(forKey: TokenKeys.legacyResetAt) as? Date
-        let storedClaudeResetAt = userDefaults.object(forKey: TokenKeys.resetAt(.claude)) as? Date
-        let claudeResetAt = storedClaudeResetAt ?? legacyResetAt ?? Date()
-        let codexResetAt = (userDefaults.object(forKey: TokenKeys.resetAt(.codex)) as? Date) ?? Date()
-        tokenStores = [
-            .claude: TokenUsageStore(resetAt: claudeResetAt),
-            .codex: TokenUsageStore(resetAt: codexResetAt)
-        ]
-        if storedClaudeResetAt == nil, let legacyResetAt {
-            userDefaults.set(legacyResetAt, forKey: TokenKeys.resetAt(.claude))
-            userDefaults.removeObject(forKey: TokenKeys.legacyResetAt)
-        }
-
-        // Daily ledger restore (ADR-007). A missing or undecodable payload yields
-        // an empty ledger — corruption degrades, never crashes.
-        if let data = userDefaults.data(forKey: TokenKeys.dailyLedger),
-           let ledger = try? JSONDecoder().decode(TokenDailyLedger.self, from: data) {
-            tokenDailyLedger = ledger
-        }
-        tokenLedgerWatermark = userDefaults.object(forKey: TokenKeys.ledgerWatermark) as? Date
-
-        evaluateAccessibility()
-    }
-
-    deinit {
-        // No leaked timers if the state is torn down mid-recovery or popover-open.
-        recoveryPollTimer?.invalidate()
-        tokenAutoRefreshTimer?.invalidate()
-        processSamplingTimer?.invalidate()
+        token = TokenUsageModel(
+            userDefaults: userDefaults,
+            selection: TokenDisplaySelection(
+                scope: metrics.display.tokenScope,
+                window: metrics.display.tokenMenuBarWindow,
+                provider: metrics.display.tokenProvider,
+                sessionBudget: metrics.display.tokenSessionBudget,
+                weeklyBudget: metrics.display.tokenWeeklyBudget
+            )
+        )
     }
 
     var menuBarTitle: String {
@@ -296,38 +137,42 @@ final class CPUState: ObservableObject {
 
     var visibleMenuBarTitles: [String] {
         var titles: [String] = []
-        let showLabel = display.identifierStyle == .labels
+        let showLabel = metrics.display.identifierStyle == .labels
 
-        if visibility.showCPU {
-            titles.append(CPUFormatter.menuBarTitle(for: latestSample, showLabel: showLabel))
+        if metrics.visibility.showCPU {
+            titles.append(CPUFormatter.menuBarTitle(for: metrics.latestSample, showLabel: showLabel))
         }
 
-        if visibility.showRAM {
-            titles.append(RAMFormatter.menuBarTitle(for: latestRAMSample, metric: display.ramMenuBarMetric, showLabel: showLabel))
+        if metrics.visibility.showGPU {
+            titles.append(GPUFormatter.menuBarTitle(for: metrics.latestGPUSample, showLabel: showLabel))
         }
 
-        if visibility.showNetwork {
-            titles.append(NetworkFormatter.stableMenuBarTitle(for: latestNetworkSample, showLabel: showLabel))
+        if metrics.visibility.showRAM {
+            titles.append(RAMFormatter.menuBarTitle(for: metrics.latestRAMSample, metric: metrics.display.ramMenuBarMetric, showLabel: showLabel))
         }
 
-        if visibility.showDisk {
-            titles.append(DiskFormatter.stableMenuBarTitle(for: latestDiskSample, metric: display.diskMenuBarMetric, showLabel: showLabel))
+        if metrics.visibility.showNetwork {
+            titles.append(NetworkFormatter.stableMenuBarTitle(for: metrics.latestNetworkSample, showLabel: showLabel))
         }
 
-        if visibility.showTemperature {
-            titles.append(TemperatureFormatter.menuBarTitle(for: latestTemperatureSample, showLabel: showLabel))
+        if metrics.visibility.showDisk {
+            titles.append(DiskFormatter.stableMenuBarTitle(for: metrics.latestDiskSample, metric: metrics.display.diskMenuBarMetric, showLabel: showLabel))
+        }
+
+        if metrics.visibility.showTemperature {
+            titles.append(TemperatureFormatter.menuBarTitle(for: metrics.latestTemperatureSample, showLabel: showLabel))
         }
 
         // Battery omits its segment when no battery is present (sample stays nil), so a
         // desktop Mac never shows it even with the toggle on (ADR-003).
-        if visibility.showBattery, latestBatterySample != nil {
-            titles.append(BatteryFormatter.menuBarTitle(for: latestBatterySample, showLabel: showLabel))
+        if metrics.visibility.showBattery, metrics.latestBatterySample != nil {
+            titles.append(BatteryFormatter.menuBarTitle(for: metrics.latestBatterySample, showLabel: showLabel))
         }
 
-        if visibility.showTokens {
-            let value = TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false)
+        if metrics.visibility.showTokens {
+            let value = TokenFormatter.menuBarTitle(for: token.aggregate, showLabel: false)
             if showLabel {
-                titles.append("\(TokenFormatter.menuBarLabel(for: display.tokenProvider)) \(value)")
+                titles.append("\(TokenFormatter.menuBarLabel(for: metrics.display.tokenProvider)) \(value)")
             } else {
                 titles.append(value)
             }
@@ -336,423 +181,137 @@ final class CPUState: ObservableObject {
         return titles
     }
 
-    var menuBarTextStyle: CPUMenuBarTextStyle {
-        CPUFormatter.menuBarTextStyle(for: latestSample)
-    }
-
-    var ramMenuBarTextStyle: CPUMenuBarTextStyle {
-        RAMFormatter.menuBarTextStyle(for: latestRAMSample, metric: display.ramMenuBarMetric)
-    }
-
-    var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric {
-        display.ramMenuBarMetric
-    }
-
-    /// Popover RAM card headline: "Used / Total" — more honest than echoing the menu-bar
-    /// metric, since it shows how much of total memory is actually in use.
-    var ramCardValue: String {
-        RAMFormatter.usedTotalString(used: latestRAMSample?.usedGB, total: latestRAMSample?.totalGB)
-    }
-
-    /// Activity-Monitor-style breakdown rows for the expanded RAM card.
-    var ramDetailRows: [(label: String, value: String)] {
-        RAMFormatter.detailRows(for: latestRAMSample)
-    }
-
-    /// Rolling-window download/upload totals and peaks for the expanded network card.
-    /// Integrates the retained rates over the configured sampling interval (ADR-002).
-    var networkDetailRows: [(label: String, value: String)] {
-        NetworkFormatter.detailRows(
-            history: networkHistory,
-            interval: TimeInterval(updateRate),
-            session: networkSessionTotals
-        )
-    }
-
-    /// Rolling-window read/write totals and peaks for the expanded disk card.
-    /// Integrates the retained rates over the configured sampling interval (ADR-002).
-    var diskDetailRows: [(label: String, value: String)] {
-        DiskFormatter.detailRows(
-            history: diskHistory,
-            interval: TimeInterval(updateRate),
-            session: diskSessionTotals
-        )
-    }
-
-    var temperatureMenuBarTextStyle: CPUMenuBarTextStyle {
-        TemperatureFormatter.menuBarTextStyle(for: latestTemperatureSample)
-    }
-
-    var diskMenuBarTextStyle: CPUMenuBarTextStyle {
-        DiskFormatter.menuBarTextStyle(for: latestDiskSample)
-    }
-
-    var batteryMenuBarTextStyle: CPUMenuBarTextStyle {
-        BatteryFormatter.menuBarTextStyle(for: latestBatterySample)
-    }
-
-    /// Popover headline for the battery row: the charge percentage, or the localized
-    /// "no battery" copy on a Mac without one.
-    var batteryRowValue: String {
-        latestBatterySample == nil ? Strings.batteryNoBattery() : BatteryFormatter.menuBarValue(for: latestBatterySample)
-    }
-
-    /// SF Symbol shown next to the battery row (charge-level glyph, bolt while charging).
-    var batterySymbolName: String {
-        BatteryFormatter.menuBarGlyphName(for: latestBatterySample)
-    }
-
-    /// Power source / time / health / cycle detail rows, empty when no battery present.
-    var batteryDetailRows: [(label: String, value: String)] {
-        BatteryFormatter.detailRows(for: latestBatterySample)
-    }
-
-    var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric {
-        display.diskMenuBarMetric
-    }
-
-    /// Token volume has no danger threshold in the volume-only MVP — always `.normal`.
-    var tokenMenuBarTextStyle: CPUMenuBarTextStyle {
-        TokenFormatter.menuBarTextStyle(for: tokenAggregate)
-    }
-
     var tokenScope: TokenScope {
-        display.tokenScope
+        metrics.display.tokenScope
     }
 
     var tokenMenuBarWindow: TokenWindow {
-        display.tokenMenuBarWindow
+        metrics.display.tokenMenuBarWindow
     }
 
     /// The selected provider (Claude / Codex / Combined) the meter currently shows.
     var tokenProvider: TokenProviderSelection {
-        display.tokenProvider
+        metrics.display.tokenProvider
     }
 
-    /// Whether the token meter has nothing meaningful to show (no logs / all-zero).
-    var tokenIsEmpty: Bool {
-        TokenFormatter.isEmpty(tokenAggregate)
-    }
-
-    /// Headline value for the popover token row: the humanized total, or the localized
-    /// empty/zero state when there is no data.
-    var tokenRowValue: String {
-        tokenIsEmpty ? TokenFormatter.emptyState() : TokenFormatter.humanized(tokenAggregate.usageTotal)
-    }
-
-    /// Localized input/output/cache breakdown rows for the popover.
-    var tokenBreakdown: [(label: String, value: String)] {
-        TokenFormatter.breakdown(for: tokenAggregate)
-    }
-
-    /// Formatted estimated-cost headline for the popover cost row, or `nil` when there
-    /// is no cost to show (no events in the window) — the row hides instead of
-    /// rendering a misleading `$0.00`.
-    var tokenCostRowValue: String? {
-        tokenCost.map { TokenFormatter.costString($0.totalUSD) }
-    }
-
-    /// Per-model formatted costs for the attribution list, largest first. Models
-    /// without a friendly display name fall back to the raw id so attribution never
-    /// silently drops a priced model.
-    var tokenCostPerModel: [(label: String, value: String)] {
-        guard let cost = tokenCost else { return [] }
-        return cost.perModelUSD.map { entry in
-            (TokenFormatter.modelDisplayName(entry.model) ?? entry.model,
-             TokenFormatter.costString(entry.usd))
-        }
-    }
-
-    /// Whether the unpriced indicator must accompany the cost figure: events from
-    /// unrecognized models were excluded from the total (ADR-003).
-    var tokenCostHasUnpricedTokens: Bool {
-        (tokenCost?.unpricedTokens ?? 0) > 0
-    }
-
-    /// Formatted pace line for the popover ("123.4k/h · $0.85/h · ~$20.4/day"), or
-    /// `nil` when no event falls in the trailing hour — the row hides instead of
-    /// rendering a misleading zero pace (ADR-004).
-    var tokenPaceRowValue: String? {
-        tokenBurnRate.map { TokenFormatter.burnRateString($0) }
-    }
-
-    /// Distinct friendly model names used within the current provider/scope/window, newest
-    /// first (e.g. "GPT-5 Codex, Opus 4.8"). For `combined`, events from both providers are
-    /// merged and ordered by recency. `nil` when there is no usage to attribute. Reads the
-    /// events already filtered on the recompute path — no filtering of its own.
-    var tokenActiveModels: String? {
-        guard !tokenIsEmpty else { return nil }
-        var seen = Set<String>()
-        let names = tokenFilteredEvents.compactMap { event -> String? in
-            guard !seen.contains(event.model) else { return nil }
-            seen.insert(event.model)
-            return TokenFormatter.modelDisplayName(event.model)
-        }
-        return names.isEmpty ? nil : names.joined(separator: ", ")
-    }
-
-    /// Sparkline values (0–100 normalized) of recent token volume for the selected
-    /// provider/scope/window, mirroring `normalizedDiskTrend`. For `combined`, per-bucket
-    /// totals are summed across providers before normalizing. Empty when there is no data.
-    var tokenSparkline: [Double] {
-        guard !tokenIsEmpty else { return [] }
-        let now = Date()
-        var summed: [Int] = []
-        for provider in display.tokenProvider.providers {
-            guard let store = tokenStores[provider] else { continue }
-            let buckets = TokenWindowStats.sparklineBuckets(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-            if summed.isEmpty {
-                summed = buckets
-            } else {
-                for index in buckets.indices where index < summed.count {
-                    summed[index] += buckets[index]
-                }
-            }
-        }
-        guard let peak = summed.max(), peak > 0 else { return [] }
-        return summed.map { Double($0) / Double(peak) * 100 }
-    }
-
-    var hasVisibleMetric: Bool {
-        visibility.hasVisibleMetric
+    /// The token-relevant slice of `metrics.display`, pushed into the model on each
+    /// picker change.
+    private var tokenSelection: TokenDisplaySelection {
+        TokenDisplaySelection(
+            scope: metrics.display.tokenScope,
+            window: metrics.display.tokenMenuBarWindow,
+            provider: metrics.display.tokenProvider,
+            sessionBudget: metrics.display.tokenSessionBudget,
+            weeklyBudget: metrics.display.tokenWeeklyBudget
+        )
     }
 
     var accessibilityMenuBarTitle: String {
         var segments: [String] = []
 
-        if visibility.showCPU {
-            segments.append("CPU \(CPUFormatter.percentageString(latestSample?.totalUsagePercent))")
+        if metrics.visibility.showCPU {
+            segments.append("CPU \(CPUFormatter.percentageString(metrics.latestSample?.totalUsagePercent))")
         }
 
-        if visibility.showRAM {
-            segments.append("RAM \(RAMFormatter.valueString(for: latestRAMSample, metric: display.ramMenuBarMetric))")
+        if metrics.visibility.showGPU {
+            segments.append("\(Strings.gpu()) \(GPUFormatter.percentageString(for: metrics.latestGPUSample))")
         }
 
-        if visibility.showNetwork {
-            segments.append(NetworkFormatter.stableMenuBarTitle(for: latestNetworkSample, showLabel: true))
+        if metrics.visibility.showRAM {
+            segments.append("RAM \(RAMFormatter.valueString(for: metrics.latestRAMSample, metric: metrics.display.ramMenuBarMetric))")
         }
 
-        if visibility.showDisk {
-            segments.append("\(Strings.disk()) \(DiskFormatter.stableMenuBarTitle(for: latestDiskSample, metric: display.diskMenuBarMetric, showLabel: false))")
+        if metrics.visibility.showNetwork {
+            segments.append(NetworkFormatter.stableMenuBarTitle(for: metrics.latestNetworkSample, showLabel: true))
         }
 
-        if visibility.showTemperature {
-            segments.append("\(Strings.temperature()) \(TemperatureFormatter.displayString(for: latestTemperatureSample))")
+        if metrics.visibility.showDisk {
+            segments.append("\(Strings.disk()) \(DiskFormatter.stableMenuBarTitle(for: metrics.latestDiskSample, metric: metrics.display.diskMenuBarMetric, showLabel: false))")
         }
 
-        if visibility.showBattery, latestBatterySample != nil {
-            segments.append("\(Strings.battery()) \(BatteryFormatter.menuBarValue(for: latestBatterySample))")
+        if metrics.visibility.showTemperature {
+            segments.append("\(Strings.temperature()) \(TemperatureFormatter.displayString(for: metrics.latestTemperatureSample))")
         }
 
-        if visibility.showTokens {
-            segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: tokenAggregate, showLabel: false))")
+        if metrics.visibility.showBattery, metrics.latestBatterySample != nil {
+            segments.append("\(Strings.battery()) \(BatteryFormatter.menuBarValue(for: metrics.latestBatterySample))")
+        }
+
+        if metrics.visibility.showTokens {
+            segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: token.aggregate, showLabel: false))")
         }
 
         guard !segments.isEmpty else { return Strings.metricsPlaceholder() }
         return segments.joined(separator: ", ")
     }
 
-    // Samples are always recorded, independent of menu-bar visibility: the popover shows
-    // every metric, while `visibility` only curates which ones appear in the menu bar.
-    func update(with sample: CPUSample) {
-        latestSample = sample
-        history.append(sample)
-    }
+    // MARK: - Ambient theme suggestion (forwards to `AmbientThemeModel`, task-003)
 
-    func update(with sample: RAMSample) {
-        latestRAMSample = sample
-        ramHistory.append(sample)
-    }
+    /// Lower-frequency read shims (Settings tab, AppDelegate's sampler gate). The
+    /// reactive banner in `PopoverView` observes `ambient` directly instead.
+    var ambientThemeSettings: AmbientThemeSettings { ambient.settings }
+    var latestAmbientSample: AmbientLightSample? { ambient.latestSample }
+    var themeSuggestion: ThemeSuggestion { ambient.suggestion }
+    var lastAppearanceApplyResult: AppearanceApplyResult? { ambient.lastApplyResult }
 
-    func update(with sample: NetworkSample) {
-        latestNetworkSample = sample
-        networkHistory.append(sample)
-        if let last = lastNetworkSampleTimestamp {
-            networkSessionTotals.add(
-                inboundRate: sample.downloadBytesPerSecond,
-                outboundRate: sample.uploadBytesPerSecond,
-                elapsed: sample.timestamp.timeIntervalSince(last)
-            )
-        }
-        lastNetworkSampleTimestamp = sample.timestamp
-    }
-
-    func update(with sample: TemperatureSample) {
-        latestTemperatureSample = sample
-        temperatureHistory.append(sample)
-    }
-
-    func update(with sample: DiskSample) {
-        latestDiskSample = sample
-        diskHistory.append(sample)
-        if let last = lastDiskSampleTimestamp {
-            diskSessionTotals.add(
-                inboundRate: sample.readBytesPerSecond,
-                outboundRate: sample.writeBytesPerSecond,
-                elapsed: sample.timestamp.timeIntervalSince(last)
-            )
-        }
-        lastDiskSampleTimestamp = sample.timestamp
-    }
-
-    /// No history is kept for battery (ADR-002 — no charge sparkline); just the latest.
-    func update(with sample: BatterySample) {
-        latestBatterySample = sample
-    }
-
-    /// One-shot battery read used when the popover opens, so the battery row shows live
-    /// data even when the menu-bar segment is hidden (its continuous sampler is gated off
-    /// while hidden, ADR-003). A nil read (no battery hardware) leaves the row as
-    /// "no battery"; it never clears a previously good sample.
-    func refreshBatteryReading() {
-        if let sample = batteryReader.readSample() {
-            latestBatterySample = sample
-        }
-    }
-
-    // MARK: - Ambient theme suggestion
-
-    /// Records an ambient-light sample and recomputes the theme suggestion. The sample
-    /// is always stored (the popover lux row reads it); the suggestion is only computed
-    /// while the feature is enabled.
     func update(with sample: AmbientLightSample) {
-        latestAmbientSample = sample
-        refreshThemeSuggestion()
+        ambient.update(with: sample)
     }
 
-    private func refreshThemeSuggestion() {
-        guard ambientThemeSettings.isEnabled, let sample = latestAmbientSample else {
-            themeSuggestion = .none
-            return
-        }
-        themeSuggestion = themeSuggestionEngine.evaluate(
-            lux: sample.lux,
-            current: systemAppearance.current,
-            now: Date()
-        )
-    }
-
-    /// Applies the active suggestion to the macOS system appearance. On success the
-    /// suggestion clears; a denial is published for the banner's guidance state. No-op
-    /// when there is no active suggestion.
     func applyThemeSuggestion() {
-        guard case let .suggest(mode) = themeSuggestion else { return }
-        let result = systemAppearance.apply(mode)
-        lastAppearanceApplyResult = result
-        if result == .applied {
-            themeSuggestion = .none
-        }
+        ambient.apply()
     }
 
-    /// Dismisses the active suggestion: snoozes the engine for this direction until the
-    /// level returns through the dead band (FR-8) and clears the banner.
     func dismissThemeSuggestion() {
-        themeSuggestionEngine.dismiss(themeSuggestion)
-        themeSuggestion = .none
-        lastAppearanceApplyResult = nil
+        ambient.dismiss()
     }
 
-    /// Persists new ambient settings, rebuilds the engine with the new band, and
-    /// re-evaluates so the change takes effect at once. Fires the change callback so
-    /// AppDelegate can start/stop the sampler in step with the opt-in flag.
+    /// Persists new ambient settings via the model and fires the change callback so
+    /// `AppDelegate` can start/stop the sampler in step with the opt-in flag.
     func setAmbientThemeSettings(_ settings: AmbientThemeSettings) {
-        guard ambientThemeSettings != settings else { return }
-        ambientThemeSettings = settings
-        settings.save(to: userDefaults)
-        themeSuggestionEngine = ThemeSuggestionEngine(settings: settings)
-        refreshThemeSuggestion()
+        guard ambient.setSettings(settings) else { return }
         onAmbientThemeSettingsChange?(settings)
     }
 
-    /// Ingests a batch of parsed token events into the given provider's store and
-    /// republishes the selected aggregate. Ingestion is independent of menu-bar visibility —
-    /// like the other metrics, the popover keeps working when the segment is hidden.
+    /// Forwards token ingest to the model (task-001 shim).
     func update(provider: TokenProvider, with events: [TokenUsageEvent]) {
-        guard !events.isEmpty else { return }
-        for event in events {
-            tokenStores[provider]?.append(event)
-        }
-        if provider == .claude {
-            foldIntoDailyLedger(events)
-        }
-        recomputeTokenAggregate()
-    }
-
-    /// Folds a Claude ingest batch into the daily ledger (ADR-007): cost computed
-    /// at ingest with the shipped price table, prune to the rolling 8 days, one
-    /// debounced persistence write per batch — never per event. The watermark
-    /// skips events already counted before a relaunch (the reader's cold-start
-    /// tail re-emits up to 24h of history).
-    private func foldIntoDailyLedger(_ events: [TokenUsageEvent]) {
-        let calendar = Calendar.current
-        var folded = false
-        for event in events {
-            if let watermark = tokenLedgerWatermark, event.timestamp <= watermark { continue }
-            tokenDailyLedger.fold(
-                event,
-                costUSD: TokenCostCalculator.cost(of: [event]).totalUSD,
-                calendar: calendar
-            )
-            folded = true
-        }
-        guard folded else { return }
-        if let newest = events.map(\.timestamp).max() {
-            tokenLedgerWatermark = max(tokenLedgerWatermark ?? .distantPast, newest)
-        }
-        tokenDailyLedger.prune(now: Date(), calendar: calendar)
-        persistDailyLedger()
-    }
-
-    /// One write per ingest batch / backfill merge — the ledger is ~8 small entries.
-    private func persistDailyLedger() {
-        if let data = try? JSONEncoder().encode(tokenDailyLedger) {
-            userDefaults.set(data, forKey: TokenKeys.dailyLedger)
-        }
-        if let watermark = tokenLedgerWatermark {
-            userDefaults.set(watermark, forKey: TokenKeys.ledgerWatermark)
-        }
+        token.update(provider: provider, with: events)
     }
 
     /// Claude-provider convenience used by the existing Claude sampler path and tests.
     func update(with events: [TokenUsageEvent]) {
-        update(provider: .claude, with: events)
+        token.update(with: events)
     }
 
-    func setTokenVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .tokens, isVisible: isVisible)
-    }
-
+    /// Token picker setters mutate `metrics.display` (the persisted slice they live in)
+    /// and then push the change into `token` — coordination only `CPUState` can do since
+    /// it owns both models.
     func setTokenScope(_ scope: TokenScope) {
-        guard display.tokenScope != scope else { return }
-
-        display.tokenScope = scope
-        display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        guard metrics.display.tokenScope != scope else { return }
+        var newDisplay = metrics.display
+        newDisplay.tokenScope = scope
+        metrics.replaceDisplay(newDisplay)
+        token.apply(selection: tokenSelection)
         onDisplayChange?()
     }
 
     func setTokenMenuBarWindow(_ window: TokenWindow) {
-        guard display.tokenMenuBarWindow != window else { return }
-
-        display.tokenMenuBarWindow = window
-        display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        guard metrics.display.tokenMenuBarWindow != window else { return }
+        var newDisplay = metrics.display
+        newDisplay.tokenMenuBarWindow = window
+        metrics.replaceDisplay(newDisplay)
+        token.apply(selection: tokenSelection)
         onDisplayChange?()
     }
 
     /// Switches the displayed provider (Claude / Codex / Combined), persists it, and
     /// republishes every token-derived surface from the already-ingested stores.
     func setTokenProvider(_ selection: TokenProviderSelection) {
-        guard display.tokenProvider != selection else { return }
-
-        display.tokenProvider = selection
-        display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        guard metrics.display.tokenProvider != selection else { return }
+        var newDisplay = metrics.display
+        newDisplay.tokenProvider = selection
+        metrics.replaceDisplay(newDisplay)
+        token.apply(selection: tokenSelection)
         onDisplayChange?()
     }
 
@@ -760,375 +319,80 @@ final class CPUState: ObservableObject {
     /// ADR-008) and republishes the snapshot so the bar appears immediately.
     func setTokenSessionBudget(_ budget: Int) {
         let sanitized = max(0, budget)
-        guard display.tokenSessionBudget != sanitized else { return }
-
-        display.tokenSessionBudget = sanitized
-        display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        guard metrics.display.tokenSessionBudget != sanitized else { return }
+        var newDisplay = metrics.display
+        newDisplay.tokenSessionBudget = sanitized
+        metrics.replaceDisplay(newDisplay)
+        token.apply(selection: tokenSelection)
     }
 
     /// Persists the weekly token budget (0 = off, negatives clamp to 0 — ADR-008).
     func setTokenWeeklyBudget(_ budget: Int) {
         let sanitized = max(0, budget)
-        guard display.tokenWeeklyBudget != sanitized else { return }
-
-        display.tokenWeeklyBudget = sanitized
-        display.save(to: userDefaults)
-        recomputeTokenAggregate()
+        guard metrics.display.tokenWeeklyBudget != sanitized else { return }
+        var newDisplay = metrics.display
+        newDisplay.tokenWeeklyBudget = sanitized
+        metrics.replaceDisplay(newDisplay)
+        token.apply(selection: tokenSelection)
     }
 
-    /// Starts a fresh since-reset measurement for the selected provider(s) — both when
-    /// `combined` is selected (ADR-003). The rolling windows (today/1h/24h) are unaffected;
-    /// only the since-reset view zeroes. Each provider's `resetAt` is persisted under its own
-    /// key so it survives relaunch and rebuilds from the backfilled tail.
+    /// Forwards the since-reset counter restart to the model (task-001 shim).
     func resetTokenCounter() {
-        let now = Date()
-        for provider in display.tokenProvider.providers {
-            tokenStores[provider]?.reset(now: now)
-            userDefaults.set(now, forKey: TokenKeys.resetAt(provider))
-        }
-        recomputeTokenAggregate()
+        token.resetCounter()
     }
 
-    /// Starts the popover-open token refresh (ADR-005): recomputes immediately so the
-    /// figures are fresh the moment the popover opens, then ticks every ~30s.
-    /// Idempotent — a second `begin` refreshes but never stacks a second timer.
+    /// Forwards the popover-open token refresh lifecycle to the model (ADR-005 shims).
     func beginTokenAutoRefresh() {
-        recomputeTokenAggregate()
-        guard tokenAutoRefreshTimer == nil else { return }
-        tokenAutoRefreshTimer = MainRunLoopTimer.repeating(every: tokenAutoRefreshInterval) { [weak self] in
-            self?.tokenAutoRefreshTick()
-        }
+        token.beginAutoRefresh()
     }
 
-    /// Stops the popover-open refresh. Safe without a matching `begin` (no-op); zero
-    /// timers run while the popover is closed (ADR-005).
     func endTokenAutoRefresh() {
-        tokenAutoRefreshTimer?.invalidate()
-        tokenAutoRefreshTimer = nil
+        token.endAutoRefresh()
     }
 
-    /// One refresh tick: re-runs the token recompute with a fresh (injectable) `now`.
-    /// Internal so tests can drive window decay deterministically, mirroring
-    /// `pollAccessibilityRecovery`. A no-op once `end` ran, so a late timer fire
-    /// cannot recompute after the popover closed.
     func tokenAutoRefreshTick(now: Date = Date()) {
-        guard tokenAutoRefreshTimer != nil else { return }
-        recomputeTokenAggregate(now: now)
+        token.autoRefreshTick(now: now)
     }
 
-    /// The aggregate for the selected provider, or the sum of both providers' aggregates
-    /// for `combined` (each computed independently with its own MRU — ADR-003). The same
-    /// pass filters each provider's events once and derives the cost breakdown from them,
-    /// so attribution and cost share the filtering work (TechSpec hot-path rule).
-    /// `now` is injectable so the auto-refresh tick can slide the windows in tests;
-    /// production call sites use the default.
-    private func recomputeTokenAggregate(now: Date = Date()) {
-        var aggregate = TokenAggregate.zero
-        var cost = TokenCostBreakdown.zero
-        var events: [TokenUsageEvent] = []
-        var rateEvents: [TokenUsageEvent] = []
+    // MARK: - Cleaning lock + Accessibility recovery (forwards to `CleaningLockModel`, task-004)
 
-        for provider in display.tokenProvider.providers {
-            guard let store = tokenStores[provider] else { continue }
-            aggregate = aggregate + TokenWindowStats.aggregate(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-            let filtered = TokenWindowStats.filteredEvents(
-                store: store,
-                scope: display.tokenScope,
-                window: display.tokenMenuBarWindow,
-                now: now
-            )
-            events += filtered
-            cost = cost + TokenCostCalculator.cost(of: filtered)
-            // Burn rate reads the raw store, not the picker-filtered set: its window
-            // is the fixed trailing hour regardless of scope/window (ADR-004).
-            rateEvents += store.events
-        }
-
-        events.sort { $0.timestamp > $1.timestamp }   // newest first across providers
-        tokenFilteredEvents = events
-        tokenAggregate = aggregate
-        tokenCost = events.isEmpty ? nil : cost
-        tokenBurnRate = TokenBurnRate.compute(events: rateEvents, now: now)
-
-        // Rate-limit snapshot: always the Claude store, regardless of the pickers
-        // (ADR-006); weekly from the ledger; budgets from display settings.
-        let block = TokenRateLimitWindow.activeBlock(
-            events: tokenStores[.claude]?.events ?? [],
-            now: now
-        )
-        let weekly = tokenDailyLedger.weeklyTotal(now: now, calendar: .current)
-        if block == nil, weekly.usage.total == 0, weekly.costUSD == 0 {
-            tokenRateLimit = nil
-        } else {
-            tokenRateLimit = TokenRateLimitSnapshot(
-                block: block,
-                weeklyUsage: weekly.usage,
-                weeklyCostUSD: weekly.costUSD,
-                sessionBudget: display.tokenSessionBudget,
-                weeklyBudget: display.tokenWeeklyBudget
-            )
-        }
-    }
-
-    func setCPUVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .cpu, isVisible: isVisible)
-    }
-
-    func setRAMVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .ram, isVisible: isVisible)
-    }
-
-    func setNetworkVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .network, isVisible: isVisible)
-    }
-
-    func setTemperatureVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .temperature, isVisible: isVisible)
-    }
-
-    func setDiskVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .disk, isVisible: isVisible)
-    }
-
-    func setBatteryVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .battery, isVisible: isVisible)
-    }
-
-    func setMetricIdentifierStyle(_ identifierStyle: MetricDisplaySettings.IdentifierStyle) {
-        guard display.identifierStyle != identifierStyle else { return }
-
-        display.identifierStyle = identifierStyle
-        display.save(to: userDefaults)
-        onDisplayChange?()
-    }
-
-    func setUpdateRate(_ rate: Int) {
-        let clamped = (rate == 1 || rate == 2 || rate == 3) ? rate : 1
-        display.updateRate = clamped
-        display.save(to: userDefaults)
-        updateRate = clamped
-        onDisplayChange?()
-    }
-
-    func setRAMMenuBarMetric(_ metric: MetricDisplaySettings.RAMMenuBarMetric) {
-        guard display.ramMenuBarMetric != metric else { return }
-
-        display.ramMenuBarMetric = metric
-        display.save(to: userDefaults)
-        onDisplayChange?()
-    }
-
-    func setDiskMenuBarMetric(_ metric: MetricDisplaySettings.DiskMenuBarMetric) {
-        guard display.diskMenuBarMetric != metric else { return }
-
-        display.diskMenuBarMetric = metric
-        display.save(to: userDefaults)
-        onDisplayChange?()
-    }
-
-    private func updateVisibility(metric: MetricVisibilitySettings.Metric, isVisible: Bool) {
-        guard currentVisibility(for: metric) != isVisible else { return }
-
-        // Toggling only curates the menu bar. Samplers keep running and history keeps
-        // accumulating, so there is no stale data to reset on re-show.
-        switch metric {
-        case .cpu:
-            visibility.showCPU = isVisible
-        case .ram:
-            visibility.showRAM = isVisible
-        case .network:
-            visibility.showNetwork = isVisible
-        case .temperature:
-            visibility.showTemperature = isVisible
-        case .disk:
-            visibility.showDisk = isVisible
-        case .tokens:
-            visibility.showTokens = isVisible
-        case .battery:
-            visibility.showBattery = isVisible
-        }
-
-        visibility.save(to: userDefaults)
-        onVisibilityChange?(metric, isVisible)
-    }
-
-    // MARK: - Process Sampling
-
-    func beginProcessSampling() {
-        guard processSamplingTimer == nil else { return } // idempotent
-        // Baseline read runs off the main thread (PERF-01); the snapshot is stored on the
-        // main actor. The first tick is a no-op until it lands (guarded on a nil baseline).
-        samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] snapshot in
-            self?.previousProcessSnapshot = snapshot
-        }
-        processSamplingTimer = MainRunLoopTimer.repeating(every: 2) { [weak self] in
-            self?.processSamplingTick()
-        }
-    }
-
-    func endProcessSampling() {
-        processSamplingTimer?.invalidate()
-        processSamplingTimer = nil
-        previousProcessSnapshot = nil
-    }
-
-    func processSamplingTick(now: Date = Date()) {
-        guard processSamplingTimer != nil, let prev = previousProcessSnapshot else { return }
-        // Enumerate all PIDs off the main thread (PERF-01); rank and publish on the main actor.
-        // Re-check the timer in the delivery closure so a stop() between read and delivery
-        // cannot publish a late ranking.
-        samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] cur in
-            guard let self, self.processSamplingTimer != nil, let cur else { return }
-            self.topCPUProcesses = ProcessCPURanking.topProcesses(previous: prev, current: cur)
-            self.previousProcessSnapshot = cur
-        }
-    }
-
-    // MARK: - Cleaning lock
-
-    /// Persists the selected duration and updates the in-memory setting.
+    /// Lower-frequency read/write shims for non-reactive call sites (`StatusItemController`,
+    /// `AppDelegate`). UI that needs live reactivity observes `lock` directly instead.
     func selectLockDuration(_ duration: TimeInterval) {
-        guard CleaningLockSettings.presets.contains(duration) else { return }
-        cleaningLockSettings.selectedDuration = duration
-        cleaningLockSettings.save(to: userDefaults)
+        lock.selectDuration(duration)
     }
 
-    /// Fires `onStartLock` with the currently selected duration.
-    /// AppDelegate owns the lock service and responds to this callback.
     func startCleaningLock() {
-        onStartLock?(cleaningLockSettings.selectedDuration)
+        lock.start()
     }
 
-    /// Re-reads the live Accessibility permission and republishes it so the
-    /// cleaning-lock UI reflects a grant made in System Settings without an
-    /// app relaunch. Called whenever the popover is shown.
     func refreshAccessibilityAuthorization() {
-        evaluateAccessibility()
+        lock.recovery.refreshAuthorization()
     }
 
-    /// User-initiated request for the Accessibility grant. The first tap shows
-    /// the native macOS prompt (which registers the entry under the running
-    /// build's identity); later taps open the Settings pane directly, since the
-    /// system prompt only appears once per launch.
     func requestAccessibilityAccess() {
-        if hasPromptedForAccess {
-            accessibilityAuthorization.openSettings()
-        } else {
-            hasPromptedForAccess = true
-            accessibilityAuthorization.promptForAccess()
-            accessibilityAuthorization.openSettings()
-        }
+        lock.recovery.requestAccess()
     }
 
-    // MARK: - Self-healing recovery
-
-    /// Starts active recovery: opens the Accessibility pane and begins polling a
-    /// fresh child-process probe for the *current* code identity's grant (the
-    /// in-process `AXIsProcessTrusted()` stays stale, ADR-002). On the first trusted
-    /// result the app relaunches to apply the grant.
     func beginAccessibilityRecovery() {
-        guard recoveryPhase == .idle else { return }
-        recoveryPhase = .awaitingGrant
-        // Reuses the request path: the first call shows the native prompt, which
-        // registers the entry under the *running build's* identity (avoiding the
-        // stale-entry trap), and opens the Accessibility pane. Later calls just
-        // open Settings. The probe loop then watches for the re-added grant.
-        requestAccessibilityAccess()
-        startRecoveryPolling()
+        lock.recovery.beginRecovery()
     }
 
-    /// Stops active recovery (e.g. the popover was dismissed before a grant) and
-    /// tears down the poll loop, returning to `.idle`.
     func cancelAccessibilityRecovery() {
-        guard recoveryPhase == .awaitingGrant else { return }
-        stopRecoveryPolling()
-        recoveryPhase = .idle
+        lock.recovery.cancelRecovery()
     }
 
-    /// One poll tick: spawn a fresh probe and apply its result. Internal (not
-    /// private) so the unit tests can drive ticks deterministically, the same way
-    /// `FakeInputLockService.tick()` drives the lock tests. A no-op outside active
-    /// recovery, so a late timer fire after cancel cannot spawn a probe.
     func pollAccessibilityRecovery() {
-        guard recoveryPhase == .awaitingGrant else { return }
-        accessibilityProbe.probe { [weak self] trusted in
-            self?.handleProbeResult(trusted)
-        }
+        lock.recovery.pollRecovery()
     }
 
-    /// One-time launch decision: when an update reset the grant and the proactive
-    /// nudge has not yet fired for this version, ask the UI to open the recovery
-    /// card once, recording the nudge so it never repeats for this version (ADR-003).
     func evaluateAccessibilityLaunchNudge() {
-        guard !isAccessibilityGranted else { return }
-        guard accessibilityResetByUpdate else { return }
-        guard nudgeTracker.shouldNudge(forVersion: currentAppVersion) else { return }
-        nudgeTracker = nudgeTracker.recordingNudge(version: currentAppVersion)
-        nudgeTracker.save(to: userDefaults)
-        onRequestOpenPopover?()
-    }
-
-    private func handleProbeResult(_ trusted: Bool) {
-        // Ignore a result that lands after cancel or after applying already began —
-        // relaunch fires at most once, only during active recovery.
-        guard recoveryPhase == .awaitingGrant, trusted else { return }
-        recoveryPhase = .applying
-        stopRecoveryPolling()
-        onRelaunch?()
-    }
-
-    private func startRecoveryPolling() {
-        stopRecoveryPolling()
-        recoveryPollTimer = MainRunLoopTimer.repeating(every: recoveryPollInterval) { [weak self] in
-            self?.pollAccessibilityRecovery()
-        }
-    }
-
-    private func stopRecoveryPolling() {
-        recoveryPollTimer?.invalidate()
-        recoveryPollTimer = nil
-    }
-
-    /// Reads the live AX permission, publishes the gate, and maintains the
-    /// grant tracker so an update-reset state can be told apart from a normal
-    /// first-time grant. When trusted, records the current version as the last
-    /// granted one; when not, flags whether an earlier version had been granted.
-    private func evaluateAccessibility() {
-        let trusted = accessibilityAuthorization.isTrusted
-        isAccessibilityGranted = trusted
-
-        if trusted {
-            accessibilityResetByUpdate = false
-            if grantTracker.lastGrantedVersion != currentAppVersion {
-                grantTracker = grantTracker.recordingGrant(version: currentAppVersion)
-                grantTracker.save(to: userDefaults)
-            }
-        } else {
-            // Compare against the pre-launch baseline so the flag does not flip
-            // off once this version is recorded as seen below.
-            accessibilityResetByUpdate = resetBaselineTracker.wasResetByUpdate(
-                isTrusted: false,
-                currentVersion: currentAppVersion
-            )
-            // Remember that this build ran (even ungranted), so a *future*
-            // update can be recognised as a reset for never-granted users too.
-            if grantTracker.lastSeenVersion != currentAppVersion {
-                grantTracker = grantTracker.recordingSeen(version: currentAppVersion)
-                grantTracker.save(to: userDefaults)
-            }
-        }
+        lock.recovery.evaluateLaunchNudge()
     }
 
     /// Called by AppDelegate each tick and on session end to keep the UI in sync.
     func updateLockState(phase: LockPhase, remaining: TimeInterval) {
-        lockPhase = phase
-        lockRemaining = remaining
+        lock.updateState(phase: phase, remaining: remaining)
     }
 
     // MARK: - Update
@@ -1142,26 +406,5 @@ final class CPUState: ObservableObject {
     /// Fires a user-initiated update check; AppDelegate owns the updater.
     func checkForUpdates() {
         onCheckForUpdates?()
-    }
-
-    // MARK: - Private
-
-    private func currentVisibility(for metric: MetricVisibilitySettings.Metric) -> Bool {
-        switch metric {
-        case .cpu:
-            return visibility.showCPU
-        case .ram:
-            return visibility.showRAM
-        case .network:
-            return visibility.showNetwork
-        case .temperature:
-            return visibility.showTemperature
-        case .disk:
-            return visibility.showDisk
-        case .tokens:
-            return visibility.showTokens
-        case .battery:
-            return visibility.showBattery
-        }
     }
 }

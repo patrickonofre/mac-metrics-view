@@ -56,28 +56,9 @@
 		10000000000000000000002F /* TemperatureHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000124 /* TemperatureHistory.swift */; };
 		100000000000000000000030 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000125 /* TemperatureFormatter.swift */; };
 		100000000000000000000031 /* TemperatureSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000126 /* TemperatureSampler.swift */; };
-		100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* IOHIDTemperatureSensors.swift */; };
-		100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* IOKitTemperatureReader.swift */; };
-		6714C7C4693B4956BAFB3424 /* AmbientLightModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */; };
-		910CC55A40BE48D6A324C28F /* AmbientThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */; };
-		B47D85D93D584D29AA3AB7AA /* AmbientLightSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */; };
-		E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */; };
-		C5F503404C4A431C8D2ACC85 /* SystemAppearanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */; };
-		65D017BEA6954CA095B9C64C /* ThemeSuggestionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */; };
-		4E9304DB8458485A81E2F532 /* AmbientSuggestionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */; };
-		B272469D84C03AFE9DF74A77 /* AmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */; };
-		324C4A03B03B87F9DECC6FF8 /* IOKitAmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */; };
 		100000000000000000000032 /* TemperatureSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000123 /* TemperatureSample.swift */; };
 		100000000000000000000033 /* TemperatureHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000124 /* TemperatureHistory.swift */; };
 		100000000000000000000034 /* TemperatureFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000125 /* TemperatureFormatter.swift */; };
-		1000000000000000000000FC05 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
-		1000000000000000000000FC06 /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
-		1000000000000000000000FC07 /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
-		1000000000000000000000FC08 /* IOKitBatteryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC04 /* IOKitBatteryReader.swift */; };
-		1000000000000000000000FC09 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
-		1000000000000000000000FC0A /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
-		1000000000000000000000FC0B /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
-		1000000000000000000000FC0C /* IOKitBatteryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC04 /* IOKitBatteryReader.swift */; };
 		100000000000000000000035 /* TemperatureFormattingAndHistoryTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000127 /* TemperatureFormattingAndHistoryTests.swift */; };
 		100000000000000000000036 /* LaunchAtLoginSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000128 /* LaunchAtLoginSettings.swift */; };
 		100000000000000000000037 /* LaunchAtLoginManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000129 /* LaunchAtLoginManager.swift */; };
@@ -95,28 +76,30 @@
 		100000000000000000000043 /* CGEventTapInputLock.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000132 /* CGEventTapInputLock.swift */; };
 		100000000000000000000044 /* LockOverlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000133 /* LockOverlayView.swift */; };
 		100000000000000000000045 /* LockOverlayWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000134 /* LockOverlayWindow.swift */; };
-		100000000000000000000046 /* LockEndReason.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012D /* LockEndReason.swift */; };
-		100000000000000000000047 /* CleaningLockSettings.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012E /* CleaningLockSettings.swift */; };
-		100000000000000000000048 /* CleaningLockCountdownFormatter.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012F /* CleaningLockCountdownFormatter.swift */; };
-		100000000000000000000049 /* InputLockService.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000131 /* InputLockService.swift */; };
+		100000000000000000000046 /* LockEndReason.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012D /* LockEndReason.swift */; };
+		100000000000000000000047 /* CleaningLockSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012E /* CleaningLockSettings.swift */; };
+		100000000000000000000048 /* CleaningLockCountdownFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000012F /* CleaningLockCountdownFormatter.swift */; };
+		100000000000000000000049 /* InputLockService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000131 /* InputLockService.swift */; };
 		10000000000000000000004A /* CleaningLockSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000135 /* CleaningLockSettingsTests.swift */; };
 		10000000000000000000004B /* CleaningLockCountdownFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */; };
 		10000000000000000000004C /* InputLockServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000137 /* InputLockServiceTests.swift */; };
 		10000000000000000000004D /* CleaningLockStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000138 /* CleaningLockStateTests.swift */; };
-		100000000000000000000C02 /* AccessibilityGrantTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
-		100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
-		100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */; };
-		100000000000000000000C08 /* UpdateBannerPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C07 /* UpdateBannerPresentationTests.swift */; };
-		100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */ = {isa = PBXBuildFile; fileRef = 100000000000000000000130 /* AccessibilityAuthorization.swift */; };
-		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
-		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
-		100000000000000000000B23 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B13 /* SparkleUpdateService.swift */; };
+		100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004E /* IOHIDTemperatureSensors.swift */; };
+		100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000004F /* IOKitTemperatureReader.swift */; };
+		1000000000000000000000A111 /* PopoverTabPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A101 /* PopoverTabPresentation.swift */; };
+		1000000000000000000000A112 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A102 /* MetricCard.swift */; };
+		1000000000000000000000A113 /* PopoverBanners.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A103 /* PopoverBanners.swift */; };
+		1000000000000000000000A114 /* MetricsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A104 /* MetricsTab.swift */; };
+		1000000000000000000000A115 /* SettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A105 /* SettingsTab.swift */; };
+		1000000000000000000000A116 /* ActionsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A106 /* ActionsTab.swift */; };
+		1000000000000000000000A117 /* PopoverTabPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A107 /* PopoverTabPresentationTests.swift */; };
+		1000000000000000000000A118 /* MetricCardAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */; };
+		1000000000000000000000A119 /* MetricsTabLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A109 /* MetricsTabLayoutTests.swift */; };
+		1000000000000000000000A1F1 /* SeverityPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A1F0 /* SeverityPalette.swift */; };
 		1000000000000000000000DB01 /* DiskCounterSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D01 /* DiskCounterSnapshot.swift */; };
 		1000000000000000000000DB02 /* DiskSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D02 /* DiskSample.swift */; };
 		1000000000000000000000DB03 /* DiskHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D03 /* DiskHistory.swift */; };
 		1000000000000000000000DB04 /* DiskWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D04 /* DiskWindowStats.swift */; };
-		1000000000000000000000FFA /* NetworkWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF1 /* NetworkWindowStats.swift */; };
-		1000000000000000000000FFC /* TrafficSessionTotals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF3 /* TrafficSessionTotals.swift */; };
 		1000000000000000000000DB05 /* DiskSampleCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D05 /* DiskSampleCalculator.swift */; };
 		1000000000000000000000DB06 /* DiskSeverityThresholds.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D06 /* DiskSeverityThresholds.swift */; };
 		1000000000000000000000DB07 /* DiskFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000D07 /* DiskFormatter.swift */; };
@@ -126,6 +109,11 @@
 		1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E01 /* AccessibilityProbe.swift */; };
 		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
 		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
+		B101B101B101B101B101B101 /* TokenUsageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A101A101A101A101A101A101 /* TokenUsageModel.swift */; };
+		B102B102B102B102B102B102 /* AmbientThemeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A102A102A102A102A102A102 /* AmbientThemeModel.swift */; };
+		B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A103A103A103A103A103A103 /* CleaningLockModel.swift */; };
+		B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */; };
+		B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A105A105A105A105A105A105 /* SystemMetricsModel.swift */; };
 		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
 		1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E05 /* UpdateBannerPresentation.swift */; };
 		1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F01 /* TokenUsageEvent.swift */; };
@@ -147,23 +135,46 @@
 		1000000000000000000000FB11 /* TokenDailyLedger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F11 /* TokenDailyLedger.swift */; };
 		1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F12 /* TokenRateLimitWindow.swift */; };
 		1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */; };
-		1000000000000000000000A111 /* PopoverTabPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A101 /* PopoverTabPresentation.swift */; };
-		1000000000000000000000A112 /* MetricCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A102 /* MetricCard.swift */; };
-		1000000000000000000000A1F1 /* SeverityPalette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A1F0 /* SeverityPalette.swift */; };
-		1000000000000000000000A113 /* PopoverBanners.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A103 /* PopoverBanners.swift */; };
-		1000000000000000000000A114 /* MetricsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A104 /* MetricsTab.swift */; };
-		1000000000000000000000A115 /* SettingsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A105 /* SettingsTab.swift */; };
-		1000000000000000000000A116 /* ActionsTab.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A106 /* ActionsTab.swift */; };
-		1000000000000000000000A117 /* PopoverTabPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A107 /* PopoverTabPresentationTests.swift */; };
-		1000000000000000000000A118 /* MetricCardAccessibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */; };
-		1000000000000000000000A119 /* MetricsTabLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000A109 /* MetricsTabLayoutTests.swift */; };
-		100000000000000000000899 /* ProcessCPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000999 /* ProcessCPUSample.swift */; };
+		1000000000000000000000FC05 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
+		1000000000000000000000FC06 /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
+		1000000000000000000000FC07 /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
+		1000000000000000000000FC08 /* IOKitBatteryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC04 /* IOKitBatteryReader.swift */; };
+		1000000000000000000000FC09 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
+		1000000000000000000000FC0A /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
+		1000000000000000000000FC0B /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
+		1000000000000000000000FC0C /* IOKitBatteryReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC04 /* IOKitBatteryReader.swift */; };
+		1000000000000000000000FFA /* NetworkWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF1 /* NetworkWindowStats.swift */; };
+		1000000000000000000000FFC /* TrafficSessionTotals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FF3 /* TrafficSessionTotals.swift */; };
 		100000000000000000000799 /* ProcessCPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000999 /* ProcessCPUSample.swift */; };
+		10000000000000000000079B /* LibprocProcessReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099B /* LibprocProcessReader.swift */; };
+		100000000000000000000899 /* ProcessCPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000999 /* ProcessCPUSample.swift */; };
 		10000000000000000000089A /* ProcessCPURankingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099A /* ProcessCPURankingTests.swift */; };
 		10000000000000000000089B /* LibprocProcessReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099B /* LibprocProcessReader.swift */; };
-		10000000000000000000079B /* LibprocProcessReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099B /* LibprocProcessReader.swift */; };
 		10000000000000000000089C /* LibprocProcessReaderTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099C /* LibprocProcessReaderTests.swift */; };
 		10000000000000000000089D /* CPUStateProcessSamplingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10000000000000000000099D /* CPUStateProcessSamplingTests.swift */; };
+		100000000000000000000B03 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 100000000000000000000B02 /* Sparkle */; };
+		100000000000000000000B22 /* AppUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B12 /* AppUpdateService.swift */; };
+		100000000000000000000B23 /* SparkleUpdateService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000B13 /* SparkleUpdateService.swift */; };
+		100000000000000000000C02 /* AccessibilityGrantTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
+		100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C01 /* AccessibilityGrantTracker.swift */; };
+		100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */; };
+		100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000130 /* AccessibilityAuthorization.swift */; };
+		100000000000000000000C08 /* UpdateBannerPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C07 /* UpdateBannerPresentationTests.swift */; };
+		324C4A03B03B87F9DECC6FF8 /* IOKitAmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */; };
+		48F14B53373C498D8F676EAD /* IOKitGPUReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0B31AAC8C295E38C7D8944 /* IOKitGPUReader.swift */; };
+		4E9304DB8458485A81E2F532 /* AmbientSuggestionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */; };
+		65D017BEA6954CA095B9C64C /* ThemeSuggestionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */; };
+		6714C7C4693B4956BAFB3424 /* AmbientLightModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */; };
+		7A1263990B23BA8A560A9848 /* GPUFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08497764461421AB6D8B4EA0 /* GPUFormatter.swift */; };
+		875CADC73E436CBB39539B0B /* GPUHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B73429D9BBEF7D1EB16D8288 /* GPUHistory.swift */; };
+		910CC55A40BE48D6A324C28F /* AmbientThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */; };
+		B272469D84C03AFE9DF74A77 /* AmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */; };
+		B47D85D93D584D29AA3AB7AA /* AmbientLightSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */; };
+		C5F503404C4A431C8D2ACC85 /* SystemAppearanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */; };
+		D16A94B1696B475157F81FE2 /* GPUReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38E64F1DE91A42C915E8095 /* GPUReading.swift */; };
+		DDEDDC61492DD84E3E2BF2A9 /* GPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8258A8D499B46A2DA5927F71 /* GPUSample.swift */; };
+		E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */; };
+		F6DC3C3A03ADD7DD7DA0BCF1 /* GPUSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4477DB866D82F1482690F7A3 /* GPUSampler.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -177,6 +188,65 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientThemeSettings.swift; path = MacMetricsView/Models/AmbientThemeSettings.swift; sourceTree = SOURCE_ROOT; };
+		08497764461421AB6D8B4EA0 /* GPUFormatter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUFormatter.swift; path = Services/GPUFormatter.swift; sourceTree = "<group>"; };
+		10000000000000000000004E /* IOHIDTemperatureSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOHIDTemperatureSensors.swift; sourceTree = "<group>"; };
+		10000000000000000000004F /* IOKitTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitTemperatureReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000A101 /* PopoverTabPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/PopoverTabPresentation.swift; sourceTree = "<group>"; };
+		1000000000000000000000A102 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/MetricCard.swift; sourceTree = "<group>"; };
+		1000000000000000000000A103 /* PopoverBanners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/PopoverBanners.swift; sourceTree = "<group>"; };
+		1000000000000000000000A104 /* MetricsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/MetricsTab.swift; sourceTree = "<group>"; };
+		1000000000000000000000A105 /* SettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/SettingsTab.swift; sourceTree = "<group>"; };
+		1000000000000000000000A106 /* ActionsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/ActionsTab.swift; sourceTree = "<group>"; };
+		1000000000000000000000A107 /* PopoverTabPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverTabPresentationTests.swift; sourceTree = "<group>"; };
+		1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCardAccessibilityTests.swift; sourceTree = "<group>"; };
+		1000000000000000000000A109 /* MetricsTabLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsTabLayoutTests.swift; sourceTree = "<group>"; };
+		1000000000000000000000A1F0 /* SeverityPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/SeverityPalette.swift; sourceTree = "<group>"; };
+		1000000000000000000000D01 /* DiskCounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskCounterSnapshot.swift; sourceTree = "<group>"; };
+		1000000000000000000000D02 /* DiskSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskSample.swift; sourceTree = "<group>"; };
+		1000000000000000000000D03 /* DiskHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskHistory.swift; sourceTree = "<group>"; };
+		1000000000000000000000D04 /* DiskWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskWindowStats.swift; sourceTree = "<group>"; };
+		1000000000000000000000D05 /* DiskSampleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampleCalculator.swift; sourceTree = "<group>"; };
+		1000000000000000000000D06 /* DiskSeverityThresholds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSeverityThresholds.swift; sourceTree = "<group>"; };
+		1000000000000000000000D07 /* DiskFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000D08 /* DiskReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskReading.swift; sourceTree = "<group>"; };
+		1000000000000000000000D09 /* IOKitDiskReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitDiskReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000D0A /* DiskSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampler.swift; sourceTree = "<group>"; };
+		1000000000000000000000E01 /* AccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityProbe.swift; sourceTree = "<group>"; };
+		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
+		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
+		A101A101A101A101A101A101 /* TokenUsageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TokenUsageModel.swift; sourceTree = "<group>"; };
+		A102A102A102A102A102A102 /* AmbientThemeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AmbientThemeModel.swift; sourceTree = "<group>"; };
+		A103A103A103A103A103A103 /* CleaningLockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/CleaningLockModel.swift; sourceTree = "<group>"; };
+		A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AccessibilityRecoveryModel.swift; sourceTree = "<group>"; };
+		A105A105A105A105A105A105 /* SystemMetricsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SystemMetricsModel.swift; sourceTree = "<group>"; };
+		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
+		1000000000000000000000E05 /* UpdateBannerPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/UpdateBannerPresentation.swift; sourceTree = "<group>"; };
+		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
+		1000000000000000000000F02 /* TokenAggregate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenAggregate.swift; sourceTree = "<group>"; };
+		1000000000000000000000F03 /* TokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenScope.swift; sourceTree = "<group>"; };
+		1000000000000000000000F04 /* TokenWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindow.swift; sourceTree = "<group>"; };
+		1000000000000000000000F05 /* TokenWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindowStats.swift; sourceTree = "<group>"; };
+		1000000000000000000000F06 /* TokenUsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageStore.swift; sourceTree = "<group>"; };
+		1000000000000000000000F07 /* TokenFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000F08 /* TokenUsageReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageReading.swift; sourceTree = "<group>"; };
+		1000000000000000000000F09 /* TokenUsageSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageSampler.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0A /* ClaudeCodeLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeCodeLogReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0B /* TokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenProvider.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0C /* CodexLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CodexLogReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0D /* ActiveFileSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ActiveFileSet.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0E /* TokenPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenPricing.swift; sourceTree = "<group>"; };
+		1000000000000000000000F0F /* TokenCostCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenCostCalculator.swift; sourceTree = "<group>"; };
+		1000000000000000000000F10 /* TokenBurnRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenBurnRate.swift; sourceTree = "<group>"; };
+		1000000000000000000000F11 /* TokenDailyLedger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenDailyLedger.swift; sourceTree = "<group>"; };
+		1000000000000000000000F12 /* TokenRateLimitWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenRateLimitWindow.swift; sourceTree = "<group>"; };
+		1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeHistoryBackfill.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC01 /* BatterySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/BatterySample.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC02 /* BatteryFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatteryFormatter.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC03 /* BatterySampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatterySampler.swift; sourceTree = "<group>"; };
+		1000000000000000000000FC04 /* IOKitBatteryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitBatteryReader.swift; sourceTree = "<group>"; };
+		1000000000000000000000FF1 /* NetworkWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkWindowStats.swift; sourceTree = "<group>"; };
+		1000000000000000000000FF3 /* TrafficSessionTotals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TrafficSessionTotals.swift; sourceTree = "<group>"; };
 		100000000000000000000101 /* MacMetricsViewMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MacMetricsViewMain.swift; sourceTree = "<group>"; };
 		100000000000000000000102 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AppDelegate.swift; sourceTree = "<group>"; };
 		100000000000000000000103 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/StatusItemController.swift; sourceTree = "<group>"; };
@@ -201,8 +271,6 @@
 		100000000000000000000117 /* NetworkCounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkCounterSnapshot.swift; sourceTree = "<group>"; };
 		100000000000000000000118 /* NetworkSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkSample.swift; sourceTree = "<group>"; };
 		100000000000000000000119 /* NetworkHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkHistory.swift; sourceTree = "<group>"; };
-		1000000000000000000000FF1 /* NetworkWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/NetworkWindowStats.swift; sourceTree = "<group>"; };
-		1000000000000000000000FF3 /* TrafficSessionTotals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TrafficSessionTotals.swift; sourceTree = "<group>"; };
 		10000000000000000000011A /* NetworkSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/NetworkSampler.swift; sourceTree = "<group>"; };
 		10000000000000000000011B /* DarwinNetworkReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DarwinNetworkReader.swift; sourceTree = "<group>"; };
 		10000000000000000000011C /* NetworkFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/NetworkFormatter.swift; sourceTree = "<group>"; };
@@ -215,31 +283,15 @@
 		100000000000000000000123 /* TemperatureSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemperatureSample.swift; sourceTree = "<group>"; };
 		100000000000000000000124 /* TemperatureHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TemperatureHistory.swift; sourceTree = "<group>"; };
 		100000000000000000000125 /* TemperatureFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureFormatter.swift; sourceTree = "<group>"; };
-		1000000000000000000000FC01 /* BatterySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/BatterySample.swift; sourceTree = "<group>"; };
-		1000000000000000000000FC02 /* BatteryFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatteryFormatter.swift; sourceTree = "<group>"; };
-		1000000000000000000000FC03 /* BatterySampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatterySampler.swift; sourceTree = "<group>"; };
-		1000000000000000000000FC04 /* IOKitBatteryReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitBatteryReader.swift; sourceTree = "<group>"; };
 		100000000000000000000126 /* TemperatureSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TemperatureSampler.swift; sourceTree = "<group>"; };
-		10000000000000000000004E /* IOHIDTemperatureSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOHIDTemperatureSensors.swift; sourceTree = "<group>"; };
-		10000000000000000000004F /* IOKitTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitTemperatureReader.swift; sourceTree = "<group>"; };
-		60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightModels.swift; path = MacMetricsView/Models/AmbientLightModels.swift; sourceTree = SOURCE_ROOT; };
-		04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientThemeSettings.swift; path = MacMetricsView/Models/AmbientThemeSettings.swift; sourceTree = SOURCE_ROOT; };
-		A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightSampler.swift; path = MacMetricsView/Services/AmbientLightSampler.swift; sourceTree = SOURCE_ROOT; };
-		5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOHIDAmbientLightSensors.swift; path = MacMetricsView/Services/IOHIDAmbientLightSensors.swift; sourceTree = SOURCE_ROOT; };
-		C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemAppearanceController.swift; path = MacMetricsView/Services/SystemAppearanceController.swift; sourceTree = SOURCE_ROOT; };
-		1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ThemeSuggestionEngine.swift; path = MacMetricsView/Services/ThemeSuggestionEngine.swift; sourceTree = SOURCE_ROOT; };
-		D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientSuggestionPresentation.swift; path = MacMetricsView/UI/AmbientSuggestionPresentation.swift; sourceTree = SOURCE_ROOT; };
-		4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightReader.swift; path = MacMetricsView/Services/AmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
-		353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOKitAmbientLightReader.swift; path = MacMetricsView/Services/IOKitAmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
-		10000000000000000000012B /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Localization.swift; sourceTree = "<group>"; };
-		10000000000000000000012C /* MainRunLoopTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MainRunLoopTimer.swift; sourceTree = "<group>"; };
 		100000000000000000000127 /* TemperatureFormattingAndHistoryTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TemperatureFormattingAndHistoryTests.swift; sourceTree = "<group>"; };
 		100000000000000000000128 /* LaunchAtLoginSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LaunchAtLoginSettings.swift; sourceTree = "<group>"; };
 		100000000000000000000129 /* LaunchAtLoginManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LaunchAtLoginManager.swift; sourceTree = "<group>"; };
 		10000000000000000000012A /* LaunchAtLoginSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLoginSettingsTests.swift; sourceTree = "<group>"; };
+		10000000000000000000012B /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/Localization.swift; sourceTree = "<group>"; };
+		10000000000000000000012C /* MainRunLoopTimer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/MainRunLoopTimer.swift; sourceTree = "<group>"; };
 		10000000000000000000012D /* LockEndReason.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LockEndReason.swift; sourceTree = "<group>"; };
 		10000000000000000000012E /* CleaningLockSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/CleaningLockSettings.swift; sourceTree = "<group>"; };
-		100000000000000000000C01 /* AccessibilityGrantTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityGrantTracker.swift; sourceTree = "<group>"; };
 		10000000000000000000012F /* CleaningLockCountdownFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CleaningLockCountdownFormatter.swift; sourceTree = "<group>"; };
 		100000000000000000000130 /* AccessibilityAuthorization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityAuthorization.swift; sourceTree = "<group>"; };
 		100000000000000000000131 /* InputLockService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/InputLockService.swift; sourceTree = "<group>"; };
@@ -250,59 +302,29 @@
 		100000000000000000000136 /* CleaningLockCountdownFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockCountdownFormatterTests.swift; sourceTree = "<group>"; };
 		100000000000000000000137 /* InputLockServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InputLockServiceTests.swift; sourceTree = "<group>"; };
 		100000000000000000000138 /* CleaningLockStateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CleaningLockStateTests.swift; sourceTree = "<group>"; };
-		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
-		100000000000000000000C07 /* UpdateBannerPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerPresentationTests.swift; sourceTree = "<group>"; };
-		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
-		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
-		1000000000000000000000D01 /* DiskCounterSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskCounterSnapshot.swift; sourceTree = "<group>"; };
-		1000000000000000000000D02 /* DiskSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskSample.swift; sourceTree = "<group>"; };
-		1000000000000000000000D03 /* DiskHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskHistory.swift; sourceTree = "<group>"; };
-		1000000000000000000000D04 /* DiskWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/DiskWindowStats.swift; sourceTree = "<group>"; };
-		1000000000000000000000D05 /* DiskSampleCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampleCalculator.swift; sourceTree = "<group>"; };
-		1000000000000000000000D06 /* DiskSeverityThresholds.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSeverityThresholds.swift; sourceTree = "<group>"; };
-		1000000000000000000000D07 /* DiskFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskFormatter.swift; sourceTree = "<group>"; };
-		1000000000000000000000D08 /* DiskReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskReading.swift; sourceTree = "<group>"; };
-		1000000000000000000000D09 /* IOKitDiskReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitDiskReader.swift; sourceTree = "<group>"; };
-		1000000000000000000000D0A /* DiskSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/DiskSampler.swift; sourceTree = "<group>"; };
-		1000000000000000000000E01 /* AccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityProbe.swift; sourceTree = "<group>"; };
-		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
-		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
-		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
-		1000000000000000000000E05 /* UpdateBannerPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/UpdateBannerPresentation.swift; sourceTree = "<group>"; };
-		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
-		1000000000000000000000F02 /* TokenAggregate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenAggregate.swift; sourceTree = "<group>"; };
-		1000000000000000000000F03 /* TokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenScope.swift; sourceTree = "<group>"; };
-		1000000000000000000000F04 /* TokenWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindow.swift; sourceTree = "<group>"; };
-		1000000000000000000000F05 /* TokenWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindowStats.swift; sourceTree = "<group>"; };
-		1000000000000000000000F06 /* TokenUsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageStore.swift; sourceTree = "<group>"; };
-		1000000000000000000000F07 /* TokenFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenFormatter.swift; sourceTree = "<group>"; };
-		1000000000000000000000F08 /* TokenUsageReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageReading.swift; sourceTree = "<group>"; };
-		1000000000000000000000F09 /* TokenUsageSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageSampler.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0A /* ClaudeCodeLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeCodeLogReader.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0B /* TokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenProvider.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0C /* CodexLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CodexLogReader.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0D /* ActiveFileSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ActiveFileSet.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0E /* TokenPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenPricing.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0F /* TokenCostCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenCostCalculator.swift; sourceTree = "<group>"; };
-		1000000000000000000000F10 /* TokenBurnRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenBurnRate.swift; sourceTree = "<group>"; };
-		1000000000000000000000F11 /* TokenDailyLedger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenDailyLedger.swift; sourceTree = "<group>"; };
-		1000000000000000000000F12 /* TokenRateLimitWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenRateLimitWindow.swift; sourceTree = "<group>"; };
-		1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeHistoryBackfill.swift; sourceTree = "<group>"; };
-		1000000000000000000000A101 /* PopoverTabPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/PopoverTabPresentation.swift; sourceTree = "<group>"; };
-		1000000000000000000000A102 /* MetricCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/MetricCard.swift; sourceTree = "<group>"; };
-		1000000000000000000000A1F0 /* SeverityPalette.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/SeverityPalette.swift; sourceTree = "<group>"; };
-		1000000000000000000000A103 /* PopoverBanners.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/PopoverBanners.swift; sourceTree = "<group>"; };
-		1000000000000000000000A104 /* MetricsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/MetricsTab.swift; sourceTree = "<group>"; };
-		1000000000000000000000A105 /* SettingsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/SettingsTab.swift; sourceTree = "<group>"; };
-		1000000000000000000000A106 /* ActionsTab.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/Popover/ActionsTab.swift; sourceTree = "<group>"; };
-		1000000000000000000000A107 /* PopoverTabPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PopoverTabPresentationTests.swift; sourceTree = "<group>"; };
-		1000000000000000000000A108 /* MetricCardAccessibilityTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricCardAccessibilityTests.swift; sourceTree = "<group>"; };
-		1000000000000000000000A109 /* MetricsTabLayoutTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetricsTabLayoutTests.swift; sourceTree = "<group>"; };
 		100000000000000000000999 /* ProcessCPUSample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/ProcessCPUSample.swift; sourceTree = "<group>"; };
 		10000000000000000000099A /* ProcessCPURankingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProcessCPURankingTests.swift; sourceTree = "<group>"; };
 		10000000000000000000099B /* LibprocProcessReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LibprocProcessReader.swift; sourceTree = "<group>"; };
 		10000000000000000000099C /* LibprocProcessReaderTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibprocProcessReaderTests.swift; sourceTree = "<group>"; };
 		10000000000000000000099D /* CPUStateProcessSamplingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CPUStateProcessSamplingTests.swift; sourceTree = "<group>"; };
+		100000000000000000000B12 /* AppUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AppUpdateService.swift; sourceTree = "<group>"; };
+		100000000000000000000B13 /* SparkleUpdateService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SparkleUpdateService.swift; sourceTree = "<group>"; };
+		100000000000000000000C01 /* AccessibilityGrantTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityGrantTracker.swift; sourceTree = "<group>"; };
+		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
+		100000000000000000000C07 /* UpdateBannerPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerPresentationTests.swift; sourceTree = "<group>"; };
+		1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ThemeSuggestionEngine.swift; path = MacMetricsView/Services/ThemeSuggestionEngine.swift; sourceTree = SOURCE_ROOT; };
+		353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOKitAmbientLightReader.swift; path = MacMetricsView/Services/IOKitAmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
+		3C0B31AAC8C295E38C7D8944 /* IOKitGPUReader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IOKitGPUReader.swift; path = Services/IOKitGPUReader.swift; sourceTree = "<group>"; };
+		4477DB866D82F1482690F7A3 /* GPUSampler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUSampler.swift; path = Services/GPUSampler.swift; sourceTree = "<group>"; };
+		4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightReader.swift; path = MacMetricsView/Services/AmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
+		5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOHIDAmbientLightSensors.swift; path = MacMetricsView/Services/IOHIDAmbientLightSensors.swift; sourceTree = SOURCE_ROOT; };
+		60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightModels.swift; path = MacMetricsView/Models/AmbientLightModels.swift; sourceTree = SOURCE_ROOT; };
+		8258A8D499B46A2DA5927F71 /* GPUSample.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUSample.swift; path = Models/GPUSample.swift; sourceTree = "<group>"; };
+		A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightSampler.swift; path = MacMetricsView/Services/AmbientLightSampler.swift; sourceTree = SOURCE_ROOT; };
+		B73429D9BBEF7D1EB16D8288 /* GPUHistory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUHistory.swift; path = Models/GPUHistory.swift; sourceTree = "<group>"; };
+		C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemAppearanceController.swift; path = MacMetricsView/Services/SystemAppearanceController.swift; sourceTree = SOURCE_ROOT; };
+		C38E64F1DE91A42C915E8095 /* GPUReading.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUReading.swift; path = Services/GPUReading.swift; sourceTree = "<group>"; };
+		D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientSuggestionPresentation.swift; path = MacMetricsView/UI/AmbientSuggestionPresentation.swift; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -410,6 +432,11 @@
 				1000000000000000000000E01 /* AccessibilityProbe.swift */,
 				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
 				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
+				A101A101A101A101A101A101 /* TokenUsageModel.swift */,
+				A102A102A102A102A102A102 /* AmbientThemeModel.swift */,
+				A103A103A103A103A103A103 /* CleaningLockModel.swift */,
+				A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */,
+				A105A105A105A105A105A105 /* SystemMetricsModel.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
 				1000000000000000000000E05 /* UpdateBannerPresentation.swift */,
 				1000000000000000000000F01 /* TokenUsageEvent.swift */,
@@ -442,6 +469,12 @@
 				10000000000000000000099B /* LibprocProcessReader.swift */,
 				10000000000000000000010F /* Info.plist */,
 				100000000000000000000122 /* Assets.xcassets */,
+				8258A8D499B46A2DA5927F71 /* GPUSample.swift */,
+				B73429D9BBEF7D1EB16D8288 /* GPUHistory.swift */,
+				C38E64F1DE91A42C915E8095 /* GPUReading.swift */,
+				3C0B31AAC8C295E38C7D8944 /* IOKitGPUReader.swift */,
+				4477DB866D82F1482690F7A3 /* GPUSampler.swift */,
+				08497764461421AB6D8B4EA0 /* GPUFormatter.swift */,
 			);
 			path = MacMetricsView;
 			sourceTree = "<group>";
@@ -659,6 +692,11 @@
 				1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */,
 				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
 				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
+				B101B101B101B101B101B101 /* TokenUsageModel.swift in Sources */,
+				B102B102B102B102B102B102 /* AmbientThemeModel.swift in Sources */,
+				B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */,
+				B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */,
+				B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
 				1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */,
 				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,
@@ -689,6 +727,12 @@
 				1000000000000000000000A116 /* ActionsTab.swift in Sources */,
 				100000000000000000000899 /* ProcessCPUSample.swift in Sources */,
 				10000000000000000000089B /* LibprocProcessReader.swift in Sources */,
+				DDEDDC61492DD84E3E2BF2A9 /* GPUSample.swift in Sources */,
+				875CADC73E436CBB39539B0B /* GPUHistory.swift in Sources */,
+				D16A94B1696B475157F81FE2 /* GPUReading.swift in Sources */,
+				48F14B53373C498D8F676EAD /* IOKitGPUReader.swift in Sources */,
+				F6DC3C3A03ADD7DD7DA0BCF1 /* GPUSampler.swift in Sources */,
+				7A1263990B23BA8A560A9848 /* GPUFormatter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -727,12 +771,12 @@
 				100000000000000000000029 /* MetricVisibilitySettingsTests.swift in Sources */,
 				100000000000000000000035 /* TemperatureFormattingAndHistoryTests.swift in Sources */,
 				10000000000000000000003A /* LaunchAtLoginSettingsTests.swift in Sources */,
-				100000000000000000000046 /* LockEndReason.swift in Sources (Tests) */,
-				100000000000000000000047 /* CleaningLockSettings.swift in Sources (Tests) */,
-				100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources (Tests) */,
-				100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources (Tests) */,
-				100000000000000000000048 /* CleaningLockCountdownFormatter.swift in Sources (Tests) */,
-				100000000000000000000049 /* InputLockService.swift in Sources (Tests) */,
+				100000000000000000000046 /* LockEndReason.swift in Sources */,
+				100000000000000000000047 /* CleaningLockSettings.swift in Sources */,
+				100000000000000000000C03 /* AccessibilityGrantTracker.swift in Sources */,
+				100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources */,
+				100000000000000000000048 /* CleaningLockCountdownFormatter.swift in Sources */,
+				100000000000000000000049 /* InputLockService.swift in Sources */,
 				10000000000000000000004A /* CleaningLockSettingsTests.swift in Sources */,
 				10000000000000000000004B /* CleaningLockCountdownFormatterTests.swift in Sources */,
 				10000000000000000000004C /* InputLockServiceTests.swift in Sources */,

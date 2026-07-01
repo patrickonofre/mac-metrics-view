@@ -102,7 +102,7 @@ final class CleaningRecoveryPresentationTests: XCTestCase {
         // What the card's "Open Accessibility" button calls.
         state.beginAccessibilityRecovery()
 
-        XCTAssertEqual(state.recoveryPhase, .awaitingGrant)
+        XCTAssertEqual(state.lock.recovery.phase, .awaitingGrant)
         XCTAssertEqual(auth.openSettingsCallCount, 1)
     }
 }
