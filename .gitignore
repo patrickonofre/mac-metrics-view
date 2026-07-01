@@ -11,6 +11,7 @@ xcuserdata/
 /dist/
 /MacMetricsView.app/
 /MacMetricsView-beta.zip
+*.profraw
 
 # Markdown docs stay local and are not version-controlled, except the
 # project README at the repo root.
