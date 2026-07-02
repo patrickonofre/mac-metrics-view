@@ -54,8 +54,10 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertTrue(appDelegate.networkSampler.isRunning)
         XCTAssertEqual(appDelegate.networkSampler.interval, 1.0)
         
+        // Temperature runs on its own slower cadence even with the popover open (OPT-06 /
+        // TD-013): 2s rather than the 1s the other samplers use.
         XCTAssertTrue(appDelegate.temperatureSampler.isRunning)
-        XCTAssertEqual(appDelegate.temperatureSampler.pollInterval, 1.0)
+        XCTAssertEqual(appDelegate.temperatureSampler.pollInterval, 2.0)
         
         XCTAssertTrue(appDelegate.diskSampler.isRunning)
         XCTAssertEqual(appDelegate.diskSampler.interval, 1.0)
@@ -66,9 +68,11 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertTrue(appDelegate.codexTokenSampler.isRunning)
         XCTAssertEqual(appDelegate.codexTokenSampler.interval, 1.0)
 
+        // Battery keeps its event-driven + 30s safety poll cadence even with the popover
+        // open (OPT-05), rather than following the 1s popover cadence of the other samplers.
         if BatterySampler.batteryIsPresent() {
             XCTAssertTrue(appDelegate.batterySampler.isRunning)
-            XCTAssertEqual(appDelegate.batterySampler.pollInterval, 1.0)
+            XCTAssertEqual(appDelegate.batterySampler.pollInterval, 30.0)
         } else {
             XCTAssertFalse(appDelegate.batterySampler.isRunning)
         }

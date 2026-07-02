@@ -13,6 +13,17 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     // title rebuild from re-rendering images.
     private var iconCache: [String: NSImage] = [:]
     private var titleUpdateScheduled = false
+    /// Signature of the last title actually applied to the button (PERF-02). Recomposed each
+    /// tick from the freshly built attributed string + effective appearance; when it matches,
+    /// the assignment to `button.attributedTitle` is skipped, so a steady state (e.g. CPU flat,
+    /// RAM in whole GB) no longer relayouts the status bar or wakes the WindowServer every tick.
+    private var lastTitleSignature: String?
+    /// The monospaced menu-bar font is size-fixed at runtime, so it is resolved once instead of
+    /// per segment per tick (PERF-02 rider). Appearance-independent; no invalidation needed.
+    private lazy var monospacedFont: NSFont = NSFont.monospacedSystemFont(
+        ofSize: max(NSFont.smallSystemFontSize, NSFont.systemFontSize - 2),
+        weight: .regular
+    )
     private var cancellables: Set<AnyCancellable> = []
 
     init(
@@ -199,8 +210,46 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             attributedTitle.append(updateBadgeGlyphAttachment(color: .labelColor))
         }
 
+        // Dirty-check (PERF-02): only touch the button when the rendered result actually
+        // changed. The signature is derived from the composed string, its per-run foreground
+        // colors and attachment-image identities, plus the effective appearance — so any real
+        // change (value, severity, glyph bucket, badge, light↔dark flip) reapplies, while an
+        // identical tick is a no-op. `NSAttributedString.isEqual` can't be used here: the icon
+        // and badge attachments are new instances each rebuild and never compare equal.
+        let signature = Self.renderSignature(for: attributedTitle, isDark: Self.isDarkAppearance)
+        guard signature != lastTitleSignature else { return }
+        lastTitleSignature = signature
+
         button.attributedTitle = attributedTitle
         button.setAccessibilityLabel(state.accessibilityMenuBarTitle)
+    }
+
+    /// A stable, drift-free fingerprint of the *rendered* title. Reads the actual composed
+    /// output (not a parallel recomposition of the inputs), so it cannot fall out of sync with
+    /// `updateTitle`. Cached glyph images have stable identities across ticks (same symbol →
+    /// same cached `NSImage`), so an unchanged icon does not perturb the signature, while a
+    /// battery charge-bucket swap (new cache key → new image) does.
+    private static func renderSignature(for title: NSAttributedString, isDark: Bool) -> String {
+        let full = NSRange(location: 0, length: title.length)
+        var parts: [String] = [title.string, isDark ? "d" : "l"]
+        title.enumerateAttribute(.foregroundColor, in: full) { value, range, _ in
+            if let color = value as? NSColor {
+                parts.append("c\(range.location):\(color.description)")
+            }
+        }
+        title.enumerateAttribute(.attachment, in: full) { value, range, _ in
+            if let attachment = value as? NSTextAttachment, let image = attachment.image {
+                parts.append("a\(range.location):\(ObjectIdentifier(image).hashValue)")
+            }
+        }
+        return parts.joined(separator: "|")
+    }
+
+    /// Whether the app's effective appearance is dark. Menu-bar template glyphs and dynamic
+    /// colors re-tint at draw time, but the signature includes this so a light↔dark flip still
+    /// forces one reapplication (the observer that drives it exists for exactly that re-tint).
+    private static var isDarkAppearance: Bool {
+        NSApplication.shared.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
     }
 
     private func statusSegment(
@@ -244,10 +293,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     private func baseAttributes(color: NSColor) -> [NSAttributedString.Key: Any] {
         [
-            .font: NSFont.monospacedSystemFont(
-                ofSize: max(NSFont.smallSystemFontSize, NSFont.systemFontSize - 2),
-                weight: .regular
-            ),
+            .font: monospacedFont,
             .foregroundColor: color
         ]
     }

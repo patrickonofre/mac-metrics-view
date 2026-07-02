@@ -25,6 +25,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     let codexTokenSampler = TokenUsageSampler(reader: CodexLogReader())
     private var statusItemController: StatusItemController?
 
+    /// Battery presence is fixed by hardware for the process lifetime, so the full IOPS
+    /// snapshot `batteryIsPresent()` runs is resolved once instead of on every
+    /// `reevaluateSamplers` (OPT-15).
+    private lazy var batteryIsPresent: Bool = BatterySampler.batteryIsPresent()
+    /// The battery sampler is event-driven (IOPS plug/charge notifications); the timer only
+    /// refreshes the slow-drifting time-remaining estimate, so a modest safety poll is enough
+    /// in every state (OPT-05). Restores the sampler's own 30s design default, which
+    /// `reevaluateSamplers` had been overriding with the metric update rate.
+    private let batterySafetyPollInterval: TimeInterval = 30
+
+    /// Temperature runs on a fixed cadence independent of the metric update rate (OPT-06 /
+    /// TD-013): die temperature changes slowly and the menu bar shows whole degrees, so a
+    /// slower read is visually identical while removing the largest remaining background cost.
+    private let temperatureBackgroundInterval: TimeInterval = 3
+    private let temperaturePopoverInterval: TimeInterval = 2
+
     // Cleaning-lock
     private let lockService = CGEventTapInputLock()
     private var overlayController: LockOverlayController?
@@ -123,6 +139,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         if lockService.phase == .locked {
             lockService.stop(reason: .terminated)
         }
+        // Flush any ledger write the debounce (OPT-09) is still holding, so a clean quit
+        // never loses the last ≤30s of token accounting.
+        state.token.flushLedgerIfDirty()
         cpuSampler.stop()
         ramSampler.stop()
         networkSampler.stop()
@@ -262,14 +281,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             cpuSampler.start(interval: 1.0, tolerance: 0)
             ramSampler.start(interval: 1.0, tolerance: 0)
             networkSampler.start(interval: 1.0, tolerance: 0)
-            temperatureSampler.start(interval: 1.0, tolerance: 0)
+            // Temperature keeps a slower 2s cadence even with the popover open (OPT-06 /
+            // TD-013); the slow signal reads identically and saves the extra reads.
+            temperatureSampler.start(interval: temperaturePopoverInterval, tolerance: 0)
             diskSampler.start(interval: 1.0, tolerance: 0)
             gpuSampler.start(interval: 1.0, tolerance: 0)
             tokenSampler.start(interval: 1.0, tolerance: 0)
             codexTokenSampler.start(interval: 1.0, tolerance: 0)
 
-            if BatterySampler.batteryIsPresent() {
-                batterySampler.start(interval: 1.0, tolerance: 0)
+            // Battery keeps its event-driven + 30s safety poll cadence even with the popover
+            // open (OPT-05): plug/unplug and charge ticks arrive as IOPS events in real time,
+            // and openPopover() already does a one-shot read, so a 1s poll adds nothing.
+            if batteryIsPresent {
+                batterySampler.start(interval: batterySafetyPollInterval, tolerance: batterySafetyPollInterval * 0.25)
             } else {
                 batterySampler.stop()
             }
@@ -296,7 +320,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             }
 
             if state.metrics.visibility.showTemperature {
-                temperatureSampler.start(interval: bgInterval, tolerance: bgTolerance)
+                // Fixed 3s background cadence, independent of updateRate (OPT-06 / TD-013).
+                temperatureSampler.start(
+                    interval: temperatureBackgroundInterval,
+                    tolerance: temperatureBackgroundInterval * 0.25
+                )
             } else {
                 temperatureSampler.stop()
             }
@@ -323,8 +351,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
                 codexTokenSampler.stop()
             }
 
-            if state.metrics.visibility.showBattery && BatterySampler.batteryIsPresent() {
-                batterySampler.start(interval: bgInterval, tolerance: bgTolerance)
+            if state.metrics.visibility.showBattery && batteryIsPresent {
+                batterySampler.start(interval: batterySafetyPollInterval, tolerance: batterySafetyPollInterval * 0.25)
             } else {
                 batterySampler.stop()
             }

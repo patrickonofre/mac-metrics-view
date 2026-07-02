@@ -154,6 +154,8 @@ final class RAMSampler {
     }
 
     func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
+        // Idempotent (OPT-10): a repeat with identical parameters must not re-collect.
+        if isRunning, interval == self.interval, tolerance == self.tolerance { return }
         self.interval = interval
         self.tolerance = tolerance
         start()

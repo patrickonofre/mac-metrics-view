@@ -34,17 +34,34 @@ final class IOHIDAmbientLightSource: AmbientLightSensorSource {
     private lazy var symbols: Symbols? = Self.resolveSymbols()
     private lazy var client: AnyObject? = makeClient()
 
+    /// Enumerated ALS services, resolved once and reused (OPT-13; same rationale as the
+    /// temperature source). `nil` = not yet enumerated; an empty enumeration is never cached;
+    /// a cache that stops emitting is dropped so the next read re-enumerates.
+    private var cachedServices: [AnyObject]?
+
     func readLevel() -> Double? {
         guard let symbols, let client else { return nil }
-        guard let services = symbols.copyServices(client)?.takeRetainedValue() as NSArray? else { return nil }
+
+        let services: [AnyObject]
+        if let cached = cachedServices {
+            services = cached
+        } else {
+            guard let enumerated = symbols.copyServices(client)?.takeRetainedValue() as? [AnyObject],
+                  !enumerated.isEmpty else { return nil }
+            cachedServices = enumerated
+            services = enumerated
+        }
 
         let field = Self.ambientLightEventType << 16
-        for case let service as AnyObject in services {
+        for service in services {
             guard let event = symbols.copyEvent(service, Self.ambientLightEventType, 0, 0)?.takeRetainedValue() else {
                 continue
             }
             return symbols.floatValue(event, field)
         }
+
+        // Nothing emitted → the cached services are stale; drop so the next read re-enumerates.
+        cachedServices = nil
         return nil
     }
 

@@ -64,6 +64,8 @@ final class TokenUsageSampler {
     }
 
     func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
+        // Idempotent (OPT-10): a repeat with identical parameters keeps the running timer.
+        if isRunning, interval == self.interval, tolerance == self.tolerance { return }
         self.interval = interval
         self.tolerance = tolerance
         if isRunning {

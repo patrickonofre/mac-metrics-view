@@ -50,7 +50,7 @@ final class GPUSamplerTests: XCTestCase {
         scheduler: FakeScheduler
     ) -> (GPUSampler, SpyDelegate) {
         let delegate = SpyDelegate()
-        let sampler = GPUSampler(reader: reader, interval: 1, pollScheduler: scheduler)
+        let sampler = GPUSampler(reader: reader, interval: 1, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         sampler.delegate = delegate
         return (sampler, delegate)
     }
@@ -137,5 +137,34 @@ final class GPUSamplerTests: XCTestCase {
 
         XCTAssertEqual(scheduler.scheduleCount, 1)
         XCTAssertEqual(scheduler.cancelCount, 0)
+    }
+
+    // OPT-10: reevaluateSamplers re-issues start on every settings/popover change. A repeat
+    // with identical (interval, tolerance) while running must be a no-op — no cancel, no
+    // reschedule, no extra read — while a real parameter change still reschedules.
+    func testStartWithIdenticalParamsWhileRunningIsNoOp() {
+        let reader = ScriptedGPUReader(samples: [
+            GPUSample(utilizationPercent: 10),
+            GPUSample(utilizationPercent: 20),
+            GPUSample(utilizationPercent: 30)
+        ])
+        let scheduler = FakeScheduler()
+        let (sampler, delegate) = makeSampler(reader: reader, scheduler: scheduler)
+
+        sampler.start(interval: 2, tolerance: 0.5)
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(reader.readCount, 1)          // one immediate read on cold start
+        XCTAssertEqual(delegate.samples.count, 1)
+
+        sampler.start(interval: 2, tolerance: 0.5)   // identical → guarded no-op
+        XCTAssertEqual(scheduler.scheduleCount, 1)
+        XCTAssertEqual(scheduler.cancelCount, 0)
+        XCTAssertEqual(reader.readCount, 1)          // no extra read
+        XCTAssertEqual(delegate.samples.count, 1)
+
+        sampler.start(interval: 3, tolerance: 0.5)   // changed → reschedule
+        XCTAssertEqual(scheduler.cancelCount, 1)
+        XCTAssertEqual(scheduler.scheduleCount, 2)
+        XCTAssertEqual(sampler.interval, 3)
     }
 }

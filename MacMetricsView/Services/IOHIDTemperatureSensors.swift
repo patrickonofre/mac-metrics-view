@@ -49,21 +49,52 @@ final class IOHIDTemperatureSensorSource: TemperatureSensorSource {
     private lazy var symbols: Symbols? = Self.resolveSymbols()
     private lazy var client: AnyObject? = makeClient()
 
+    /// Enumerated services paired with their (fixed) `Product` name, resolved once and
+    /// reused every tick (OPT-01). Sensor hardware and names never change while running, so
+    /// the per-tick `copyServices` enumeration and the N `copyProperty` string reads — the
+    /// dominant cost of the temperature poll — collapse to `copyEvent` + `floatValue` per
+    /// service. `nil` means "not yet enumerated"; an empty enumeration is never cached (it
+    /// retries next tick, same cost as before), and a populated cache that stops emitting
+    /// entirely (post sleep/wake, HID event system restart) is dropped so the next tick
+    /// re-enumerates. Retained CF objects are held alive by this array (ARC via AnyObject).
+    private var cachedServices: [(service: AnyObject, name: String)]?
+
     func readSensors() -> [TemperatureSensorReading] {
         guard let symbols, let client else { return [] }
-        guard let services = symbols.copyServices(client)?.takeRetainedValue() as NSArray? else { return [] }
+
+        let services: [(service: AnyObject, name: String)]
+        if let cached = cachedServices {
+            services = cached
+        } else {
+            let enumerated = Self.enumerateServices(symbols: symbols, client: client)
+            guard !enumerated.isEmpty else { return [] }   // don't cache empty — retry next tick
+            cachedServices = enumerated
+            services = enumerated
+        }
 
         let field = Self.temperatureEventType << 16
         var readings: [TemperatureSensorReading] = []
-        for case let service as AnyObject in services {
-            guard let event = symbols.copyEvent(service, Self.temperatureEventType, 0, 0)?.takeRetainedValue() else {
+        for entry in services {
+            guard let event = symbols.copyEvent(entry.service, Self.temperatureEventType, 0, 0)?.takeRetainedValue() else {
                 continue
             }
-            let celsius = symbols.floatValue(event, field)
-            let name = symbols.copyProperty(service, "Product" as CFString)?.takeRetainedValue() as? String ?? ""
-            readings.append(TemperatureSensorReading(name: name, celsius: celsius))
+            readings.append(TemperatureSensorReading(name: entry.name, celsius: symbols.floatValue(event, field)))
         }
+
+        // A populated cache that produced nothing this tick is stale (services invalidated) —
+        // drop it so the next tick rebuilds it. Never crashes; falls back to thermal state.
+        if readings.isEmpty { cachedServices = nil }
         return readings
+    }
+
+    private static func enumerateServices(symbols: Symbols, client: AnyObject) -> [(service: AnyObject, name: String)] {
+        guard let services = symbols.copyServices(client)?.takeRetainedValue() as NSArray? else { return [] }
+        var result: [(service: AnyObject, name: String)] = []
+        for case let service as AnyObject in services {
+            let name = symbols.copyProperty(service, "Product" as CFString)?.takeRetainedValue() as? String ?? ""
+            result.append((service, name))
+        }
+        return result
     }
 
     private func makeClient() -> AnyObject? {

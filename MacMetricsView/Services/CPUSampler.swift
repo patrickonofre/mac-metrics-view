@@ -29,6 +29,9 @@ final class CPUSampler {
     }
 
     func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
+        // Idempotent (OPT-10): reevaluateSamplers re-issues start on any settings/popover
+        // change; a repeat with identical parameters must not re-baseline or re-collect.
+        if isRunning, interval == self.interval, tolerance == self.tolerance { return }
         self.interval = interval
         self.tolerance = tolerance
         start()
