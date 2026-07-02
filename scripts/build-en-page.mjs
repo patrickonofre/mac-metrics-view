@@ -50,7 +50,9 @@ body = body.replace(/<img\b[^>]*\bdata-i18n-alt="([^"]+)"[^>]*>/g, (imgTag) => {
   const keyMatch = imgTag.match(/data-i18n-alt="([^"]+)"/);
   const key = keyMatch && keyMatch[1];
   if (!key || !(key in en)) { if (key) missing.push(key); return imgTag; }
-  return imgTag.replace(/\balt="[^"]*"/, `alt="${escAttr(en[key])}"`);
+  // Target the real alt attribute — the lookbehind avoids matching the "alt="
+  // that lives inside data-i18n-alt, which would corrupt the key.
+  return imgTag.replace(/(?<!-)\balt="[^"]*"/, `alt="${escAttr(en[key])}"`);
 });
 
 // Reflect the active language on the switch for the no-JS case (i18n.js also
