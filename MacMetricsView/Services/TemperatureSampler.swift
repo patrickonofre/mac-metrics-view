@@ -94,6 +94,8 @@ final class TemperatureSampler {
     }
 
     func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
+        // Idempotent (OPT-10): a repeat with identical parameters keeps the running timer.
+        if isRunning, interval == self.pollInterval, tolerance == self.tolerance { return }
         self.pollInterval = interval
         self.tolerance = tolerance
         if isRunning {

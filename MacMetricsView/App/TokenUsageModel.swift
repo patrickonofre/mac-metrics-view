@@ -49,6 +49,11 @@ final class TokenUsageModel: ObservableObject {
     /// Claude rate-limit estimate (5h block + rolling week + budgets), or `nil` when there
     /// is no data at all (ADR-006/007/008).
     @Published private(set) var rateLimit: TokenRateLimitSnapshot?
+    /// Sparkline values (0–100 normalized) of recent token volume for the current selection,
+    /// recomputed in `recompute()` and published (OPT-08) instead of derived on every view
+    /// render. `MetricsTab` renders at 1 Hz with the popover open; keeping this as a computed
+    /// property re-scanned the whole event store per frame even when no token event arrived.
+    @Published private(set) var sparkline: [Double] = []
 
     /// Current token picker selection (derived from `MetricDisplaySettings`, pushed via
     /// `apply(selection:)`). Used by `recompute` and the presentation surfaces.
@@ -65,6 +70,18 @@ final class TokenUsageModel: ObservableObject {
     private var autoRefreshTimer: Timer?
     private let autoRefreshInterval: TimeInterval = 30
 
+    /// Ledger persistence is debounced (OPT-09): during an active AI session Claude batches
+    /// arrive every few seconds, and writing the plist on each was the repeated `cfprefsd`
+    /// write that muddied earlier idle-CPU measurements. We keep the ledger + watermark in
+    /// memory and flush to `UserDefaults` at most once per `ledgerPersistInterval`, plus a
+    /// forced flush on terminate. A crash loses ≤ interval of ledger; the persisted watermark
+    /// lags with it, so the backfill re-folds exactly that delta on relaunch (no double count).
+    private var ledgerDirty = false
+    private var lastLedgerPersist: Date = .distantPast
+    private let ledgerPersistInterval: TimeInterval
+    /// Injectable clock so the debounce window is deterministic in tests; real time otherwise.
+    private let ledgerClock: () -> Date
+
     private enum Keys {
         /// Legacy single reset key (pre-Codex). Migrated once into the Claude slot.
         static let legacyResetAt = "CPUState.tokenResetAt"
@@ -79,9 +96,16 @@ final class TokenUsageModel: ObservableObject {
         static let ledgerBackfilled = "CPUState.tokenLedgerBackfilled.claude"
     }
 
-    init(userDefaults: UserDefaults, selection: TokenDisplaySelection) {
+    init(
+        userDefaults: UserDefaults,
+        selection: TokenDisplaySelection,
+        ledgerPersistInterval: TimeInterval = 30,
+        ledgerClock: @escaping () -> Date = { Date() }
+    ) {
         self.userDefaults = userDefaults
         self.selection = selection
+        self.ledgerPersistInterval = ledgerPersistInterval
+        self.ledgerClock = ledgerClock
 
         // Per-provider reset times. Migrate the legacy single key into the Claude slot
         // once (ADR-003), so an existing install's since-reset measurement carries over.
@@ -117,9 +141,8 @@ final class TokenUsageModel: ObservableObject {
     /// republishes the selected aggregate. Independent of menu-bar visibility.
     func update(provider: TokenProvider, with events: [TokenUsageEvent]) {
         guard !events.isEmpty else { return }
-        for event in events {
-            tokenStores[provider]?.append(event)
-        }
+        // Batch ingest evicts once instead of per-event (OPT-04): O(n) rather than O(k·n).
+        tokenStores[provider]?.append(contentsOf: events)
         if provider == .claude {
             foldIntoDailyLedger(events)
         }
@@ -151,10 +174,32 @@ final class TokenUsageModel: ObservableObject {
             ledgerWatermark = max(ledgerWatermark ?? .distantPast, newest)
         }
         dailyLedger.prune(now: Date(), calendar: calendar)
-        persistDailyLedger()
+        // Ledger + watermark advance in memory now; persistence is debounced (OPT-09).
+        ledgerDirty = true
+        persistLedgerIfDue()
     }
 
-    /// One write per ingest batch / backfill merge — the ledger is ~8 small entries.
+    /// Persists the ledger only when the debounce window has elapsed since the last write.
+    /// A no-op when nothing is pending or the window has not passed — keeps the ledger in
+    /// memory until the next batch crosses the interval (or `flushLedgerIfDirty` forces it).
+    private func persistLedgerIfDue() {
+        let now = ledgerClock()
+        guard ledgerDirty, now.timeIntervalSince(lastLedgerPersist) >= ledgerPersistInterval else { return }
+        persistDailyLedger()
+        lastLedgerPersist = now
+    }
+
+    /// Forces a pending ledger write immediately (called on terminate, ADR-005). No-op when
+    /// nothing is dirty. Public so `AppDelegate.applicationWillTerminate` can flush before exit.
+    func flushLedgerIfDirty() {
+        guard ledgerDirty else { return }
+        persistDailyLedger()
+        lastLedgerPersist = ledgerClock()
+    }
+
+    /// One write of ledger + watermark together (FR-6): they must never be persisted apart,
+    /// so a relaunch never sees a ledger newer than its watermark (or vice versa). The ledger
+    /// is ~8 small entries. Clears the dirty flag.
     private func persistDailyLedger() {
         if let data = try? JSONEncoder().encode(dailyLedger) {
             userDefaults.set(data, forKey: Keys.dailyLedger)
@@ -162,6 +207,7 @@ final class TokenUsageModel: ObservableObject {
         if let watermark = ledgerWatermark {
             userDefaults.set(watermark, forKey: Keys.ledgerWatermark)
         }
+        ledgerDirty = false
     }
 
     // MARK: - Selection & reset
@@ -266,6 +312,10 @@ final class TokenUsageModel: ObservableObject {
                 weeklyBudget: selection.weeklyBudget
             )
         }
+
+        // Published here (OPT-08) so the view reads a ready array; uses the same `now` as the
+        // rest of the recompute so all windows share one clock.
+        sparkline = computeSparkline(now: now)
     }
 
     // MARK: - Presentation
@@ -332,10 +382,9 @@ final class TokenUsageModel: ObservableObject {
 
     /// Sparkline values (0–100 normalized) of recent token volume for the selected
     /// provider/scope/window. For `combined`, per-bucket totals are summed across providers
-    /// before normalizing. Empty when there is no data.
-    var sparkline: [Double] {
+    /// before normalizing. Empty when there is no data. Pure; called from `recompute()`.
+    private func computeSparkline(now: Date) -> [Double] {
         guard !isEmpty else { return [] }
-        let now = Date()
         var summed: [Int] = []
         for provider in selection.provider.providers {
             guard let store = tokenStores[provider] else { continue }

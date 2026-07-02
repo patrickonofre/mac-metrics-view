@@ -35,6 +35,11 @@ final class DiskSampler {
     private(set) var interval: TimeInterval
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: DiskPollScheduler
+    /// Runs the IORegistry read off the main thread (OPT-03); the delta is computed and
+    /// `previousSnapshot` is stored on the main actor (main-confined), mirroring the process
+    /// sampler. The reader's cached `io_service_t` is touched only on the executor's serial
+    /// queue. Tests inject `InlineSamplingExecutor` to stay synchronous.
+    private let executor: SamplingExecutor
     private var previousSnapshot: DiskCounterSnapshot?
     private(set) var isRunning = false
 
@@ -43,23 +48,32 @@ final class DiskSampler {
     init(
         reader: DiskReading = IOKitDiskReader(),
         interval: TimeInterval = 1,
-        pollScheduler: DiskPollScheduler = RunLoopDiskPollScheduler()
+        pollScheduler: DiskPollScheduler = RunLoopDiskPollScheduler(),
+        executor: SamplingExecutor = BackgroundSamplingExecutor()
     ) {
         self.reader = reader
         self.interval = interval
         self.pollScheduler = pollScheduler
+        self.executor = executor
     }
 
     func start() {
         guard !isRunning else { return }
         isRunning = true
-        previousSnapshot = reader.readSnapshot()
+        // Baseline read off-main; snapshot stored on the main actor (OPT-03). The `== nil`
+        // guard keeps a tick that raced ahead of the baseline from being clobbered.
+        executor.run({ [reader] in reader.readSnapshot() }) { [weak self] snapshot in
+            guard let self, self.isRunning, self.previousSnapshot == nil else { return }
+            self.previousSnapshot = snapshot
+        }
         pollScheduler.schedule(interval: interval, tolerance: tolerance) { [weak self] in
             self?.collect()
         }
     }
 
     func start(interval: TimeInterval, tolerance: TimeInterval = 0) {
+        // Idempotent (OPT-10): a repeat with identical parameters keeps the running timer.
+        if isRunning, interval == self.interval, tolerance == self.tolerance { return }
         self.interval = interval
         self.tolerance = tolerance
         if isRunning {
@@ -79,15 +93,19 @@ final class DiskSampler {
     }
 
     private func collect() {
-        guard let current = reader.readSnapshot() else { return }
-        defer { previousSnapshot = current }
+        // Read off-main; compute the delta and advance `previousSnapshot` on the main actor
+        // (OPT-03). Re-check `isRunning` so a stop() between read and delivery cannot publish.
+        executor.run({ [reader] in reader.readSnapshot() }) { [weak self] current in
+            guard let self, self.isRunning, let current else { return }
+            defer { self.previousSnapshot = current }
 
-        guard let previous = previousSnapshot,
-              let sample = DiskSampleCalculator.sample(previous: previous, current: current)
-        else {
-            return
+            guard let previous = self.previousSnapshot,
+                  let sample = DiskSampleCalculator.sample(previous: previous, current: current)
+            else {
+                return
+            }
+
+            self.delegate?.diskSampler(self, didProduce: sample)
         }
-
-        delegate?.diskSampler(self, didProduce: sample)
     }
 }

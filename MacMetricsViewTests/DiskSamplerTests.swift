@@ -50,7 +50,7 @@ final class DiskSamplerTests: XCTestCase {
         scheduler: FakeScheduler
     ) -> (DiskSampler, SpyDelegate) {
         let delegate = SpyDelegate()
-        let sampler = DiskSampler(reader: reader, interval: 1, pollScheduler: scheduler)
+        let sampler = DiskSampler(reader: reader, interval: 1, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         sampler.delegate = delegate
         return (sampler, delegate)
     }

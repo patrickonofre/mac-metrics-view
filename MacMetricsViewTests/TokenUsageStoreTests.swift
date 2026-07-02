@@ -104,6 +104,69 @@ final class TokenUsageStoreTests: XCTestCase {
         XCTAssertEqual(store.sinceResetGlobal.input, 11)   // both still counted in sums
     }
 
+    // MARK: - Batch ingest (OPT-04)
+
+    func testAppendContentsOfMatchesPerEventAppends() {
+        let batch = [
+            event(at: 1, input: 10, session: "s1", project: "p1"),
+            event(at: 3, input: 40, session: "s3", project: "p2"),
+            event(at: 2, input: 20, session: "s2", project: "p1")   // out of order on purpose
+        ]
+
+        var perEvent = TokenUsageStore(resetAt: epoch)
+        for e in batch { perEvent.append(e) }
+
+        var batched = TokenUsageStore(resetAt: epoch)
+        batched.append(contentsOf: batch)
+
+        XCTAssertEqual(batched.events, perEvent.events)
+        XCTAssertEqual(batched.sinceResetGlobal, perEvent.sinceResetGlobal)
+        XCTAssertEqual(batched.sinceResetByProject, perEvent.sinceResetByProject)
+        XCTAssertEqual(batched.sinceResetBySession, perEvent.sinceResetBySession)
+        XCTAssertEqual(batched.newestTimestamp, perEvent.newestTimestamp)
+    }
+
+    func testAppendContentsOfEvictsAcrossHorizonLikePerEvent() {
+        // A batch that crosses the retention horizon evicts identically to per-event appends.
+        let batch = [
+            event(at: 0, input: 5),
+            event(at: 48 * 3600, input: 6)   // 48h newer → evicts the first
+        ]
+
+        var perEvent = TokenUsageStore(resetAt: epoch)
+        for e in batch { perEvent.append(e) }
+
+        var batched = TokenUsageStore(resetAt: epoch)
+        batched.append(contentsOf: batch)
+
+        XCTAssertEqual(batched.events.count, 1)
+        XCTAssertEqual(batched.events, perEvent.events)
+        XCTAssertEqual(batched.sinceResetGlobal.input, 11)   // both counted in sums
+    }
+
+    func testNewestTimestampTracksMaxRegardlessOfOrderAndInit() {
+        // Init from a non-empty, unordered array computes the max.
+        let seeded = TokenUsageStore(resetAt: epoch, events: [
+            event(at: 5, input: 1),
+            event(at: 2, input: 1),
+            event(at: 9, input: 1)
+        ])
+        XCTAssertEqual(seeded.newestTimestamp, epoch.addingTimeInterval(9))
+
+        // A later append advances it; an older append does not retreat it.
+        var store = TokenUsageStore(resetAt: epoch)
+        store.append(event(at: 100, input: 1))
+        store.append(event(at: 50, input: 1))
+        XCTAssertEqual(store.newestTimestamp, epoch.addingTimeInterval(100))
+    }
+
+    func testEmptyBatchIsNoOp() {
+        var store = TokenUsageStore(resetAt: epoch)
+        store.append(contentsOf: [])
+        XCTAssertTrue(store.events.isEmpty)
+        XCTAssertNil(store.newestTimestamp)
+    }
+
     // MARK: - TokenAggregate helpers
 
     func testTokenAggregateZeroIsAllZero() {
