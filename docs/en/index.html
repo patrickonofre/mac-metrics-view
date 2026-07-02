@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Progressive-enhancement marker: scroll-reveal start-state is gated on
+         html.js so content is never stuck hidden when JS is absent. -->
+    <script>document.documentElement.classList.add("js");</script>
+    <title>Mac Metrics View — CPU, GPU and RAM in the macOS menu bar</title>
+    <meta name="description" content="CPU, GPU, memory, network, temperature, disk, battery, and AI tokens in the macOS menu bar. Native, free, open-source app — 100% local, no telemetry.">
+    <link rel="canonical" href="https://patrickonofre.github.io/mac-metrics-view/en/">
+    <link rel="alternate" hreflang="pt-br" href="https://patrickonofre.github.io/mac-metrics-view/">
+    <link rel="alternate" hreflang="en" href="https://patrickonofre.github.io/mac-metrics-view/en/">
+    <link rel="alternate" hreflang="x-default" href="https://patrickonofre.github.io/mac-metrics-view/">
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+    <meta name="author" content="Patrick Onofre">
+    <meta name="theme-color" content="#0b0c10" media="(prefers-color-scheme: dark)">
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Mac Metrics View">
+    <meta property="og:url" content="https://patrickonofre.github.io/mac-metrics-view/en/">
+    <meta property="og:title" content="Mac Metrics View 2.5 — your Mac's metrics in the menu bar">
+    <meta property="og:description" content="CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens right in the macOS menu bar. Native, local, and telemetry-free.">
+    <meta property="og:image" content="https://patrickonofre.github.io/mac-metrics-view/assets/og-cover.png">
+    <meta property="og:image:alt" content="Mac Metrics View — CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens monitor in the macOS menu bar">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:locale" content="en_US">
+    <meta property="og:locale:alternate" content="pt_BR">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Mac Metrics View 2.5 — your Mac's metrics in the menu bar">
+    <meta name="twitter:description" content="CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens right in the macOS menu bar. Native, local, and telemetry-free.">
+    <meta name="twitter:image" content="https://patrickonofre.github.io/mac-metrics-view/assets/og-cover.png">
+
+    <link rel="icon" href="../assets/app-icon.png">
+    <link rel="apple-touch-icon" href="../assets/app-icon.png">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../i18n.js" defer></script>
+    <script src="../popover-demo.js" defer></script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Mac Metrics View",
+      "operatingSystem": "macOS 14+",
+      "applicationCategory": "UtilitiesApplication",
+      "processorRequirements": "Apple Silicon (M1 or later)",
+      "description": "Native macOS app that shows CPU, GPU, memory, network, temperature, disk, battery, and AI tokens (Claude Code and Codex) right in the menu bar. Local reads, no account, no telemetry.",
+      "url": "https://patrickonofre.github.io/mac-metrics-view/en/",
+      "softwareVersion": "2.5.0",
+      "datePublished": "2026-05-26",
+      "dateModified": "2026-07-02",
+      "fileSize": "2MB",
+      "image": "https://patrickonofre.github.io/mac-metrics-view/assets/popover-cpu-light.png",
+      "screenshot": "https://patrickonofre.github.io/mac-metrics-view/assets/popover-cpu-light.png",
+      "inLanguage": ["en", "pt-BR"],
+      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-2.5.0.zip",
+      "installUrl": "https://patrickonofre.github.io/mac-metrics-view/en/#download",
+      "releaseNotes": "https://patrickonofre.github.io/mac-metrics-view/en/#timeline",
+      "sameAs": "https://github.com/patrickonofre/mac-metrics-view",
+      "isAccessibleForFree": true,
+      "author": {
+        "@type": "Person",
+        "name": "Patrick Onofre",
+        "url": "https://github.com/patrickonofre"
+      },
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      }
+    }
+    </script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "inLanguage": "en",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Mac Metrics View free?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. It's free, open source, with no account and no in-app purchases."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which Macs are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Macs with Apple Silicon (M1 chip or later) running macOS 14 (Sonoma) or later. Version 2.2 was the last to support Intel Macs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does the app collect my data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Every metric read is local — no telemetry, no account, and nothing sent over the network."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I open the app the first time?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Because the app isn't notarized yet, on first launch right-click the icon and choose Open to confirm. After that it opens normally and keeps itself up to date."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Mac Metrics View update itself?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. New versions are downloaded and installed with your confirmation via Sparkle, without downloading the app again."
+          }
+        }
+      ]
+    }
+    </script>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <a class="brand" href="#top" aria-label="Mac Metrics View">
+          <img src="../assets/app-icon.png" alt="" width="28" height="28">
+          <span>Mac Metrics View</span>
+        </a>
+        <nav class="nav" aria-label="Navegação principal">
+          <a href="#whatsnew" data-i18n="nav.whatsnew">What's new</a>
+          <a href="#demo" data-i18n="nav.demo">Demo</a>
+          <a href="#features" data-i18n="nav.features">Features</a>
+          <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+          <a href="#download" data-i18n="nav.download">Download</a>
+        </nav>
+        <div class="lang-switch" role="group" aria-label="Idioma / Language">
+          <button type="button" data-lang-option="pt" aria-pressed="false">PT</button>
+          <button type="button" data-lang-option="en" aria-pressed="true">EN</button>
+        </div>
+      </div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="eyebrow" data-i18n="hero.eyebrow">Version 2.5 for macOS</p>
+        <h1 data-i18n="hero.title">Your whole Mac, in the menu bar.</h1>
+        <p class="lede" data-i18n="hero.lede">CPU, GPU, memory, network, temperature, disk, battery, and AI tokens — all at a glance, without opening Activity Monitor.</p>
+        <div class="actions" aria-label="Acoes principais">
+          <a class="button primary" href="../downloads/MacMetricsView-2.5.0.zip" download data-i18n="hero.cta">Download 2.5</a>
+          <a class="link-cta" href="#whatsnew"><span data-i18n="hero.secondary">See what's new</span> <span aria-hidden="true">&rsaquo;</span></a>
+        </div>
+        <p class="note" data-i18n="hero.note">No account. No telemetry. Local-only system readings.</p>
+
+        <div class="hero-visual" aria-label="Previa do Mac Metrics View">
+          <div class="menu-bar-shot">
+            <img src="../assets/menu-bar-2.0.png" width="744" height="64" decoding="async" fetchpriority="high" data-i18n-alt="hero.altMenu" alt="Mac Metrics View in the macOS menu bar showing CPU, RAM, network, temperature, disk, and battery">
+          </div>
+        </div>
+      </section>
+
+      <section class="metrics-strip" aria-label="Metricas exibidas">
+        <div><span class="metric-label">CPU</span><strong data-i18n="metric.cpu">usage and processes</strong></div>
+        <div><span class="metric-label">GPU</span><strong data-i18n="metric.gpu">graphics chip usage</strong></div>
+        <div><span class="metric-label">RAM</span><strong data-i18n="metric.ram">apps, pressure, and swap</strong></div>
+        <div><span class="metric-label">NET</span><strong data-i18n="metric.net">download and upload</strong></div>
+        <div><span class="metric-label">TEMP</span><strong data-i18n="metric.temp">thermal state</strong></div>
+        <div><span class="metric-label">DISK</span><strong data-i18n="metric.disk">read and write</strong></div>
+        <div><span class="metric-label">BAT</span><strong data-i18n="metric.bat">charge and power</strong></div>
+        <div><span class="metric-label">AI</span><strong data-i18n="metric.ai">tokens and cost</strong></div>
+      </section>
+
+      <section class="section reveal-init" id="whatsnew">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="highlights.eyebrow">Series 2 highlights</p>
+          <h2 data-i18n="highlights.title">Every release, a leap.</h2>
+          <p class="section-lede" data-i18n="highlights.lede">GPU in the bar, used/total memory, a tabbed popover, and AI tokens — the highlights on the road to 2.5.</p>
+        </div>
+        <div class="highlight-grid">
+          <article class="card"><h3 data-i18n="highlights.gpuTitle">GPU in the bar</h3><p data-i18n="highlights.gpuBody">Real-time graphics processor usage, read straight from the system — new in 2.4.</p></article>
+          <article class="card"><h3 data-i18n="highlights.usedtotalTitle">Used/total memory</h3><p data-i18n="highlights.usedtotalBody">The menu bar shows memory used over your Mac's total, tinted by pressure — App Memory and Pressure stay as options.</p></article>
+          <article class="card"><h3 data-i18n="highlights.monoTitle">Monochrome menu bar</h3><p data-i18n="highlights.monoBody">Native macOS values: the standard system color, with red reserved for the critical state only.</p></article>
+          <article class="card"><h3 data-i18n="highlights.popoverTitle">Tabbed popover</h3><p data-i18n="highlights.popoverBody">A redesigned popover in cards and tabs — CPU, memory, network/disk, and tokens, each with its own detail.</p></article>
+          <article class="card"><h3 data-i18n="highlights.tokensTitle">AI tokens</h3><p data-i18n="highlights.tokensBody">Track usage and estimated cost for Claude Code and Codex — hourly pace and a daily projection.</p></article>
+          <article class="card"><h3 data-i18n="highlights.ramTitle">Detailed memory</h3><p data-i18n="highlights.ramBody">An Activity-Monitor-style breakdown: app memory, swap, and kernel pressure, live.</p></article>
+          <article class="card"><h3 data-i18n="highlights.netdiskTitle">Network and disk in depth</h3><p data-i18n="highlights.netdiskBody">Expandable cards with read/write and download/upload, plus current session totals.</p></article>
+          <article class="card"><h3 data-i18n="highlights.batteryTitle">Battery</h3><p data-i18n="highlights.batteryBody">Charge, power source, and battery condition right in the menu bar — on laptops.</p></article>
+          <article class="card"><h3 data-i18n="highlights.tempTitle">Temperature</h3><p data-i18n="highlights.tempBody">Thermal state in °C, straight from the Apple Silicon sensors.</p></article>
+          <article class="card"><h3 data-i18n="highlights.rateTitle">Adjustable pace</h3><p data-i18n="highlights.rateBody">Pick the update rate and save energy whenever you want.</p></article>
+          <article class="card"><h3 data-i18n="highlights.updateTitle">Automatic updates</h3><p data-i18n="highlights.updateBody">New signed versions arrive through the app itself, without re-triggering Gatekeeper.</p></article>
+        </div>
+      </section>
+
+      <section class="section reveal-init" id="demo">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="demo.eyebrow">Try it</p>
+          <h2 id="demo-title" data-i18n="demo.title">Explore the popover, tab by tab.</h2>
+          <p class="section-lede" data-i18n="demo.lede">Click the tabs to see each metric's detail — it's the real series-2 popover.</p>
+        </div>
+
+        <div class="popover-demo" data-popover-demo>
+          <div class="popover-tablist" role="tablist" aria-labelledby="demo-title">
+            <button class="popover-tab" role="tab" id="tab-cpu" aria-controls="panel-cpu" aria-selected="true" tabindex="0" data-i18n="demo.tabCPU">CPU</button>
+            <button class="popover-tab" role="tab" id="tab-ram" aria-controls="panel-ram" aria-selected="false" tabindex="-1" data-i18n="demo.tabRAM">Memory</button>
+            <button class="popover-tab" role="tab" id="tab-net" aria-controls="panel-net" aria-selected="false" tabindex="-1" data-i18n="demo.tabNet">Network/Disk</button>
+            <button class="popover-tab" role="tab" id="tab-ai" aria-controls="panel-ai" aria-selected="false" tabindex="-1" data-i18n="demo.tabAI">Tokens</button>
+          </div>
+
+          <div class="popover-panel" role="tabpanel" id="panel-cpu" aria-labelledby="tab-cpu">
+            <picture>
+              <source media="(prefers-color-scheme: dark)" srcset="../assets/popover-cpu-dark.png">
+              <img class="popover-shot" width="680" height="860" decoding="async" src="../assets/popover-cpu-light.png" data-i18n-alt="demo.altCPU" alt="Popover CPU tab showing current usage and the top processes">
+            </picture>
+            <p class="demo-desc" data-i18n="demo.descCPU">The heaviest processes, in real time.</p>
+          </div>
+
+          <div class="popover-panel" role="tabpanel" id="panel-ram" aria-labelledby="tab-ram" hidden>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" data-srcset="../assets/popover-ram-dark.png">
+              <img class="popover-shot" width="680" height="860" decoding="async" loading="lazy" data-src="../assets/popover-ram-light.png" data-i18n-alt="demo.altRAM" alt="Memory tab showing the app, swap, and kernel-pressure breakdown">
+            </picture>
+            <p class="demo-desc" data-i18n="demo.descRAM">Apps, swap, and kernel pressure, Activity-Monitor style.</p>
+          </div>
+
+          <div class="popover-panel" role="tabpanel" id="panel-net" aria-labelledby="tab-net" hidden>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" data-srcset="../assets/popover-netdisk-dark.png">
+              <img class="popover-shot" width="680" height="860" decoding="async" loading="lazy" data-src="../assets/popover-netdisk-light.png" data-i18n-alt="demo.altNet" alt="Network and disk tab with read/write, download/upload, and session totals">
+            </picture>
+            <p class="demo-desc" data-i18n="demo.descNet">Read/write and download/upload, with session totals.</p>
+          </div>
+
+          <div class="popover-panel" role="tabpanel" id="panel-ai" aria-labelledby="tab-ai" hidden>
+            <picture>
+              <source media="(prefers-color-scheme: dark)" data-srcset="../assets/popover-ai-dark.png">
+              <img class="popover-shot" width="680" height="860" decoding="async" loading="lazy" data-src="../assets/popover-ai-light.png" data-i18n-alt="demo.altAI" alt="AI tokens tab with usage pace, dollar cost, and projection">
+            </picture>
+            <p class="demo-desc" data-i18n="demo.descAI">Pace, estimated cost, and a daily projection.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="section reveal-init" id="features">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="features.eyebrow">Everything it shows</p>
+          <h2 data-i18n="features.title">Eight metrics, one menu bar.</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="card"><h3 data-i18n="features.cpuTitle">CPU</h3><p data-i18n="features.cpuBody">Current usage and the top-consuming processes, in the popover.</p></article>
+          <article class="card"><h3 data-i18n="features.gpuTitle">GPU</h3><p data-i18n="features.gpuBody">Graphics processor usage, in real time.</p></article>
+          <article class="card"><h3 data-i18n="features.ramTitle">Memory</h3><p data-i18n="features.ramBody">App memory, pressure, and swap, with a sparkline.</p></article>
+          <article class="card"><h3 data-i18n="features.netTitle">Network</h3><p data-i18n="features.netBody">Live download and upload, in a compact format.</p></article>
+          <article class="card"><h3 data-i18n="features.tempTitle">Temperature</h3><p data-i18n="features.tempBody">°C with a color per thermal state, on Apple Silicon.</p></article>
+          <article class="card"><h3 data-i18n="features.diskTitle">Disk</h3><p data-i18n="features.diskBody">An SSD activity light with read and write.</p></article>
+          <article class="card"><h3 data-i18n="features.batteryTitle">Battery</h3><p data-i18n="features.batteryBody">Charge, power source, and condition on laptops.</p></article>
+          <article class="card"><h3 data-i18n="features.tokensTitle">AI tokens</h3><p data-i18n="features.tokensBody">Usage and cost for Claude Code and Codex.</p></article>
+        </div>
+      </section>
+
+      <section class="section split reveal-init" id="privacy">
+        <div>
+          <p class="eyebrow" data-i18n="privacy.eyebrow">Privacy first</p>
+          <h2 data-i18n="privacy.title">Your data never leaves your Mac.</h2>
+        </div>
+        <div class="copy-block">
+          <p data-i18n="privacy.body">Mac Metrics View reads CPU, memory, network, disk, and local AI logs on your Mac. No login, no telemetry, and no external services to work.</p>
+          <ul>
+            <li data-i18n="privacy.li1">No user account</li>
+            <li data-i18n="privacy.li2">No in-app analytics</li>
+            <li data-i18n="privacy.li3">100% local reads — nothing leaves over the network</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="download-panel reveal-init" id="download">
+        <div>
+          <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
+          <h2 data-i18n="download.title">Download version 2.5.</h2>
+          <p data-i18n="download.body">For macOS 14 or later on Apple Silicon Macs. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.</p>
+          <p class="download-meta" data-i18n="download.meta">≈ 2 MB · macOS 14+ · Apple Silicon · free and open source</p>
+        </div>
+        <a class="button primary large" href="../downloads/MacMetricsView-2.5.0.zip" download data-i18n="download.cta">Download MacMetricsView-2.5.0.zip</a>
+      </section>
+
+      <section class="section reveal-init" id="firstrun">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="firstrun.eyebrow">First launch</p>
+          <h2 data-i18n="firstrun.title">See “MacMetricsView Was Not Opened”? That's expected.</h2>
+        </div>
+        <p class="firstrun-lede" data-i18n="firstrun.body">Because the app isn't notarized by Apple yet, macOS blocks the first launch as a precaution — it's not an error or a sign of malware. Allow the app once like this:</p>
+        <ol class="steps">
+          <li class="card step">
+            <span class="step-num" aria-hidden="true">1</span>
+            <h3 data-i18n="firstrun.s1Title">Click “OK”</h3>
+            <p data-i18n="firstrun.s1Body">In the alert, choose “OK” — never “Move to Trash”. This just dismisses the warning without deleting the app.</p>
+          </li>
+          <li class="card step">
+            <span class="step-num" aria-hidden="true">2</span>
+            <h3 data-i18n="firstrun.s2Title">Open Privacy &amp; Security</h3>
+            <p data-i18n="firstrun.s2Body">In System Settings → Privacy &amp; Security, scroll to “MacMetricsView was blocked” and click “Open Anyway”.</p>
+          </li>
+          <li class="card step">
+            <span class="step-num" aria-hidden="true">3</span>
+            <h3 data-i18n="firstrun.s3Title">Confirm and open</h3>
+            <p data-i18n="firstrun.s3Body">Authenticate with Touch ID or your password and click “Open”. You only need to do this once.</p>
+          </li>
+        </ol>
+        <p class="firstrun-alt" data-i18n="firstrun.alt">On macOS Ventura or earlier: right-click (or Control-click) the app and choose “Open” — skip steps 2 and 3 above.</p>
+        <p class="firstrun-alt" data-i18n="firstrun.update">This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.</p>
+      </section>
+
+      <section class="section reveal-init" id="timeline">
+        <div class="section-heading">
+          <p class="eyebrow" data-i18n="timeline.eyebrow">Timeline</p>
+          <h2 data-i18n="timeline.title">From 1.0 to 2.5.</h2>
+          <p class="section-lede" data-i18n="timeline.lede">The road to version 2.5, in brief.</p>
+        </div>
+        <ol class="timeline">
+          <li class="timeline-item"><h3 data-i18n="timeline.v25Title">2.5 — Lighter than ever</h3><p data-i18n="timeline.v25Body">A round of CPU, energy, and I/O optimizations — the monitor weighs even less on the Mac it measures.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v24Title">2.4 — GPU in the menu bar</h3><p data-i18n="timeline.v24Body">A new graphics-usage meter and a reorganized internal architecture for the metrics to come.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v23Title">2.3 — Apple Silicon only and automatic theme</h3><p data-i18n="timeline.v23Body">Exclusive support for Apple-chip Macs (M-series); Intel compatibility code removed. Automatic light/dark theme suggestion based on ambient light.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v22Title">2.2 — Lighter, focused on Claude and Codex</h3><p data-i18n="timeline.v22Body">Sampling moved off the main thread (less energy), the accessibility notice now lives only in the popover, and AI tokens focus on Claude Code and Codex.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v21Title">2.1 — Used/total memory and a monochrome menu bar</h3><p data-i18n="timeline.v21Body">Menu-bar RAM now shows used/total tinted by memory pressure; values are native monochrome, with red reserved for the critical state.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v20Title">2.0 — Tabbed popover and a complete suite</h3><p data-i18n="timeline.v20Body">Redesigned popover, AI tokens (Claude, Codex, and Gemini), detailed memory, network/disk, battery, and temperature.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v18Title">1.8 — Token pace</h3><p data-i18n="timeline.v18Body">Hourly pace and a daily projection of your usage.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v17Title">1.7 — Cost in dollars</h3><p data-i18n="timeline.v17Body">Estimated cost of AI usage, per model.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v16Title">1.6 — Codex tokens</h3><p data-i18n="timeline.v16Body">Reads Codex (ChatGPT) local logs.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v15Title">1.5 — Token meter</h3><p data-i18n="timeline.v15Body">Claude Code usage in the menu bar and popover.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v14Title">1.4 — Rethought popover</h3><p data-i18n="timeline.v14Body">A cleaner layout with every metric visible.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v13Title">1.3 — SSD light</h3><p data-i18n="timeline.v13Body">Disk activity LED and read/write detail.</p></li>
+          <li class="timeline-item"><h3 data-i18n="timeline.v10Title">1.0 — First stable release</h3><p data-i18n="timeline.v10Body">Cleaning mode, open at login, and a PT/EN interface.</p></li>
+        </ol>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span>Mac Metrics View</span>
+      <span data-i18n="footer.tagline">Version 2.5 for macOS</span>
+      <span class="footer-links">
+        <a href="https://github.com/patrickonofre/mac-metrics-view" data-i18n="footer.github">GitHub</a>
+        <span data-i18n="footer.rights">Open source · MIT License</span>
+      </span>
+    </footer>
+
+    <!-- Sticky download CTA — persistent on scroll, hidden near the hero/download
+         panel by popover-demo.js so it never doubles up the primary action. -->
+    <a class="sticky-cta" href="../downloads/MacMetricsView-2.5.0.zip" download data-sticky-cta>
+      <span class="sticky-cta-label" data-i18n="sticky.label">Mac Metrics View 2.5</span>
+      <span class="sticky-cta-button" data-i18n="sticky.cta">Download</span>
+    </a>
+  </body>
+</html>
