@@ -114,6 +114,8 @@
 		B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A103A103A103A103A103A103 /* CleaningLockModel.swift */; };
 		B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */; };
 		B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A105A105A105A105A105A105 /* SystemMetricsModel.swift */; };
+		B106B106B106B106B106B106 /* KeepAwakeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A106A106A106A106A106A106 /* KeepAwakeModel.swift */; };
+		B107B107B107B107B107B107 /* SleepAssertionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A107A107A107A107A107A107 /* SleepAssertionService.swift */; };
 		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
 		1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E05 /* UpdateBannerPresentation.swift */; };
 		1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F01 /* TokenUsageEvent.swift */; };
@@ -220,6 +222,8 @@
 		A103A103A103A103A103A103 /* CleaningLockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/CleaningLockModel.swift; sourceTree = "<group>"; };
 		A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AccessibilityRecoveryModel.swift; sourceTree = "<group>"; };
 		A105A105A105A105A105A105 /* SystemMetricsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SystemMetricsModel.swift; sourceTree = "<group>"; };
+		A106A106A106A106A106A106 /* KeepAwakeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/KeepAwakeModel.swift; sourceTree = "<group>"; };
+		A107A107A107A107A107A107 /* SleepAssertionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SleepAssertionService.swift; sourceTree = "<group>"; };
 		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
 		1000000000000000000000E05 /* UpdateBannerPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/UpdateBannerPresentation.swift; sourceTree = "<group>"; };
 		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
@@ -437,6 +441,8 @@
 				A103A103A103A103A103A103 /* CleaningLockModel.swift */,
 				A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */,
 				A105A105A105A105A105A105 /* SystemMetricsModel.swift */,
+				A106A106A106A106A106A106 /* KeepAwakeModel.swift */,
+				A107A107A107A107A107A107 /* SleepAssertionService.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
 				1000000000000000000000E05 /* UpdateBannerPresentation.swift */,
 				1000000000000000000000F01 /* TokenUsageEvent.swift */,
@@ -697,6 +703,8 @@
 				B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */,
 				B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */,
 				B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */,
+				B106B106B106B106B106B106 /* KeepAwakeModel.swift in Sources */,
+				B107B107B107B107B107B107 /* SleepAssertionService.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
 				1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */,
 				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,
