@@ -104,7 +104,7 @@ const head = `  <head>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Mac Metrics View">
     <meta property="og:url" content="${SITE}/en/">
-    <meta property="og:title" content="Mac Metrics View 2.5 — your Mac's metrics in the menu bar">
+    <meta property="og:title" content="Mac Metrics View 2.6 — your Mac's metrics in the menu bar">
     <meta property="og:description" content="CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens right in the macOS menu bar. Native, local, and telemetry-free.">
     <meta property="og:image" content="${SITE}/assets/og-cover.png">
     <meta property="og:image:alt" content="Mac Metrics View — CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens monitor in the macOS menu bar">
@@ -115,7 +115,7 @@ const head = `  <head>
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Mac Metrics View 2.5 — your Mac's metrics in the menu bar">
+    <meta name="twitter:title" content="Mac Metrics View 2.6 — your Mac's metrics in the menu bar">
     <meta name="twitter:description" content="CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens right in the macOS menu bar. Native, local, and telemetry-free.">
     <meta name="twitter:image" content="${SITE}/assets/og-cover.png">
 
@@ -135,14 +135,14 @@ const head = `  <head>
       "processorRequirements": "Apple Silicon (M1 or later)",
       "description": "Native macOS app that shows CPU, GPU, memory, network, temperature, disk, battery, and AI tokens (Claude Code and Codex) right in the menu bar. Local reads, no account, no telemetry.",
       "url": "${SITE}/en/",
-      "softwareVersion": "2.5.0",
+      "softwareVersion": "2.6.0",
       "datePublished": "2026-05-26",
-      "dateModified": "2026-07-02",
+      "dateModified": "2026-07-03",
       "fileSize": "2MB",
       "image": "${SITE}/assets/popover-cpu-light.png",
       "screenshot": "${SITE}/assets/popover-cpu-light.png",
       "inLanguage": ["en", "pt-BR"],
-      "downloadUrl": "${SITE}/downloads/MacMetricsView-2.5.0.zip",
+      "downloadUrl": "${SITE}/downloads/MacMetricsView-2.6.0.zip",
       "installUrl": "${SITE}/en/#download",
       "releaseNotes": "${SITE}/en/#timeline",
       "sameAs": "https://github.com/patrickonofre/mac-metrics-view",

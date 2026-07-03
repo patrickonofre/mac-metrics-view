@@ -13,15 +13,15 @@
       "nav.privacy": "Privacidade",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 2.5 para macOS",
+      "hero.eyebrow": "Versão 2.6 para macOS",
       "hero.title": "Seu Mac inteiro, na barra de menus.",
       "hero.lede": "CPU, GPU, memória, rede, temperatura, disco, bateria e tokens de IA — tudo num relance, sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 2.5",
+      "hero.cta": "Baixar 2.6",
       "hero.secondary": "Ver o que há de novo",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View na barra de menus do macOS mostrando CPU, RAM, rede, temperatura, disco e bateria",
 
-      "sticky.label": "Mac Metrics View 2.5",
+      "sticky.label": "Mac Metrics View 2.6",
       "sticky.cta": "Baixar",
 
       "metric.cpu": "uso e processos",
@@ -35,7 +35,7 @@
 
       "highlights.eyebrow": "Destaques da série 2",
       "highlights.title": "Cada versão, um salto.",
-      "highlights.lede": "GPU na barra, memória usado/total, popover em abas e tokens de IA — os destaques do caminho até a 2.5.",
+      "highlights.lede": "GPU na barra, memória usado/total, popover em abas e tokens de IA — os destaques do caminho até a 2.6.",
       "highlights.gpuTitle": "GPU na barra",
       "highlights.gpuBody": "Uso do processador gráfico em tempo real, lido direto do sistema — novidade da 2.4.",
       "highlights.usedtotalTitle": "Memória usado/total",
@@ -102,9 +102,9 @@
       "privacy.li3": "Leitura 100% local — nada sai pela rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 2.5.",
+      "download.title": "Baixe a versão 2.6.",
       "download.body": "Para macOS 14 ou superior em Macs com Apple Silicon. Na primeira abertura o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, ele se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-2.5.0.zip",
+      "download.cta": "Baixar MacMetricsView-2.6.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · Apple Silicon · grátis e de código aberto",
 
       "firstrun.eyebrow": "Primeira abertura",
@@ -120,8 +120,10 @@
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
       "timeline.eyebrow": "Linha do tempo",
-      "timeline.title": "De 1.0 a 2.5.",
-      "timeline.lede": "O caminho até a versão 2.5, em resumo.",
+      "timeline.title": "De 1.0 a 2.6.",
+      "timeline.lede": "O caminho até a versão 2.6, em resumo.",
+      "timeline.v26Title": "2.6 — Manter o Mac acordado",
+      "timeline.v26Body": "Novo botão “Manter acordado” nas Ações impede a suspensão da tela e do sistema durante builds, downloads e apresentações longas.",
       "timeline.v25Title": "2.5 — Mais leve do que nunca",
       "timeline.v25Body": "Rodada de otimizações de CPU, energia e I/O — o monitor pesa ainda menos no Mac que ele mede.",
       "timeline.v24Title": "2.4 — GPU na barra de menus",
@@ -149,7 +151,7 @@
       "timeline.v10Title": "1.0 — Primeira versão estável",
       "timeline.v10Body": "Modo limpeza, abrir ao iniciar e interface em PT/EN.",
 
-      "footer.tagline": "Versão 2.5 para macOS",
+      "footer.tagline": "Versão 2.6 para macOS",
       "footer.rights": "Código aberto · Licença MIT",
       "footer.github": "GitHub"
     },
@@ -160,15 +162,15 @@
       "nav.privacy": "Privacy",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 2.5 for macOS",
+      "hero.eyebrow": "Version 2.6 for macOS",
       "hero.title": "Your whole Mac, in the menu bar.",
       "hero.lede": "CPU, GPU, memory, network, temperature, disk, battery, and AI tokens — all at a glance, without opening Activity Monitor.",
-      "hero.cta": "Download 2.5",
+      "hero.cta": "Download 2.6",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View in the macOS menu bar showing CPU, RAM, network, temperature, disk, and battery",
 
-      "sticky.label": "Mac Metrics View 2.5",
+      "sticky.label": "Mac Metrics View 2.6",
       "sticky.cta": "Download",
 
       "metric.cpu": "usage and processes",
@@ -182,7 +184,7 @@
 
       "highlights.eyebrow": "Series 2 highlights",
       "highlights.title": "Every release, a leap.",
-      "highlights.lede": "GPU in the bar, used/total memory, a tabbed popover, and AI tokens — the highlights on the road to 2.5.",
+      "highlights.lede": "GPU in the bar, used/total memory, a tabbed popover, and AI tokens — the highlights on the road to 2.6.",
       "highlights.gpuTitle": "GPU in the bar",
       "highlights.gpuBody": "Real-time graphics processor usage, read straight from the system — new in 2.4.",
       "highlights.usedtotalTitle": "Used/total memory",
@@ -249,9 +251,9 @@
       "privacy.li3": "100% local reads — nothing leaves over the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 2.5.",
+      "download.title": "Download version 2.6.",
       "download.body": "For macOS 14 or later on Apple Silicon Macs. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-2.5.0.zip",
+      "download.cta": "Download MacMetricsView-2.6.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · Apple Silicon · free and open source",
 
       "firstrun.eyebrow": "First launch",
@@ -267,8 +269,10 @@
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
       "timeline.eyebrow": "Timeline",
-      "timeline.title": "From 1.0 to 2.5.",
-      "timeline.lede": "The road to version 2.5, in brief.",
+      "timeline.title": "From 1.0 to 2.6.",
+      "timeline.lede": "The road to version 2.6, in brief.",
+      "timeline.v26Title": "2.6 — Keep your Mac awake",
+      "timeline.v26Body": "A new “Keep awake” switch in Actions prevents display and system sleep during long builds, downloads, and presentations.",
       "timeline.v25Title": "2.5 — Lighter than ever",
       "timeline.v25Body": "A round of CPU, energy, and I/O optimizations — the monitor weighs even less on the Mac it measures.",
       "timeline.v24Title": "2.4 — GPU in the menu bar",
@@ -296,7 +300,7 @@
       "timeline.v10Title": "1.0 — First stable release",
       "timeline.v10Body": "Cleaning mode, open at login, and a PT/EN interface.",
 
-      "footer.tagline": "Version 2.5 for macOS",
+      "footer.tagline": "Version 2.6 for macOS",
       "footer.rights": "Open source · MIT License",
       "footer.github": "GitHub"
     }
