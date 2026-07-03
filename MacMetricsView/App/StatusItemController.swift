@@ -385,7 +385,10 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     }
 
     private func configurePopover() {
-        popover.behavior = .transient
+        // Capture mode (MMV_CAPTURE=1, dev-only): keep the popover open when it loses
+        // focus so an external screenshot tool can grab each tab. Inert otherwise.
+        popover.behavior =
+            ProcessInfo.processInfo.environment["MMV_CAPTURE"] == "1" ? .applicationDefined : .transient
         popover.delegate = self
         // No content controller at init: the SwiftUI graph is built per-open and released on
         // close (ADR-001), so nothing observes CPUState's 1 Hz churn while the popover is
@@ -446,6 +449,16 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     func popoverWillShow(_ notification: Notification) {
         state.isPopoverOpen = true
+    }
+
+    func popoverDidShow(_ notification: Notification) {
+        // Capture mode (dev-only): the popover window now exists, so emit its id for an
+        // external screenshot tool to grab exactly this window (`screencapture -l<id>`),
+        // regardless of z-order. Inert in normal use.
+        guard ProcessInfo.processInfo.environment["MMV_CAPTURE"] == "1" else { return }
+        if let number = popover.contentViewController?.view.window?.windowNumber {
+            FileHandle.standardError.write(Data("MMV_POPOVER_WINDOW=\(number)\n".utf8))
+        }
     }
 
     func popoverDidClose(_ notification: Notification) {

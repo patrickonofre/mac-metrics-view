@@ -23,9 +23,26 @@ struct PopoverView: View {
     let quit: () -> Void
 
     @State private var selectedTab: PopoverTab = .metrics
-    @State private var expandedCards: Set<MetricCardKind> = []
+    @State private var expandedCards: Set<MetricCardKind> = PopoverView.captureSeededExpandedCards()
 
     private let popoverWidth: CGFloat = 380
+
+    /// Capture-mode only (MMV_CAPTURE_CARD, dev tool): pre-expand the named metric cards
+    /// so the marketing screenshots can show each card's detail. Empty in normal use.
+    private static func captureSeededExpandedCards() -> Set<MetricCardKind> {
+        guard let raw = ProcessInfo.processInfo.environment["MMV_CAPTURE_CARD"] else { return [] }
+        let map: [String: MetricCardKind] = [
+            "cpu": .cpu, "gpu": .gpu, "ram": .ram, "network": .network,
+            "temperature": .temperature, "disk": .disk, "battery": .battery, "tokens": .tokens,
+        ]
+        return Set(raw.split(separator: ",").compactMap { map[$0.trimmingCharacters(in: .whitespaces)] })
+    }
+
+    /// Capture-mode flag (MMV_CAPTURE=1, dev tool): used to hide transient banners so the
+    /// marketing screenshots show a clean popover.
+    private static var isCaptureMode: Bool {
+        ProcessInfo.processInfo.environment["MMV_CAPTURE"] == "1"
+    }
 
     var body: some View {
         // Defense-in-depth (ADR-002): StatusItemController tears down the popover hosting
@@ -43,13 +60,15 @@ struct PopoverView: View {
                 headerBar
 
                 // Critical banners pinned above the tab bar so they show on every tab.
-                if UpdateBannerPresentation.showsBanner(availableVersion: state.availableUpdateVersion) {
+                if !Self.isCaptureMode,
+                   UpdateBannerPresentation.showsBanner(availableVersion: state.availableUpdateVersion) {
                     UpdateBanner(availableVersion: state.availableUpdateVersion ?? "") {
                         state.checkForUpdates()
                     }
                 }
 
-                if CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: lock.recovery.isGranted) {
+                if !Self.isCaptureMode,
+                   CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: lock.recovery.isGranted) {
                     RecoveryBanner(wasResetByUpdate: lock.recovery.resetByUpdate)
                 }
 
@@ -57,7 +76,7 @@ struct PopoverView: View {
                     suggestion: ambient.suggestion,
                     lastApply: ambient.lastApplyResult
                 )
-                if ambientBanner != .hidden {
+                if !Self.isCaptureMode, ambientBanner != .hidden {
                     AmbientSuggestionBanner(
                         state: ambientBanner,
                         apply: { ambient.apply() },

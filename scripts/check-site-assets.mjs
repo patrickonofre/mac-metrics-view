@@ -66,20 +66,40 @@ checkImage(
   manifest.byteBudgetKB.menuBar,
 );
 
-// 2. Each popover tab in both themes (presence + pairing + dims + budget).
+// 2. Each popover tab in both themes. These are real popover-window captures with a
+//    fixed width but a per-tab height (the expanded card drives the height), so the
+//    gate checks: presence, both themes, valid PNG, width == popoverWidth (or 2x),
+//    byte budget, and light/dark dimension parity within a tab.
 for (const tab of manifest.tabs) {
+  const dims = {};
   for (const theme of ["light", "dark"]) {
     const file = tab[theme];
     if (!file) {
       fail(`MISSING THEME: tab "${tab.id}" has no ${theme} variant`);
       continue;
     }
-    checkImage(
-      file,
-      manifest.popoverWidth,
-      manifest.popoverHeight,
-      manifest.byteBudgetKB.popover,
-    );
+    const path = join(assetsDir, file);
+    if (!existsSync(path)) {
+      fail(`MISSING: ${manifest.assetsDir}/${file}`);
+      continue;
+    }
+    const kb = statSync(path).size / 1024;
+    if (kb > manifest.byteBudgetKB.popover) {
+      fail(`OVER BUDGET: ${file} is ${kb.toFixed(0)}KB (budget ${manifest.byteBudgetKB.popover}KB)`);
+    }
+    const size = pngSize(path);
+    if (!size) {
+      fail(`NOT A VALID PNG: ${file}`);
+      continue;
+    }
+    const [w, h] = size;
+    if (w !== manifest.popoverWidth && w !== manifest.popoverWidth * 2) {
+      fail(`BAD WIDTH: ${file} is ${w}px, expected ${manifest.popoverWidth} (or 2x ${manifest.popoverWidth * 2})`);
+    }
+    dims[theme] = `${w}x${h}`;
+  }
+  if (dims.light && dims.dark && dims.light !== dims.dark) {
+    fail(`THEME MISMATCH: tab "${tab.id}" light ${dims.light} != dark ${dims.dark}`);
   }
 }
 

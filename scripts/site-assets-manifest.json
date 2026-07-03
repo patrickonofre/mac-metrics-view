@@ -14,9 +14,9 @@
     { "id": "netdisk", "light": "popover-netdisk-light.png", "dark": "popover-netdisk-dark.png", "role": "Network/Disk tab — expandable detail + session totals" },
     { "id": "ai",      "light": "popover-ai-light.png",      "dark": "popover-ai-dark.png",      "role": "AI tokens tab — burn rate, USD cost, projection" }
   ],
-  "popoverWidth": 680,
-  "popoverHeight": 860,
-  "ogImage": "popover-cpu-light.png",
+  "$comment_popover": "Real macOS popover-window captures: fixed width, per-tab height (an expanded card sets the height). The gate checks width + light/dark parity per tab, not a single global height.",
+  "popoverWidth": 406,
+  "ogImage": "og-cover.png",
   "legacyDemoAssetsForbidden": [
     "app-popover-preview.png",
     "token-usage-preview.png",
