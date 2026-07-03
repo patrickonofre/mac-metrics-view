@@ -49,7 +49,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     private let updateService = makeAppUpdateService()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        NSApplication.shared.setActivationPolicy(.accessory)
+        // Capture mode (MMV_CAPTURE=1, dev-only): run as a regular, focusable app so the
+        // popover renders as a normal window for screenshots. Accessory otherwise.
+        let captureMode = ProcessInfo.processInfo.environment["MMV_CAPTURE"] == "1"
+        NSApplication.shared.setActivationPolicy(captureMode ? .regular : .accessory)
 
         // Must run before the first `state` access, which constructs CPUState and loads
         // visibility from UserDefaults.
@@ -110,6 +113,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         // has a window before an auto-open tries to anchor a popover to it.
         DispatchQueue.main.async { [weak self] in
             self?.state.evaluateAccessibilityLaunchNudge()
+        }
+
+        // Capture mode: bring the app forward and open the popover so a screenshot tool can
+        // grab it. Deferred so the status-bar button is laid out and has a window first.
+        if captureMode {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { [weak self] in
+                NSApplication.shared.activate(ignoringOtherApps: true)
+                self?.statusItemController?.openPopover()
+            }
         }
 
         cpuSampler.delegate = self

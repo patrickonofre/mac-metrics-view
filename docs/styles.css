@@ -755,15 +755,14 @@ h3 {
   display: none;
 }
 
+/* The popover screenshots are captured as the real macOS window, so the native
+   rounded corners and drop shadow are baked into the PNG (with transparent
+   margins) — no CSS border/radius/shadow here or it would double up. */
 .popover-shot {
-  aspect-ratio: 680 / 860;
-  border: 1px solid color-mix(in srgb, var(--line) 60%, transparent);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
   display: block;
   height: auto;
   margin: 0 auto;
-  max-height: min(68svh, 44rem);
+  max-height: min(72svh, 46rem);
   max-width: 100%;
   width: auto;
 }
