@@ -6,6 +6,7 @@ import SwiftUI
 struct ActionsTab: View {
     @ObservedObject var state: CPUState
     @ObservedObject var lock: CleaningLockModel
+    @ObservedObject var keepAwake: KeepAwakeModel
     let dismissPopover: () -> Void
 
     var body: some View {
@@ -20,7 +21,45 @@ struct ActionsTab: View {
 
             Divider()
 
+            KeepAwakeSection(keepAwake: keepAwake)
+
+            Divider()
+
             UpdatesControl(state: state)
+        }
+        .font(.caption)
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+// MARK: - Keep awake
+
+/// Plain on/off keep-awake toggle (feature `keep-awake-toggle`). Observes `keepAwake`
+/// directly so the switch reflects the real assertion state — if the OS refuses the
+/// assertion, `isActive` stays `false` and the toggle snaps back off.
+struct KeepAwakeSection: View {
+    @ObservedObject var keepAwake: KeepAwakeModel
+
+    private var isActiveBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { keepAwake.isActive },
+            set: { keepAwake.setActive($0) }
+        )
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle(isOn: isActiveBinding) {
+                Text(Strings.keepAwakeTitle())
+                    .font(.caption.weight(.semibold))
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+
+            Text(Strings.keepAwakeHint())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)

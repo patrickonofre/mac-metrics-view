@@ -36,6 +36,12 @@ final class CPUState: ObservableObject {
     /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `token`/`ambient`.
     let lock: CleaningLockModel
 
+    /// The Utilities pillar (TD-012): the keep-awake toggle (feature `keep-awake-toggle`).
+    /// Holds a `PreventUserIdleDisplaySleep` power assertion while active. Not persisted
+    /// (off at every launch) and, like the other pillar models, not bridged to this
+    /// coordinator's `objectWillChange` — `ActionsTab` observes `keepAwake` directly.
+    let keepAwake: KeepAwakeModel
+
     /// Newest version announced by the appcast when it is more recent than the
     /// installed build, or `nil` when the app is up to date. Fed by a passive
     /// Sparkle probe (no dialog) via `setAvailableUpdateVersion(_:)`.
@@ -94,6 +100,7 @@ final class CPUState: ObservableObject {
         systemAppearance: SystemAppearanceControlling? = nil,
         processReader: ProcessReading = LibprocProcessReader(),
         samplingExecutor: SamplingExecutor = BackgroundSamplingExecutor(),
+        sleepAssertionService: SleepAssertionControlling = IOPMSleepAssertionService(),
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
         self.userDefaults = userDefaults
@@ -116,6 +123,7 @@ final class CPUState: ObservableObject {
             accessibilityProbe: accessibilityProbe ?? SystemAccessibilityProbe(),
             currentAppVersion: currentAppVersion
         )
+        keepAwake = KeepAwakeModel(service: sleepAssertionService)
 
         token = TokenUsageModel(
             userDefaults: userDefaults,

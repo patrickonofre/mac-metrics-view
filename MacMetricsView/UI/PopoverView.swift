@@ -157,6 +157,7 @@ struct PopoverView: View {
             ActionsTab(
                 state: state,
                 lock: lock,
+                keepAwake: state.keepAwake,
                 dismissPopover: dismissPopover
             )
         }

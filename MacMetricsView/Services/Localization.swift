@@ -281,6 +281,13 @@ enum Strings {
     static let loginDisabled = LocalizedText(en: "Disabled", pt: "Desativado")
     static let loginError = LocalizedText(en: "Error", pt: "Erro")
 
+    // Keep awake
+    static let keepAwakeTitle = LocalizedText(en: "Keep awake", pt: "Manter acordado")
+    static let keepAwakeHint = LocalizedText(
+        en: "Prevent the display and system from sleeping while on.",
+        pt: "Impede a suspensão da tela e do sistema enquanto ativo."
+    )
+
     // Auto-update
     static let autoUpdateCheck = LocalizedText(en: "Check for updates…", pt: "Buscar atualizações…")
     static func autoUpdateAvailable(_ version: String, _ language: AppLanguage = .current) -> String {
