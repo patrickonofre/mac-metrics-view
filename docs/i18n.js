@@ -12,6 +12,7 @@
       "nav.features": "Recursos",
       "nav.privacy": "Privacidade",
       "nav.download": "Download",
+      "nav.hub": "Todos os apps",
 
       "hero.eyebrow": "Versão 2.6 para macOS",
       "hero.title": "Seu Mac inteiro, na barra de menus.",
@@ -161,6 +162,7 @@
       "nav.features": "Features",
       "nav.privacy": "Privacy",
       "nav.download": "Download",
+      "nav.hub": "All apps",
 
       "hero.eyebrow": "Version 2.6 for macOS",
       "hero.title": "Your whole Mac, in the menu bar.",

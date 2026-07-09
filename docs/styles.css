@@ -131,9 +131,26 @@ p {
 
 .nav a {
   transition: color 160ms ease;
+  white-space: nowrap;
 }
 
 .nav a:hover {
+  color: var(--text);
+}
+
+.nav-cross {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 1rem;
+  font-size: 0.82rem;
+}
+
+.nav-cross a {
+  color: var(--muted);
+  transition: color 160ms ease;
+}
+
+.nav-cross a:hover {
   color: var(--text);
 }
 
@@ -623,6 +640,12 @@ h3 {
 }
 
 /* ---------- Responsive ---------- */
+
+@media (max-width: 1150px) {
+  .nav-cross {
+    display: none;
+  }
+}
 
 @media (max-width: 900px) {
   .nav {
