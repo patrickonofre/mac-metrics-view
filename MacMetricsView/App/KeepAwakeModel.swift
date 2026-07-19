@@ -142,7 +142,16 @@ final class KeepAwakeModel: ObservableObject {
 
     private func startPowerSourceMonitor() {
         powerSourceMonitor.onChange = { [weak self] snapshot in
-            self?.latestPowerSnapshot = snapshot
+            guard let self else { return }
+            self.latestPowerSnapshot = snapshot
+            // LIDC-14: while the sub-mode is active, a reading below the threshold on
+            // battery auto-deactivates it through the same serialized queue (redundant
+            // readings collapse into the LIDC-06 no-op). The handler only ever turns
+            // the sub-mode off — never back on — so reconnecting power cannot re-arm
+            // it (LIDC-15), and base keep-awake is not touched here (LIDC-16).
+            if self.lidClose == .active, LidCloseFailsafePolicy.shouldBlock(snapshot) {
+                self.enqueueLidCloseTransition(false)
+            }
         }
         powerSourceMonitor.start()
     }

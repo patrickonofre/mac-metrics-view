@@ -278,4 +278,80 @@ final class KeepAwakeModelLidCloseTests: XCTestCase {
 
         XCTAssertEqual(model.lidClose, .active)
     }
+
+    // MARK: - LIDC-14/15: battery fail-safe while active
+
+    // LIDC-14: a reading below 10% on battery while active deactivates the sub-mode —
+    // helper deactivate called exactly once even when readings repeat.
+    func testFailsafeSnapshotDeactivatesSubModeExactlyOnce() async {
+        let monitor = FakePowerSourceMonitor()
+        let (model, helper, _) = makeModel(monitor: monitor)
+        await model.setLidCloseActive(true)
+
+        monitor.emit(PowerSourceSnapshot(levelPercent: 9, isOnBattery: true))
+        monitor.emit(PowerSourceSnapshot(levelPercent: 8, isOnBattery: true))
+        await model.settleLidCloseTransitions()
+
+        XCTAssertEqual(model.lidClose, .off)
+        XCTAssertEqual(helper.deactivateCalls, 1, "repeated qualifying readings must deactivate exactly once")
+        XCTAssertFalse(monitor.isRunning, "monitor must stop once the sub-mode is off")
+    }
+
+    // LIDC-14 (branch): non-qualifying readings while active change nothing.
+    func testHealthySnapshotsKeepSubModeActive() async {
+        let monitor = FakePowerSourceMonitor()
+        let (model, helper, _) = makeModel(monitor: monitor)
+        await model.setLidCloseActive(true)
+
+        monitor.emit(PowerSourceSnapshot(levelPercent: 50, isOnBattery: true))
+        monitor.emit(PowerSourceSnapshot(levelPercent: 9, isOnBattery: false))
+        await model.settleLidCloseTransitions()
+
+        XCTAssertEqual(model.lidClose, .active)
+        XCTAssertEqual(helper.callLog, ["activate"], "healthy readings must not reach the helper")
+    }
+
+    // LIDC-15: after the fail-safe fires, reconnecting external power must NOT
+    // re-enable the sub-mode — it stays off until the user re-enables it manually.
+    func testNoAutoRearmOnPowerReconnect() async {
+        let monitor = FakePowerSourceMonitor()
+        let (model, helper, _) = makeModel(monitor: monitor)
+        await model.setLidCloseActive(true)
+        monitor.emit(PowerSourceSnapshot(levelPercent: 9, isOnBattery: true))
+        await model.settleLidCloseTransitions()
+
+        monitor.emit(PowerSourceSnapshot(levelPercent: 9, isOnBattery: false))
+        await model.settleLidCloseTransitions()
+
+        XCTAssertEqual(model.lidClose, .off, "power reconnect must not re-arm the sub-mode")
+        XCTAssertEqual(helper.activateCalls, 1, "no helper activation without a manual re-enable")
+    }
+
+    // LIDC-16: the fail-safe deactivates only the sub-mode; base keep-awake stays in
+    // its current state.
+    func testFailsafeLeavesBaseKeepAwakeUntouched() async {
+        let monitor = FakePowerSourceMonitor()
+        let (model, _, _) = makeModel(monitor: monitor)
+        await model.setLidCloseActive(true)
+
+        monitor.emit(PowerSourceSnapshot(levelPercent: 9, isOnBattery: true))
+        await model.settleLidCloseTransitions()
+
+        XCTAssertTrue(model.isActive, "base keep-awake must survive the fail-safe")
+        XCTAssertEqual(model.lidClose, .off)
+    }
+
+    // Fail-safe scoping: the power-source monitor runs only while the sub-mode is
+    // active — never before the first enable and not after a manual disable.
+    func testMonitorObservedOnlyWhileSubModeActive() async {
+        let monitor = FakePowerSourceMonitor()
+        let (model, _, _) = makeModel(monitor: monitor)
+        XCTAssertEqual(monitor.startCalls, 0, "monitor must not run before the sub-mode is enabled")
+
+        await model.setLidCloseActive(true)
+        XCTAssertTrue(monitor.isRunning, "monitor must run while the sub-mode is active")
+
+        await model.setLidCloseActive(false)
+        XCTAssertFalse(monitor.isRunning, "monitor must stop with the sub-mode")
+    }
 }
