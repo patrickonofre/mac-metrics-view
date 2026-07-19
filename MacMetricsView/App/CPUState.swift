@@ -102,6 +102,8 @@ final class CPUState: ObservableObject {
         processReader: ProcessReading = LibprocProcessReader(),
         samplingExecutor: SamplingExecutor = BackgroundSamplingExecutor(),
         sleepAssertionService: SleepAssertionControlling = IOPMSleepAssertionService(),
+        lidCloseService: LidCloseSleepControlling? = nil,
+        powerSourceMonitor: PowerSourceMonitoring? = nil,
         currentAppVersion: String = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0.0"
     ) {
         self.userDefaults = userDefaults
@@ -124,7 +126,15 @@ final class CPUState: ObservableObject {
             accessibilityProbe: accessibilityProbe ?? SystemAccessibilityProbe(),
             currentAppVersion: currentAppVersion
         )
-        keepAwake = KeepAwakeModel(userDefaults: userDefaults, service: sleepAssertionService)
+        // `lidCloseService`/`powerSourceMonitor` are injectable for wiring tests
+        // (feature `lid-close-keep-awake`); `nil` lets KeepAwakeModel build the real
+        // SMAppService/IOPS implementations on the main actor.
+        keepAwake = KeepAwakeModel(
+            userDefaults: userDefaults,
+            service: sleepAssertionService,
+            lidCloseService: lidCloseService,
+            powerSourceMonitor: powerSourceMonitor
+        )
 
         token = TokenUsageModel(
             userDefaults: userDefaults,

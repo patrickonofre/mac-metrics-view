@@ -151,6 +151,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         if lockService.phase == .locked {
             lockService.stop(reason: .terminated)
         }
+        // Failsafe (LIDC-11): a normal quit must clear the system sleep-disabled
+        // flag before the process exits.
+        deactivateLidCloseBeforeExit()
         // Flush any ledger write the debounce (OPT-09) is still holding, so a clean quit
         // never loses the last ≤30s of token accounting.
         state.token.flushLedgerIfDirty()
@@ -164,6 +167,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         ambientLightSampler.stop()
         tokenSampler.stop()
         codexTokenSampler.stop()
+    }
+
+    /// Handle to the quit-failsafe deactivation (LIDC-11). Internal so wiring tests
+    /// can await it deterministically instead of racing the fire-and-forget task.
+    private(set) var lidCloseTerminationTask: Task<Void, Never>?
+
+    /// How long `applicationWillTerminate` may pump the run loop waiting for the
+    /// lid-close deactivation to settle. Internal so wiring tests can zero it: under
+    /// XCTest the pump cannot drain the main actor (the test's own main-actor frame
+    /// holds it), so tests await `lidCloseTerminationTask` instead.
+    var lidCloseTerminationPumpTimeout: TimeInterval = 2
+
+    /// Quit failsafe for the lid-close sub-mode (feature `lid-close-keep-awake`,
+    /// LIDC-11): enqueues the deactivation through the model's serialized transition
+    /// queue, then pumps the run loop briefly until the sub-mode reads `.off` so the
+    /// helper call actually happens before exit. Bounded by a deadline so a hung
+    /// helper can never block quit — the daemon's connection-loss revert (LIDC-12)
+    /// and pmset's reboot-clears semantics are the backstops.
+    private func deactivateLidCloseBeforeExit() {
+        let keepAwake = state.keepAwake
+        guard keepAwake.lidClose != .off else { return }
+        lidCloseTerminationTask = Task { @MainActor in
+            await keepAwake.setLidCloseActive(false)
+        }
+        let deadline = Date().addingTimeInterval(lidCloseTerminationPumpTimeout)
+        while keepAwake.lidClose != .off && Date() < deadline {
+            RunLoop.current.run(mode: .default, before: Date().addingTimeInterval(0.05))
+        }
     }
 
     /// Seeds the first-run metric preset once, on a genuinely fresh install. The grant
