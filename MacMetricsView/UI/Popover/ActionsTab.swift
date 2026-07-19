@@ -47,6 +47,20 @@ struct KeepAwakeSection: View {
         )
     }
 
+    /// Lid-close sub-mode binding (feature `lid-close-keep-awake`). The switch shows
+    /// on only for `.active` — `.pendingApproval` reads as off plus the guidance card,
+    /// so the toggle never claims the flag is set when it isn't (LIDC-05/08). Writes go
+    /// through the model's serialized async transition queue; the switch snaps back on
+    /// refusal/failure because it renders `lidClose`, not the user's tap.
+    private var lidCloseBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { keepAwake.lidClose == .active },
+            set: { active in
+                Task { await keepAwake.setLidCloseActive(active) }
+            }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             Toggle(isOn: isActiveBinding) {
@@ -60,9 +74,62 @@ struct KeepAwakeSection: View {
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+
+            // LIDC-01: the lid-close sub-option exists only while base keep-awake is on.
+            if keepAwake.isActive {
+                lidCloseSubOption
+                    .padding(.top, 4)
+            }
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // Indented nested control, mirroring the CleaningLockSection conditional-card idiom.
+    private var lidCloseSubOption: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Toggle(isOn: lidCloseBinding) {
+                Text(Strings.lidCloseTitle())
+                    .font(.caption)
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+
+            Text(Strings.lidCloseHint())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+            if keepAwake.lidClose == .pendingApproval {
+                lidCloseApprovalGuidance
+            }
+        }
+        .padding(.leading, 12)
+    }
+
+    // LIDC-08: daemon registered but awaiting user approval — guidance + a deep-link
+    // into System Settings → Login Items. The sub-mode stays inactive meanwhile.
+    private var lidCloseApprovalGuidance: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(spacing: 8) {
+                Image(systemName: "hourglass")
+                    .foregroundStyle(.orange)
+                Text(Strings.lidClosePendingApprovalTitle())
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Button(Strings.lidCloseOpenLoginItems()) {
+                    HelperLidCloseSleepService.openApprovalSettings()
+                }
+                .buttonStyle(.borderless)
+                .foregroundStyle(Color.accentColor)
+            }
+
+            Text(Strings.lidClosePendingApprovalMessage())
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .font(.caption)
     }
 }
 

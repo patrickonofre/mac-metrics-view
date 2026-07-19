@@ -288,6 +288,30 @@ enum Strings {
         pt: "Impede a suspensão da tela e do sistema enquanto ativo."
     )
 
+    // Lid-close keep-awake sub-mode (feature `lid-close-keep-awake`). Visible only
+    // while base keep-awake is on (LIDC-01); the approval strings back the
+    // pending-approval guidance card (LIDC-08).
+    static let lidCloseTitle = LocalizedText(
+        en: "Keep awake with lid closed",
+        pt: "Manter acordado com a tampa fechada"
+    )
+    static let lidCloseHint = LocalizedText(
+        en: "Keeps the Mac running with the lid closed. Turns itself off below 10% battery.",
+        pt: "Mantém o Mac funcionando com a tampa fechada. Desliga sozinho abaixo de 10% de bateria."
+    )
+    static let lidClosePendingApprovalTitle = LocalizedText(
+        en: "Waiting for approval",
+        pt: "Aguardando aprovação"
+    )
+    static let lidClosePendingApprovalMessage = LocalizedText(
+        en: "Allow Mac Metrics View in System Settings → General → Login Items, then turn the option on again. This approval is asked only once.",
+        pt: "Permita o Mac Metrics View em Ajustes do Sistema → Geral → Itens de Início, depois ative a opção novamente. Esta aprovação é pedida só uma vez."
+    )
+    static let lidCloseOpenLoginItems = LocalizedText(
+        en: "Open Login Items",
+        pt: "Abrir Itens de Início"
+    )
+
     // Auto-update
     static let autoUpdateCheck = LocalizedText(en: "Check for updates…", pt: "Buscar atualizações…")
     static func autoUpdateAvailable(_ version: String, _ language: AppLanguage = .current) -> String {
