@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "promote_threshold": 2,
+  "window_days": 45,
+  "quarantine_threshold": 2,
+  "next_id": 5,
+  "lessons": [
+    {
+      "id": "L-001",
+      "key": "surviving_mutant::when persisting the post attempt result of a fallible action not raw caller intent add a test that forces the action to fail and asserts the persisted value reflects the failure success path only tests won t catch a regression that persists intent instead of outcome",
+      "text": "When persisting the post-attempt result of a fallible action (not raw caller intent), add a test that forces the action to fail and asserts the persisted value reflects the failure — success-path-only tests won't catch a regression that persists intent instead of outcome.",
+      "signal": "surviving_mutant",
+      "scope": "persistence,failure-handling",
+      "status": "candidate",
+      "features": [
+        "keep-awake-persistence"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "KeepAwakeModel.swift:45 mutant #1 (persistence,failure-handling)"
+      ],
+      "created": "2026-07-19T04:00:47Z",
+      "last_seen": "2026-07-19T04:00:47Z"
+    },
+    {
+      "id": "L-002",
+      "key": "ac_gap::when a spec edge case says only one attempt no retry loop assert the actual call count e g activatecalls 1 in the failure path test not just the final state a loop can produce the same final state as a single attempt",
+      "text": "When a spec edge case says 'only one attempt, no retry loop', assert the actual call count (e.g. activateCalls == 1) in the failure-path test, not just the final state — a loop can produce the same final state as a single attempt.",
+      "signal": "ac_gap",
+      "scope": "testing,edge-cases",
+      "status": "candidate",
+      "features": [
+        "keep-awake-persistence"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md Edge Case 2 (no retry loop on restore failure) (testing,edge-cases)"
+      ],
+      "created": "2026-07-19T04:00:57Z",
+      "last_seen": "2026-07-19T04:00:57Z"
+    },
+    {
+      "id": "L-003",
+      "key": "ac_gap::when an ac states x or y as alternative preconditions e g false or absent write a separate test for each precondition even if they re indistinguishable at the storage read layer the consuming code path may still deserve independent proof",
+      "text": "When an AC states 'X or Y' as alternative preconditions (e.g. 'false or absent'), write a separate test for each precondition even if they're indistinguishable at the storage-read layer — the consuming code path may still deserve independent proof.",
+      "signal": "ac_gap",
+      "scope": "testing,acceptance-criteria",
+      "status": "candidate",
+      "features": [
+        "keep-awake-persistence"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "spec.md P1 AC5 (stored pref false or absent) (testing,acceptance-criteria)"
+      ],
+      "created": "2026-07-19T04:00:57Z",
+      "last_seen": "2026-07-19T04:00:57Z"
+    },
+    {
+      "id": "L-004",
+      "key": "surviving_mutant::when a spec criterion is a conjunction assert every clause including the unchanged state clause not only the state that transitions",
+      "text": "When a spec criterion is a conjunction, assert every clause including the unchanged-state clause, not only the state that transitions",
+      "signal": "surviving_mutant",
+      "scope": "MacMetricsViewTests",
+      "status": "candidate",
+      "features": [
+        "lid-close-keep-awake"
+      ],
+      "recurrence": 1,
+      "harmful": 0,
+      "evidence": [
+        "validation.md sensor mutant F — KeepAwakeModelLidCloseTests.swift:149-157, LIDC-09 (MacMetricsViewTests)"
+      ],
+      "created": "2026-07-19T18:33:54Z",
+      "last_seen": "2026-07-19T18:33:54Z"
+    }
+  ]
+}
