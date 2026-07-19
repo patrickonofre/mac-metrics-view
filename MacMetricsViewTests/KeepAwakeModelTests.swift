@@ -27,10 +27,14 @@ final class KeepAwakeModelTests: XCTestCase {
         }
     }
 
+    private func freshDefaults() -> UserDefaults {
+        UserDefaults(suiteName: "KeepAwakeModelTests.\(UUID().uuidString)")!
+    }
+
     // KAWK-01: turning on creates exactly one assertion and reports active.
     func testActivateHoldsAssertionAndReportsActive() {
         let service = FakeSleepAssertionService()
-        let model = KeepAwakeModel(service: service)
+        let model = KeepAwakeModel(userDefaults: freshDefaults(), service: service)
 
         model.setActive(true)
 
@@ -42,7 +46,7 @@ final class KeepAwakeModelTests: XCTestCase {
     // KAWK-01: turning off releases the assertion.
     func testDeactivateReleasesAssertion() {
         let service = FakeSleepAssertionService()
-        let model = KeepAwakeModel(service: service)
+        let model = KeepAwakeModel(userDefaults: freshDefaults(), service: service)
         model.setActive(true)
 
         model.setActive(false)
@@ -56,7 +60,7 @@ final class KeepAwakeModelTests: XCTestCase {
     func testActivateFailureRevertsToOff() {
         let service = FakeSleepAssertionService()
         service.activateResult = false
-        let model = KeepAwakeModel(service: service)
+        let model = KeepAwakeModel(userDefaults: freshDefaults(), service: service)
 
         model.setActive(true)
 
@@ -64,15 +68,15 @@ final class KeepAwakeModelTests: XCTestCase {
         XCTAssertEqual(service.held, 0)
     }
 
-    // KAWK-03: never persisted — a fresh model is always off.
-    func testStartsInactive() {
-        XCTAssertFalse(KeepAwakeModel(service: FakeSleepAssertionService()).isActive)
+    // KAWK-03 (edge case): no stored preference yet — a fresh model starts off.
+    func testStartsInactiveWithNoStoredPreference() {
+        XCTAssertFalse(KeepAwakeModel(userDefaults: freshDefaults(), service: FakeSleepAssertionService()).isActive)
     }
 
     // KAWK-04: redundant calls are no-ops; at most one assertion exists at any time.
     func testIdempotentActivateHoldsSingleAssertion() {
         let service = FakeSleepAssertionService()
-        let model = KeepAwakeModel(service: service)
+        let model = KeepAwakeModel(userDefaults: freshDefaults(), service: service)
 
         model.setActive(true)
         model.setActive(true)
@@ -83,6 +87,54 @@ final class KeepAwakeModelTests: XCTestCase {
         XCTAssertEqual(service.deactivateCalls, 1, "second deactivate is a no-op")
         XCTAssertLessThanOrEqual(service.held, 1)
         XCTAssertFalse(model.isActive)
+    }
+
+    // KAWK-05: turning on persists the preference so it survives relaunch/restart.
+    func testTurningOnPersistsPreference() {
+        let defaults = freshDefaults()
+        let model = KeepAwakeModel(userDefaults: defaults, service: FakeSleepAssertionService())
+
+        model.setActive(true)
+
+        XCTAssertTrue(KeepAwakeSettings.load(from: defaults).isActive)
+    }
+
+    // KAWK-05: turning off persists the preference too.
+    func testTurningOffPersistsPreference() {
+        let defaults = freshDefaults()
+        let model = KeepAwakeModel(userDefaults: defaults, service: FakeSleepAssertionService())
+        model.setActive(true)
+
+        model.setActive(false)
+
+        XCTAssertFalse(KeepAwakeSettings.load(from: defaults).isActive)
+    }
+
+    // KAWK-06: a stored "on" preference reactivates the real assertion at launch,
+    // with no user action required.
+    func testRestoresAndReactivatesOnLaunch() {
+        let defaults = freshDefaults()
+        KeepAwakeSettings(isActive: true).save(to: defaults)
+        let service = FakeSleepAssertionService()
+
+        let model = KeepAwakeModel(userDefaults: defaults, service: service)
+
+        XCTAssertTrue(model.isActive)
+        XCTAssertEqual(service.activateCalls, 1)
+    }
+
+    // KAWK-07: if the OS refuses the assertion on restore, the UI reports off but the
+    // stored preference is left untouched so the next launch retries.
+    func testRestoreFailureReportsOffButKeepsStoredPreference() {
+        let defaults = freshDefaults()
+        KeepAwakeSettings(isActive: true).save(to: defaults)
+        let service = FakeSleepAssertionService()
+        service.activateResult = false
+
+        let model = KeepAwakeModel(userDefaults: defaults, service: service)
+
+        XCTAssertFalse(model.isActive, "a refused restore must not report active")
+        XCTAssertTrue(KeepAwakeSettings.load(from: defaults).isActive, "stored preference must survive a refused restore")
     }
 
     // Pillar contract: mutating keep-awake must not invalidate CPUState's own

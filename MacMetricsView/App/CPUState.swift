@@ -36,10 +36,11 @@ final class CPUState: ObservableObject {
     /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `token`/`ambient`.
     let lock: CleaningLockModel
 
-    /// The Utilities pillar (TD-012): the keep-awake toggle (feature `keep-awake-toggle`).
-    /// Holds a `PreventUserIdleDisplaySleep` power assertion while active. Not persisted
-    /// (off at every launch) and, like the other pillar models, not bridged to this
-    /// coordinator's `objectWillChange` — `ActionsTab` observes `keepAwake` directly.
+    /// The Utilities pillar (TD-012): the keep-awake toggle (feature `keep-awake-toggle`,
+    /// persisted per `keep-awake-persistence`). Holds a `PreventUserIdleDisplaySleep`
+    /// power assertion while active, and restores the last selection on launch. Like the
+    /// other pillar models, not bridged to this coordinator's `objectWillChange` —
+    /// `ActionsTab` observes `keepAwake` directly.
     let keepAwake: KeepAwakeModel
 
     /// Newest version announced by the appcast when it is more recent than the
@@ -123,7 +124,7 @@ final class CPUState: ObservableObject {
             accessibilityProbe: accessibilityProbe ?? SystemAccessibilityProbe(),
             currentAppVersion: currentAppVersion
         )
-        keepAwake = KeepAwakeModel(service: sleepAssertionService)
+        keepAwake = KeepAwakeModel(userDefaults: userDefaults, service: sleepAssertionService)
 
         token = TokenUsageModel(
             userDefaults: userDefaults,
