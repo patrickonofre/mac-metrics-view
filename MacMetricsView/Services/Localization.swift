@@ -299,6 +299,9 @@ enum Strings {
     static let updateNow = LocalizedText(en: "Update now", pt: "Atualizar agora")
     static let whatsNew = LocalizedText(en: "What's new", pt: "Novidades")
 
+    /// Feature-level opt-in toggle (feature `cleaning-lock-opt-in`, CLNGT-03/04/05).
+    static let cleaningLockEnable = LocalizedText(en: "Enable", pt: "Ativar")
+
     // Cleaning-lock Accessibility recovery (self-healing flow). Tone matches the
     // existing Portuguese cleaning-section copy; the dead-end "reload" wording is
     // gone — the app now applies a restored grant on its own.

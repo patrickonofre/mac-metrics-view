@@ -108,16 +108,38 @@ struct CleaningLockSection: View {
         )
     }
 
+    /// Feature-level opt-in toggle (CLNGT-04/05/08). Disabled while a session is
+    /// actively locked so the permission/settings chain can't be pulled out from under
+    /// an in-flight `CGEventTap` session — mirrors "Iniciar"'s own
+    /// `disabled(lock.phase == .locked)` guard below.
+    private var isEnabledBinding: Binding<Bool> {
+        Binding<Bool>(
+            get: { lock.settings.isEnabled },
+            set: { lock.setEnabled($0) }
+        )
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("Modo limpeza")
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.primary)
+            HStack(spacing: 6) {
+                Text("Modo limpeza")
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                Spacer()
+                Toggle(Strings.cleaningLockEnable(), isOn: isEnabledBinding)
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .disabled(lock.phase == .locked)
+            }
 
             switch CleaningRecoveryPresentation.cardState(
+                isEnabled: lock.settings.isEnabled,
                 isAccessibilityGranted: lock.recovery.isGranted,
                 recoveryPhase: lock.recovery.phase
             ) {
+            case .disabled:
+                EmptyView()
             case .granted:
                 grantedControls
             case .applying:

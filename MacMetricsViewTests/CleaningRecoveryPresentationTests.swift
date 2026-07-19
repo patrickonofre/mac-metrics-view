@@ -8,44 +8,66 @@ final class CleaningRecoveryPresentationTests: XCTestCase {
 
     func testGrantedSelectsGrantedControlsRegardlessOfPhase() {
         XCTAssertEqual(
-            CleaningRecoveryPresentation.cardState(isAccessibilityGranted: true, recoveryPhase: .idle),
+            CleaningRecoveryPresentation.cardState(isEnabled: true, isAccessibilityGranted: true, recoveryPhase: .idle),
             .granted
         )
         XCTAssertEqual(
-            CleaningRecoveryPresentation.cardState(isAccessibilityGranted: true, recoveryPhase: .applying),
+            CleaningRecoveryPresentation.cardState(isEnabled: true, isAccessibilityGranted: true, recoveryPhase: .applying),
             .granted
         )
     }
 
     func testApplyingPhaseSelectsApplyingIndicatorWhenUngranted() {
         XCTAssertEqual(
-            CleaningRecoveryPresentation.cardState(isAccessibilityGranted: false, recoveryPhase: .applying),
+            CleaningRecoveryPresentation.cardState(isEnabled: true, isAccessibilityGranted: false, recoveryPhase: .applying),
             .applying
         )
     }
 
     func testUngrantedIdleSelectsAwaitingGuidance() {
         XCTAssertEqual(
-            CleaningRecoveryPresentation.cardState(isAccessibilityGranted: false, recoveryPhase: .idle),
+            CleaningRecoveryPresentation.cardState(isEnabled: true, isAccessibilityGranted: false, recoveryPhase: .idle),
             .awaitingGuidance
         )
     }
 
     func testUngrantedAwaitingGrantSelectsAwaitingGuidance() {
         XCTAssertEqual(
-            CleaningRecoveryPresentation.cardState(isAccessibilityGranted: false, recoveryPhase: .awaitingGrant),
+            CleaningRecoveryPresentation.cardState(isEnabled: true, isAccessibilityGranted: false, recoveryPhase: .awaitingGrant),
             .awaitingGuidance
+        )
+    }
+
+    // CLNGT-03: disabled short-circuits to `.disabled` regardless of grant/phase.
+    func testDisabledSelectsDisabledRegardlessOfGrantOrPhase() {
+        XCTAssertEqual(
+            CleaningRecoveryPresentation.cardState(isEnabled: false, isAccessibilityGranted: true, recoveryPhase: .idle),
+            .disabled
+        )
+        XCTAssertEqual(
+            CleaningRecoveryPresentation.cardState(isEnabled: false, isAccessibilityGranted: false, recoveryPhase: .applying),
+            .disabled
+        )
+        XCTAssertEqual(
+            CleaningRecoveryPresentation.cardState(isEnabled: false, isAccessibilityGranted: false, recoveryPhase: .awaitingGrant),
+            .disabled
         )
     }
 
     // MARK: - Banner visibility
 
-    func testBannerShownWhenUngranted() {
-        XCTAssertTrue(CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: false))
+    func testBannerShownWhenEnabledAndUngranted() {
+        XCTAssertTrue(CleaningRecoveryPresentation.showsRecoveryBanner(isEnabled: true, isAccessibilityGranted: false))
     }
 
     func testBannerHiddenWhenGranted() {
-        XCTAssertFalse(CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: true))
+        XCTAssertFalse(CleaningRecoveryPresentation.showsRecoveryBanner(isEnabled: true, isAccessibilityGranted: true))
+    }
+
+    // CLNGT-02: disabled hides the banner regardless of the (unchecked) grant state.
+    func testBannerHiddenWhenDisabledRegardlessOfGrant() {
+        XCTAssertFalse(CleaningRecoveryPresentation.showsRecoveryBanner(isEnabled: false, isAccessibilityGranted: false))
+        XCTAssertFalse(CleaningRecoveryPresentation.showsRecoveryBanner(isEnabled: false, isAccessibilityGranted: true))
     }
 
     // MARK: - Copy selection (reset vs first-grant)

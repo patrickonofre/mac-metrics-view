@@ -8,6 +8,9 @@ enum CleaningRecoveryPresentation {
 
     /// Which content the cleaning-lock section shows.
     enum CardState: Equatable {
+        /// Feature-level toggle is off (CLNGT-03) — only the toggle itself renders, no
+        /// picker/button/guidance, regardless of the underlying (unchecked) grant state.
+        case disabled
         /// Granted — the duration picker + Iniciar controls.
         case granted
         /// A valid grant was detected; the transient "applying… reopening" indicator.
@@ -16,18 +19,25 @@ enum CleaningRecoveryPresentation {
         case awaitingGuidance
     }
 
+    /// - Parameter isEnabled: the feature-level opt-in (`CleaningLockSettings.isEnabled`,
+    ///   CLNGT-03). Checked first — a disabled feature short-circuits to `.disabled`
+    ///   before any grant/phase check, since those are meaningless while opted out.
     static func cardState(
+        isEnabled: Bool,
         isAccessibilityGranted: Bool,
         recoveryPhase: AccessibilityRecoveryPhase
     ) -> CardState {
+        guard isEnabled else { return .disabled }
         if isAccessibilityGranted { return .granted }
         if recoveryPhase == .applying { return .applying }
         return .awaitingGuidance
     }
 
-    /// The header recovery banner shows whenever the grant is missing.
-    static func showsRecoveryBanner(isAccessibilityGranted: Bool) -> Bool {
-        !isAccessibilityGranted
+    /// The header recovery banner shows only when the feature is enabled AND the grant
+    /// is missing (CLNGT-02) — a disabled feature never shows the banner, regardless of
+    /// the underlying (unchecked) grant state.
+    static func showsRecoveryBanner(isEnabled: Bool, isAccessibilityGranted: Bool) -> Bool {
+        isEnabled && !isAccessibilityGranted
     }
 
     /// Card guidance copy: the update-reset wording stresses remove (−) + re-add;

@@ -68,7 +68,10 @@ struct PopoverView: View {
                 }
 
                 if !Self.isCaptureMode,
-                   CleaningRecoveryPresentation.showsRecoveryBanner(isAccessibilityGranted: lock.recovery.isGranted) {
+                   CleaningRecoveryPresentation.showsRecoveryBanner(
+                       isEnabled: lock.settings.isEnabled,
+                       isAccessibilityGranted: lock.recovery.isGranted
+                   ) {
                     RecoveryBanner(wasResetByUpdate: lock.recovery.resetByUpdate)
                 }
 
@@ -97,7 +100,7 @@ struct PopoverView: View {
             .padding(.vertical, 12)
             .frame(width: popoverWidth, alignment: .topLeading)
             .onAppear {
-                lock.recovery.refreshAuthorization()
+                state.refreshAccessibilityAuthorization()
                 // Time-derived token figures (burn rate, rolling windows) refresh on a
                 // ~30s timer only while the popover is open (ADR-005).
                 state.beginTokenAutoRefresh()
