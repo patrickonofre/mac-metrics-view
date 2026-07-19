@@ -19,6 +19,7 @@ final class KeepAwakeModelLidCloseTests: XCTestCase {
     /// interleave if transitions were not serialized.
     private final class FakeLidCloseService: LidCloseSleepControlling {
         var activateOutcome: LidCloseActivationOutcome = .active
+        var onConnectionLost: (() -> Void)?
         private(set) var callLog: [String] = []
 
         var activateCalls: Int { callLog.filter { $0 == "activate" }.count }
@@ -155,6 +156,23 @@ final class KeepAwakeModelLidCloseTests: XCTestCase {
 
         XCTAssertEqual(model.lidClose, .off, "never report active without the flag set")
         XCTAssertTrue(model.isActive, "LIDC-09: base keep-awake keeps working unchanged")
+    }
+
+    // Broken-daemon edge: a helper connection dropped without deactivate() (daemon
+    // crash/restart) means a fresh daemon that no longer tracks the flag — the
+    // sub-mode must snap off (LIDC-05: never report active without the flag set)
+    // while base keep-awake keeps working unchanged.
+    func testConnectionLossWhileActiveForcesOff() async {
+        let (model, helper, monitor) = makeModel()
+        await model.setLidCloseActive(true)
+        XCTAssertEqual(model.lidClose, .active)
+
+        helper.onConnectionLost?()
+        await model.settleLidCloseTransitions()
+
+        XCTAssertEqual(model.lidClose, .off, "dropped daemon must not read as active")
+        XCTAssertTrue(model.isActive, "base keep-awake keeps working unchanged")
+        XCTAssertFalse(monitor.isRunning, "fail-safe monitor stops with the sub-mode")
     }
 
     // LIDC-08: pending registration approval is surfaced as its own state — not active.

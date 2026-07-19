@@ -3,7 +3,10 @@ import ServiceManagement
 
 /// Control seam for the lid-close sleep-disabled flag. The concrete implementation
 /// talks to the privileged helper daemon; `KeepAwakeModel` tests inject a fake
-/// (same injection idiom as `SleepAssertionControlling`).
+/// (same injection idiom as `SleepAssertionControlling`). Main-actor bound (like
+/// `PowerSourceMonitoring`): `KeepAwakeModel` owns it and `onConnectionLost` mutates
+/// main-actor UI state.
+@MainActor
 protocol LidCloseSleepControlling: AnyObject {
     /// Registers the helper if needed and asks it to set the sleep-disabled flag.
     /// `.pendingApproval` means the daemon awaits user approval in System Settings →
@@ -13,6 +16,10 @@ protocol LidCloseSleepControlling: AnyObject {
     /// Asks the helper to clear the flag and drops the XPC connection. Safe to call
     /// when nothing was ever activated.
     func deactivate() async
+    /// Fired when a live helper connection drops without `deactivate()` (daemon
+    /// crash/restart). A fresh daemon no longer tracks the flag, so the model must
+    /// stop claiming it (LIDC-05 direction: fail toward "off").
+    var onConnectionLost: (() -> Void)? { get set }
 }
 
 /// `LidCloseSleepControlling` backed by `SMAppService` + XPC. The only app-side code
@@ -41,6 +48,8 @@ final class HelperLidCloseSleepService: LidCloseSleepControlling {
         #"identifier "com.patrickonofre.MacMetricsView.helper" and certificate leaf[subject.CN] = "Mac Metrics View Self-Signed""#
 
     private var connection: NSXPCConnection?
+
+    var onConnectionLost: (() -> Void)?
 
     nonisolated init() {}
 
@@ -117,20 +126,32 @@ final class HelperLidCloseSleepService: LidCloseSleepControlling {
             options: .privileged
         )
         new.remoteObjectInterface = NSXPCInterface(with: LidCloseHelperProtocol.self)
-        try? new.setCodeSigningRequirement(Self.helperCodeSigningRequirement)
-        new.invalidationHandler = { [weak self] in
+        new.setCodeSigningRequirement(Self.helperCodeSigningRequirement)
+        // Both handlers funnel into the same loss path: interruption is the daemon
+        // process dying (launchd may respawn it with no flag state), invalidation is
+        // the connection going away entirely. `tearDownConnection` nils `connection`
+        // first, so a deliberate teardown never reports a loss.
+        // Captured as an identity token: the handler only needs to know *which*
+        // connection died, and NSXPCConnection is not Sendable.
+        let lostToken = ObjectIdentifier(new)
+        let reportLoss: @Sendable () -> Void = { [weak self] in
             Task { @MainActor [weak self] in
-                if self?.connection === new { self?.connection = nil }
+                guard let self, self.connection.map(ObjectIdentifier.init) == lostToken else { return }
+                self.connection = nil
+                self.onConnectionLost?()
             }
         }
+        new.invalidationHandler = reportLoss
+        new.interruptionHandler = reportLoss
         new.resume()
         connection = new
         return new
     }
 
     private func tearDownConnection() {
-        connection?.invalidate()
+        let current = connection
         connection = nil
+        current?.invalidate()
     }
 }
 

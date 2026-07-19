@@ -17,6 +17,7 @@ final class AppDelegateLidCloseWiringTests: XCTestCase {
     }
 
     private final class FakeLidCloseService: LidCloseSleepControlling {
+        var onConnectionLost: (() -> Void)?
         private(set) var activateCalls = 0
         private(set) var deactivateCalls = 0
 

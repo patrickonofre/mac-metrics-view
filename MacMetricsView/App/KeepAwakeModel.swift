@@ -55,6 +55,14 @@ final class KeepAwakeModel: ObservableObject {
         if KeepAwakeSettings.load(from: userDefaults).isActive {
             isActive = service.activate()
         }
+        // Broken-daemon resync: a dropped helper connection means a fresh daemon that
+        // no longer tracks the flag — snap the sub-mode off (LIDC-05 direction) rather
+        // than keep claiming a flag nobody owns. Goes through the serialized queue so
+        // it cannot interleave with a user toggle.
+        self.lidCloseService.onConnectionLost = { [weak self] in
+            guard let self, self.lidClose == .active else { return }
+            self.enqueueLidCloseTransition(false)
+        }
     }
 
     /// Activates or deactivates keep-awake. Idempotent (KAWK-04): a redundant call is a
