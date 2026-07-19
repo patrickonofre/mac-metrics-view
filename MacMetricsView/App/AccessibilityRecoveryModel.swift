@@ -19,6 +19,14 @@ enum AccessibilityRecoveryPhase: Equatable {
 /// (spec `spec-cpustate-pillar-decouple`, task-004). Composed inside `CleaningLockModel`,
 /// which bridges this model's `objectWillChange` into its own (nested `ObservableObject`s
 /// do not propagate through SwiftUI containment).
+///
+/// **Passive by design** (feature `cleaning-lock-opt-in`, CLNGT-01): `init` performs no
+/// AX check, no tracker write, and no side effect of any kind — it only loads the
+/// trackers already on disk. The very first `evaluate()` happens only when a caller
+/// explicitly invokes `refreshAuthorization()`/`beginRecovery()`/`evaluateLaunchNudge()`.
+/// `CleaningLockModel` (the owner) decides whether and when that first call happens,
+/// gated by `CleaningLockSettings.isEnabled` — so a user who never enables the
+/// cleaning-lock feature never triggers `AXIsProcessTrusted()` or a grant-tracker write.
 @MainActor
 final class AccessibilityRecoveryModel: ObservableObject {
     /// Live Accessibility permission gate for the cleaning lock. Refreshed on each
@@ -77,7 +85,6 @@ final class AccessibilityRecoveryModel: ObservableObject {
         grantTracker = loadedTracker
         resetBaselineTracker = loadedTracker
         nudgeTracker = AccessibilityNudgeTracker.load(from: userDefaults)
-        evaluate()
     }
 
     deinit {

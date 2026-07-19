@@ -48,6 +48,17 @@ final class CleaningLockStateTests: XCTestCase {
         return ud
     }
 
+    /// A `UserDefaults` suite with the cleaning-lock feature pre-enabled (feature
+    /// `cleaning-lock-opt-in`), so the Accessibility recovery machinery under test here
+    /// actually evaluates instead of staying gated off. These tests exercise the
+    /// pre-existing tracker/reset-detection logic, which is orthogonal to the opt-in gate
+    /// itself — CLNGT-01 gating is covered separately in `CleaningLockModelTests.swift`.
+    private func makeEnabledUserDefaults() -> UserDefaults {
+        let ud = makeUserDefaults()
+        CleaningLockSettings(isEnabled: true).save(to: ud)
+        return ud
+    }
+
     // MARK: - Initial state
 
     func testInitialLockPhaseIsIdle() {
@@ -195,17 +206,21 @@ final class CleaningLockStateTests: XCTestCase {
     func testInitialAccessibilityGateReflectsAuthorization() {
         let granted = CPUState(userDefaults: makeUserDefaults(),
                                accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true))
-        let denied = CPUState(userDefaults: makeUserDefaults(),
+        // Denied case pre-enabled so the gate is actually evaluated (not left at its
+        // default-false from the opt-in gate never running) — proves isGranted reflects
+        // a real evaluation, not just the unevaluated default.
+        let denied = CPUState(userDefaults: makeEnabledUserDefaults(),
                               accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false))
         XCTAssertTrue(granted.lock.recovery.isGranted)
         XCTAssertFalse(denied.lock.recovery.isGranted)
     }
 
     func testRefreshPicksUpGrantMadeAfterLaunch() {
-        // Reproduces the bug: app launches without permission, user grants it
-        // in System Settings, then reopens the popover. The gate must flip.
+        // Reproduces the bug: app launches without permission (feature already enabled
+        // by the user), user grants it in System Settings, then reopens the popover.
+        // The gate must flip.
         let auth = FakeAccessibilityAuthorization(isTrusted: false)
-        let state = CPUState(userDefaults: makeUserDefaults(), accessibilityAuthorization: auth)
+        let state = CPUState(userDefaults: makeEnabledUserDefaults(), accessibilityAuthorization: auth)
         XCTAssertFalse(state.lock.recovery.isGranted)
 
         auth.isTrusted = true
@@ -228,8 +243,9 @@ final class CleaningLockStateTests: XCTestCase {
     // MARK: - Grant reset by update (ad-hoc signing, TD-010)
 
     func testNoResetFlagOnFreshInstall() {
-        // Never granted on any version → ordinary first-grant prompt.
-        let state = CPUState(userDefaults: makeUserDefaults(),
+        // Never granted on any version → ordinary first-grant prompt. Pre-enabled so the
+        // reset-detection logic actually runs rather than staying gated off.
+        let state = CPUState(userDefaults: makeEnabledUserDefaults(),
                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                              currentAppVersion: "1.0.0")
         XCTAssertFalse(state.lock.recovery.resetByUpdate)
@@ -272,8 +288,9 @@ final class CleaningLockStateTests: XCTestCase {
     func testUpdateFromNeverGrantedVersionFlagsReset() {
         // User ran a prior version that was never recorded as granted (e.g. it
         // predated the tracker, or the grant was always stale), then updated.
-        // The reset guidance must still appear.
-        let ud = makeUserDefaults()
+        // The reset guidance must still appear. Feature pre-enabled on both launches
+        // (shared suite) so the tracker/reset-detection logic under test actually runs.
+        let ud = makeEnabledUserDefaults()
         _ = CPUState(userDefaults: ud,
                      accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                      currentAppVersion: "1.0.1")
@@ -288,8 +305,10 @@ final class CleaningLockStateTests: XCTestCase {
 
     func testResetFlagStaysSetAcrossRefreshesWhileUngranted() {
         // Once detected, the reset guidance must not disappear when the popover
-        // is reopened (refresh) before the user actually grants.
-        let ud = makeUserDefaults()
+        // is reopened (refresh) before the user actually grants. Feature pre-enabled
+        // on both launches (shared suite) so the tracker/reset-detection logic under
+        // test actually runs.
+        let ud = makeEnabledUserDefaults()
         _ = CPUState(userDefaults: ud,
                      accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                      currentAppVersion: "1.0.1")
@@ -539,8 +558,9 @@ final class CleaningLockStateTests: XCTestCase {
     }
 
     func testLaunchNudgeDoesNotFireWhenNoResetDetected() {
-        // Fresh install, never granted → first-grant, not a reset.
-        let state = CPUState(userDefaults: makeUserDefaults(),
+        // Fresh install, never granted → first-grant, not a reset. Pre-enabled so the
+        // reset-detection logic actually runs rather than staying gated off.
+        let state = CPUState(userDefaults: makeEnabledUserDefaults(),
                              accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
                              currentAppVersion: "1.0.0")
         XCTAssertFalse(state.lock.recovery.resetByUpdate)
@@ -580,6 +600,26 @@ final class CleaningLockStateTests: XCTestCase {
         state.evaluateAccessibilityLaunchNudge()
 
         XCTAssertEqual(controller.openCount, 1)
+    }
+
+    // CLNGT-01: with the feature disabled, the launch nudge must never fire — even when
+    // the underlying reset/eligibility conditions would otherwise trigger it.
+    func testLaunchNudgeNeverFiresWhenFeatureDisabled() {
+        let ud = makeUserDefaults()
+        _ = CPUState(userDefaults: ud,
+                     accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: true),
+                     currentAppVersion: "1.0.0")
+        let auth = FakeAccessibilityAuthorization(isTrusted: false)
+        let state = CPUState(userDefaults: ud, accessibilityAuthorization: auth, currentAppVersion: "1.1.0")
+        // Explicitly disable — otherwise this shared suite would have inherited
+        // isEnabled = true from the first (trusted) launch's migration bootstrap.
+        state.lock.setEnabled(false)
+        var openCount = 0
+        state.onRequestOpenPopover = { openCount += 1 }
+
+        state.evaluateAccessibilityLaunchNudge()
+
+        XCTAssertEqual(openCount, 0, "a disabled feature must never auto-open the popover, even with a genuine reset condition")
     }
 
     func testRelaunchHandshakeRemainsTheApplyMechanism() {

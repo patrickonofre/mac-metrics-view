@@ -376,7 +376,7 @@ final class CPUState: ObservableObject {
     }
 
     func refreshAccessibilityAuthorization() {
-        lock.recovery.refreshAuthorization()
+        lock.refreshAuthorizationIfEnabled()
     }
 
     func requestAccessibilityAccess() {
@@ -396,7 +396,7 @@ final class CPUState: ObservableObject {
     }
 
     func evaluateAccessibilityLaunchNudge() {
-        lock.recovery.evaluateLaunchNudge()
+        lock.evaluateLaunchNudgeIfEnabled()
     }
 
     /// Called by AppDelegate each tick and on session end to keep the UI in sync.

@@ -32,8 +32,31 @@ final class AccessibilityRecoveryModelTests: XCTestCase {
         XCTAssertEqual(model.phase, .idle)
     }
 
+    // Passive-init contract (CLNGT-01): construction alone must not touch AX state.
+    func testInitDoesNotEvaluateAuthorization() {
+        let (model, _) = makeModel(isTrusted: true)
+        XCTAssertFalse(model.isGranted, "isGranted must stay at its default until refreshAuthorization() is called")
+    }
+
+    // Passive-init contract (CLNGT-01): construction alone must not write the grant tracker.
+    func testInitDoesNotWriteGrantTracker() {
+        let defaults = makeDefaults()
+        _ = AccessibilityRecoveryModel(
+            userDefaults: defaults,
+            authorization: FakeAccessibilityAuthorization(isTrusted: true),
+            probe: FakeAccessibilityProbe(),
+            currentAppVersion: "2.0.0"
+        )
+
+        let tracker = AccessibilityGrantTracker.load(from: defaults)
+
+        XCTAssertNil(tracker.lastGrantedVersion, "init must not persist a grant-tracker write")
+        XCTAssertNil(tracker.lastSeenVersion, "init must not persist a grant-tracker write")
+    }
+
     func testGrantedAtLaunchPublishesIsGranted() {
         let (model, _) = makeModel(isTrusted: true)
+        model.refreshAuthorization()
         XCTAssertTrue(model.isGranted)
         XCTAssertFalse(model.resetByUpdate)
     }
@@ -78,13 +101,15 @@ final class AccessibilityRecoveryModelTests: XCTestCase {
 
     func testResetByUpdateDetectedAcrossRelaunchWithNewVersion() {
         let defaults = makeDefaults()
-        // First launch: granted on v1.0.0.
-        _ = AccessibilityRecoveryModel(
+        // First launch: granted on v1.0.0. `refreshAuthorization()` stands in for the
+        // owner (`CleaningLockModel`) driving the first evaluation when enabled.
+        let firstLaunch = AccessibilityRecoveryModel(
             userDefaults: defaults,
             authorization: FakeAccessibilityAuthorization(isTrusted: true),
             probe: FakeAccessibilityProbe(),
             currentAppVersion: "1.0.0"
         )
+        firstLaunch.refreshAuthorization()
         // Relaunch on v2.0.0 with the grant reset (ad-hoc signing, TD-010).
         let afterUpdate = AccessibilityRecoveryModel(
             userDefaults: defaults,
@@ -92,24 +117,27 @@ final class AccessibilityRecoveryModelTests: XCTestCase {
             probe: FakeAccessibilityProbe(),
             currentAppVersion: "2.0.0"
         )
+        afterUpdate.refreshAuthorization()
         XCTAssertFalse(afterUpdate.isGranted)
         XCTAssertTrue(afterUpdate.resetByUpdate)
     }
 
     func testEvaluateLaunchNudgeFiresOnceForAResetVersion() {
         let defaults = makeDefaults()
-        _ = AccessibilityRecoveryModel(
+        let firstLaunch = AccessibilityRecoveryModel(
             userDefaults: defaults,
             authorization: FakeAccessibilityAuthorization(isTrusted: true),
             probe: FakeAccessibilityProbe(),
             currentAppVersion: "1.0.0"
         )
+        firstLaunch.refreshAuthorization()
         let afterUpdate = AccessibilityRecoveryModel(
             userDefaults: defaults,
             authorization: FakeAccessibilityAuthorization(isTrusted: false),
             probe: FakeAccessibilityProbe(),
             currentAppVersion: "2.0.0"
         )
+        afterUpdate.refreshAuthorization()
         var openCount = 0
         afterUpdate.onRequestOpenPopover = { openCount += 1 }
 
