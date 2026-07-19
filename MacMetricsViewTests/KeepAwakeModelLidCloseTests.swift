@@ -154,6 +154,7 @@ final class KeepAwakeModelLidCloseTests: XCTestCase {
         await model.setLidCloseActive(true)
 
         XCTAssertEqual(model.lidClose, .off, "never report active without the flag set")
+        XCTAssertTrue(model.isActive, "LIDC-09: base keep-awake keeps working unchanged")
     }
 
     // LIDC-08: pending registration approval is surfaced as its own state — not active.
@@ -165,6 +166,7 @@ final class KeepAwakeModelLidCloseTests: XCTestCase {
         await model.setLidCloseActive(true)
 
         XCTAssertEqual(model.lidClose, .pendingApproval)
+        XCTAssertTrue(model.isActive, "LIDC-09: base keep-awake keeps working unchanged")
     }
 
     // LIDC-08→10: after the user approves, a repeat enable retries the helper (pending
