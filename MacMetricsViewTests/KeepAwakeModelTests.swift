@@ -135,6 +135,35 @@ final class KeepAwakeModelTests: XCTestCase {
 
         XCTAssertFalse(model.isActive, "a refused restore must not report active")
         XCTAssertTrue(KeepAwakeSettings.load(from: defaults).isActive, "stored preference must survive a refused restore")
+        XCTAssertEqual(service.activateCalls, 1, "a refused restore must not retry within the same launch")
+    }
+
+    // KAWK-07 (live toggle): a refused activation must persist the post-attempt state
+    // (false), never the raw caller intent (true) — otherwise a future restore would
+    // wrongly believe the OS had granted an assertion it actually refused.
+    func testActivateFailurePersistsFalseNotRawIntent() {
+        let defaults = freshDefaults()
+        let service = FakeSleepAssertionService()
+        service.activateResult = false
+        let model = KeepAwakeModel(userDefaults: defaults, service: service)
+
+        model.setActive(true)
+
+        XCTAssertFalse(model.isActive)
+        XCTAssertFalse(KeepAwakeSettings.load(from: defaults).isActive, "a refused activation must persist false, not the raw true intent")
+    }
+
+    // Edge case (AC5, explicit-false branch): a stored "off" preference starts inactive
+    // and never attempts to create an assertion at launch.
+    func testStartsInactiveWithExplicitStoredFalsePreference() {
+        let defaults = freshDefaults()
+        KeepAwakeSettings(isActive: false).save(to: defaults)
+        let service = FakeSleepAssertionService()
+
+        let model = KeepAwakeModel(userDefaults: defaults, service: service)
+
+        XCTAssertFalse(model.isActive)
+        XCTAssertEqual(service.activateCalls, 0, "no assertion should be attempted when the stored preference is off")
     }
 
     // Pillar contract: mutating keep-awake must not invalidate CPUState's own
