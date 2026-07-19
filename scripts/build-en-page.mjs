@@ -137,7 +137,7 @@ const head = `  <head>
       "url": "${SITE}/en/",
       "softwareVersion": "2.7.0",
       "datePublished": "2026-05-26",
-      "dateModified": "2026-07-03",
+      "dateModified": "2026-07-19",
       "fileSize": "2MB",
       "image": "${SITE}/assets/popover-cpu-light.png",
       "screenshot": "${SITE}/assets/popover-cpu-light.png",
