@@ -50,13 +50,10 @@ final class ListenerDelegate: NSObject, NSXPCListenerDelegate {
         #"identifier "com.pso.MacMetricsView" and certificate leaf[subject.CN] = "Mac Metrics View Self-Signed""#
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
-        do {
-            try newConnection.setCodeSigningRequirement(Self.clientCodeSigningRequirement)
-        } catch {
-            // Requirement string failed to parse/apply — refuse everything rather
-            // than run a root service without client validation.
-            return false
-        }
+        // Applied before resume; the system rejects messages from any process that
+        // fails the requirement (non-throwing macOS 13+ API — an invalid requirement
+        // string rejects everything, which fails safe for a root service).
+        newConnection.setCodeSigningRequirement(Self.clientCodeSigningRequirement)
 
         newConnection.exportedInterface = NSXPCInterface(with: LidCloseHelperProtocol.self)
         newConnection.exportedObject = ExportedHelper()

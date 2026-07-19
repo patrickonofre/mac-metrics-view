@@ -177,6 +177,18 @@
 		DDEDDC61492DD84E3E2BF2A9 /* GPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8258A8D499B46A2DA5927F71 /* GPUSample.swift */; };
 		E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */; };
 		F6DC3C3A03ADD7DD7DA0BCF1 /* GPUSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4477DB866D82F1482690F7A3 /* GPUSampler.swift */; };
+		D1DC0000000000000000020C /* KeepAwakeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC0000000000000000010A /* KeepAwakeSettings.swift */; };
+		D1DC00000000000000000201 /* LidCloseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000101 /* LidCloseState.swift */; };
+		D1DC00000000000000000202 /* LidCloseFailsafePolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000102 /* LidCloseFailsafePolicy.swift */; };
+		D1DC00000000000000000203 /* LidCloseHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000103 /* LidCloseHelperProtocol.swift */; };
+		D1DC00000000000000000204 /* LidCloseHelperCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000104 /* LidCloseHelperCore.swift */; };
+		D1DC00000000000000000205 /* HelperLidCloseSleepService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000105 /* HelperLidCloseSleepService.swift */; };
+		D1DC00000000000000000206 /* IOPSPowerSourceMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000106 /* IOPSPowerSourceMonitor.swift */; };
+		D1DC00000000000000000207 /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000107 /* main.swift */; };
+		D1DC00000000000000000208 /* LidCloseHelperProtocol.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000103 /* LidCloseHelperProtocol.swift */; };
+		D1DC00000000000000000209 /* LidCloseHelperCore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000104 /* LidCloseHelperCore.swift */; };
+		D1DC0000000000000000020A /* MacMetricsHelper in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000109 /* MacMetricsHelper */; };
+		D1DC0000000000000000020B /* com.patrickonofre.MacMetricsView.helper.plist in CopyFiles */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000108 /* com.patrickonofre.MacMetricsView.helper.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -187,7 +199,39 @@
 			remoteGlobalIDString = 100000000000000000000401;
 			remoteInfo = MacMetricsView;
 		};
+		D1DC00000000000000000301 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 100000000000000000000301 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D1DC00000000000000000401;
+			remoteInfo = MacMetricsHelper;
+		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		D1DC00000000000000000910 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				D1DC0000000000000000020A /* MacMetricsHelper in CopyFiles */,
+			);
+			name = "Embed Helper Daemon";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D1DC00000000000000000911 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "Contents/Library/LaunchDaemons";
+			dstSubfolderSpec = 1;
+			files = (
+				D1DC0000000000000000020B /* com.patrickonofre.MacMetricsView.helper.plist in CopyFiles */,
+			);
+			name = "Embed LaunchDaemon Plist";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientThemeSettings.swift; path = MacMetricsView/Models/AmbientThemeSettings.swift; sourceTree = SOURCE_ROOT; };
@@ -329,6 +373,16 @@
 		C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemAppearanceController.swift; path = MacMetricsView/Services/SystemAppearanceController.swift; sourceTree = SOURCE_ROOT; };
 		C38E64F1DE91A42C915E8095 /* GPUReading.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUReading.swift; path = Services/GPUReading.swift; sourceTree = "<group>"; };
 		D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientSuggestionPresentation.swift; path = MacMetricsView/UI/AmbientSuggestionPresentation.swift; sourceTree = SOURCE_ROOT; };
+		D1DC0000000000000000010A /* KeepAwakeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/KeepAwakeSettings.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000101 /* LidCloseState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LidCloseState.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000102 /* LidCloseFailsafePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LidCloseFailsafePolicy.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000103 /* LidCloseHelperProtocol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LidClose/LidCloseHelperProtocol.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000104 /* LidCloseHelperCore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LidClose/LidCloseHelperCore.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000105 /* HelperLidCloseSleepService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LidClose/HelperLidCloseSleepService.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000106 /* IOPSPowerSourceMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/LidClose/IOPSPowerSourceMonitor.swift; sourceTree = "<group>"; };
+		D1DC00000000000000000107 /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = main.swift; path = MacMetricsHelper/main.swift; sourceTree = SOURCE_ROOT; };
+		D1DC00000000000000000108 /* com.patrickonofre.MacMetricsView.helper.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = com.patrickonofre.MacMetricsView.helper.plist; path = MacMetricsHelper/com.patrickonofre.MacMetricsView.helper.plist; sourceTree = SOURCE_ROOT; };
+		D1DC00000000000000000109 /* MacMetricsHelper */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MacMetricsHelper; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -347,6 +401,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1DC00000000000000000501 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -355,6 +416,7 @@
 			children = (
 				100000000000000000000602 /* MacMetricsView */,
 				100000000000000000000603 /* MacMetricsViewTests */,
+				D1DC00000000000000000601 /* MacMetricsHelper */,
 				100000000000000000000604 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -443,6 +505,13 @@
 				A105A105A105A105A105A105 /* SystemMetricsModel.swift */,
 				A106A106A106A106A106A106 /* KeepAwakeModel.swift */,
 				A107A107A107A107A107A107 /* SleepAssertionService.swift */,
+				D1DC0000000000000000010A /* KeepAwakeSettings.swift */,
+				D1DC00000000000000000101 /* LidCloseState.swift */,
+				D1DC00000000000000000102 /* LidCloseFailsafePolicy.swift */,
+				D1DC00000000000000000103 /* LidCloseHelperProtocol.swift */,
+				D1DC00000000000000000104 /* LidCloseHelperCore.swift */,
+				D1DC00000000000000000105 /* HelperLidCloseSleepService.swift */,
+				D1DC00000000000000000106 /* IOPSPowerSourceMonitor.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
 				1000000000000000000000E05 /* UpdateBannerPresentation.swift */,
 				1000000000000000000000F01 /* TokenUsageEvent.swift */,
@@ -515,8 +584,18 @@
 			children = (
 				100000000000000000000111 /* MacMetricsView.app */,
 				100000000000000000000112 /* MacMetricsViewTests.xctest */,
+				D1DC00000000000000000109 /* MacMetricsHelper */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		D1DC00000000000000000601 /* MacMetricsHelper */ = {
+			isa = PBXGroup;
+			children = (
+				D1DC00000000000000000107 /* main.swift */,
+				D1DC00000000000000000108 /* com.patrickonofre.MacMetricsView.helper.plist */,
+			);
+			name = MacMetricsHelper;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -529,10 +608,13 @@
 				100000000000000000000801 /* Sources */,
 				100000000000000000000501 /* Frameworks */,
 				100000000000000000000901 /* Resources */,
+				D1DC00000000000000000910 /* Embed Helper Daemon */,
+				D1DC00000000000000000911 /* Embed LaunchDaemon Plist */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				D1DC00000000000000000302 /* PBXTargetDependency */,
 			);
 			name = MacMetricsView;
 			packageProductDependencies = (
@@ -559,6 +641,22 @@
 			productName = MacMetricsViewTests;
 			productReference = 100000000000000000000112 /* MacMetricsViewTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		D1DC00000000000000000401 /* MacMetricsHelper */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D1DC00000000000000000701 /* Build configuration list for PBXNativeTarget "MacMetricsHelper" */;
+			buildPhases = (
+				D1DC00000000000000000801 /* Sources */,
+				D1DC00000000000000000501 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MacMetricsHelper;
+			productName = MacMetricsHelper;
+			productReference = D1DC00000000000000000109 /* MacMetricsHelper */;
+			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
 
@@ -597,6 +695,7 @@
 			targets = (
 				100000000000000000000401 /* MacMetricsView */,
 				100000000000000000000402 /* MacMetricsViewTests */,
+				D1DC00000000000000000401 /* MacMetricsHelper */,
 			);
 		};
 /* End PBXProject section */
@@ -705,6 +804,13 @@
 				B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */,
 				B106B106B106B106B106B106 /* KeepAwakeModel.swift in Sources */,
 				B107B107B107B107B107B107 /* SleepAssertionService.swift in Sources */,
+				D1DC0000000000000000020C /* KeepAwakeSettings.swift in Sources */,
+				D1DC00000000000000000201 /* LidCloseState.swift in Sources */,
+				D1DC00000000000000000202 /* LidCloseFailsafePolicy.swift in Sources */,
+				D1DC00000000000000000203 /* LidCloseHelperProtocol.swift in Sources */,
+				D1DC00000000000000000204 /* LidCloseHelperCore.swift in Sources */,
+				D1DC00000000000000000205 /* HelperLidCloseSleepService.swift in Sources */,
+				D1DC00000000000000000206 /* IOPSPowerSourceMonitor.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
 				1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */,
 				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,
@@ -802,6 +908,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		D1DC00000000000000000801 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D1DC00000000000000000207 /* main.swift in Sources */,
+				D1DC00000000000000000208 /* LidCloseHelperProtocol.swift in Sources */,
+				D1DC00000000000000000209 /* LidCloseHelperCore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -809,6 +925,11 @@
 			isa = PBXTargetDependency;
 			target = 100000000000000000000401 /* MacMetricsView */;
 			targetProxy = 100000000000000000000201 /* PBXContainerItemProxy */;
+		};
+		D1DC00000000000000000302 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D1DC00000000000000000401 /* MacMetricsHelper */;
+			targetProxy = D1DC00000000000000000301 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -818,7 +939,8 @@
 			buildSettings = {
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Mac Metrics View Self-Signed";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_ASSET_PATHS = "";
@@ -842,7 +964,8 @@
 			buildSettings = {
 				ARCHS = arm64;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				CODE_SIGN_STYLE = Automatic;
+				CODE_SIGN_IDENTITY = "Mac Metrics View Self-Signed";
+				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 48;
 				ENABLE_CODE_COVERAGE = NO;
@@ -1012,6 +1135,36 @@
 			};
 			name = Release;
 		};
+		D1DC00000000000000000A01 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "Mac Metrics View Self-Signed";
+				CODE_SIGN_STYLE = Manual;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				OTHER_CODE_SIGN_FLAGS = "-i com.patrickonofre.MacMetricsView.helper";
+				PRODUCT_BUNDLE_IDENTIFIER = com.patrickonofre.MacMetricsView.helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		D1DC00000000000000000A02 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = arm64;
+				CODE_SIGN_IDENTITY = "Mac Metrics View Self-Signed";
+				CODE_SIGN_STYLE = Manual;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				OTHER_CODE_SIGN_FLAGS = "-i com.patrickonofre.MacMetricsView.helper";
+				PRODUCT_BUNDLE_IDENTIFIER = com.patrickonofre.MacMetricsView.helper;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1038,6 +1191,15 @@
 			buildConfigurations = (
 				100000000000000000000A05 /* Debug */,
 				100000000000000000000A06 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		D1DC00000000000000000701 /* Build configuration list for PBXNativeTarget "MacMetricsHelper" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D1DC00000000000000000A01 /* Debug */,
+				D1DC00000000000000000A02 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
