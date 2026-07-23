@@ -58,19 +58,22 @@ final class HelperLidCloseSleepService: LidCloseSleepControlling {
     func activate() async -> LidCloseActivationOutcome {
         let daemon = SMAppService.daemon(plistName: LidCloseHelperConstants.plistName)
 
-        if daemon.status != .enabled {
-            // First activation registers the daemon (LIDC-07, at most one admin
-            // approval ever). `register()` throws when approval is pending or refused;
-            // the post-attempt status disambiguates the two.
-            try? daemon.register()
-            switch daemon.status {
-            case .enabled:
-                break
-            case .requiresApproval:
-                return .pendingApproval
-            default:
-                return .failed
-            }
+        // Always (re-)register, even when `status` already reads `.enabled`.
+        // `register()` is idempotent and a no-op approval-wise once already
+        // approved (LIDC-07, at most one admin approval ever) - but skipping it
+        // when already enabled left a stale/rebuilt job stuck reporting enabled
+        // in Background Items while launchd never actually loaded it (observed:
+        // launchd logging repeated "service inactive", daemon never spawned).
+        // `register()` throws when approval is pending or refused; the
+        // post-attempt status disambiguates the two.
+        try? daemon.register()
+        switch daemon.status {
+        case .enabled:
+            break
+        case .requiresApproval:
+            return .pendingApproval
+        default:
+            return .failed
         }
 
         let applied = await sendSetSleepDisabled(true)
