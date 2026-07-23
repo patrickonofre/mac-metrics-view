@@ -40,7 +40,7 @@ final class AppDelegateBatteryWiringTests: XCTestCase {
 
         let reader = FixedBatteryReader(sample: sample(charge: 91))
         let scheduler = ManualBatteryPollScheduler()
-        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         sampler.delegate = appDelegate
 
         sampler.start()

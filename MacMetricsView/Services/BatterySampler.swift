@@ -47,6 +47,9 @@ final class BatterySampler {
     private(set) var pollInterval: TimeInterval
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: BatteryPollScheduler
+    /// Runs the IORegistry read off the main thread (OPT-03 pattern); the sample is
+    /// delivered on the main actor. Tests inject `InlineSamplingExecutor` to stay synchronous.
+    private let executor: SamplingExecutor
     private var runLoopSource: CFRunLoopSource?
     private(set) var isRunning = false
 
@@ -55,11 +58,13 @@ final class BatterySampler {
     init(
         reader: BatteryReading = IOKitBatteryReader(),
         pollInterval: TimeInterval = 30,
-        pollScheduler: BatteryPollScheduler = RunLoopBatteryPollScheduler()
+        pollScheduler: BatteryPollScheduler = RunLoopBatteryPollScheduler(),
+        executor: SamplingExecutor = BackgroundSamplingExecutor()
     ) {
         self.reader = reader
         self.pollInterval = pollInterval
         self.pollScheduler = pollScheduler
+        self.executor = executor
     }
 
     /// Whether an internal battery is present, via a non-empty IOPS internal-battery
@@ -136,7 +141,13 @@ final class BatterySampler {
     }
 
     private func collect() {
-        guard let sample = reader.readSample() else { return }
-        delegate?.batterySampler(self, didProduce: sample)
+        // Read off-main (OPT-03 pattern); deliver on the main actor. Re-check `isRunning` in
+        // the delivery so a stop() between read and delivery cannot publish a late sample —
+        // matters more here than for a plain timer sampler since the IOPS run-loop source
+        // can also trigger a collect() concurrently with a poll-scheduler tick.
+        executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
+            guard let self, self.isRunning, let sample else { return }
+            self.delegate?.batterySampler(self, didProduce: sample)
+        }
     }
 }

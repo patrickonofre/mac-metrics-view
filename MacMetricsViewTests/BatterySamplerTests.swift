@@ -41,7 +41,7 @@ final class BatterySamplerTests: XCTestCase {
 
     func testStartEmitsImmediateSample() {
         let reader = FakeReader(sample: sample())
-        let sampler = BatterySampler(reader: reader, pollScheduler: FakeScheduler())
+        let sampler = BatterySampler(reader: reader, pollScheduler: FakeScheduler(), executor: InlineSamplingExecutor())
         let delegate = RecordingDelegate()
         sampler.delegate = delegate
 
@@ -54,7 +54,7 @@ final class BatterySamplerTests: XCTestCase {
     func testPollFireEmitsAnotherSample() {
         let reader = FakeReader(sample: sample())
         let scheduler = FakeScheduler()
-        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         let delegate = RecordingDelegate()
         sampler.delegate = delegate
 
@@ -67,7 +67,7 @@ final class BatterySamplerTests: XCTestCase {
 
     func testDoubleStartDoesNotDuplicateImmediateEmission() {
         let reader = FakeReader(sample: sample())
-        let sampler = BatterySampler(reader: reader, pollScheduler: FakeScheduler())
+        let sampler = BatterySampler(reader: reader, pollScheduler: FakeScheduler(), executor: InlineSamplingExecutor())
         let delegate = RecordingDelegate()
         sampler.delegate = delegate
 
@@ -80,7 +80,7 @@ final class BatterySamplerTests: XCTestCase {
 
     func testNoEmissionWhenReaderReturnsNil() {
         let reader = FakeReader(sample: nil)
-        let sampler = BatterySampler(reader: reader, pollScheduler: FakeScheduler())
+        let sampler = BatterySampler(reader: reader, pollScheduler: FakeScheduler(), executor: InlineSamplingExecutor())
         let delegate = RecordingDelegate()
         sampler.delegate = delegate
 
@@ -93,7 +93,7 @@ final class BatterySamplerTests: XCTestCase {
     func testStopHaltsPollEmissions() {
         let reader = FakeReader(sample: sample())
         let scheduler = FakeScheduler()
-        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: InlineSamplingExecutor())
         let delegate = RecordingDelegate()
         sampler.delegate = delegate
 
@@ -107,7 +107,7 @@ final class BatterySamplerTests: XCTestCase {
     func testStartWithIntervalChangesIntervalAndReschedulesIfRunning() {
         let reader = FakeReader(sample: sample())
         let scheduler = FakeScheduler()
-        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: InlineSamplingExecutor())
 
         sampler.start()
         XCTAssertEqual(scheduler.scheduleCount, 1)
@@ -121,7 +121,7 @@ final class BatterySamplerTests: XCTestCase {
     func testStartWithIntervalWhenNotRunningDoesNotRescheduleTwice() {
         let reader = FakeReader(sample: sample())
         let scheduler = FakeScheduler()
-        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler)
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: InlineSamplingExecutor())
 
         sampler.start(interval: 50)
         XCTAssertEqual(scheduler.scheduleCount, 1)
