@@ -72,7 +72,8 @@ swift test
 The app checks a static `appcast.xml` (served by GitHub Pages alongside the
 release zip) and installs EdDSA-signed updates in place — no backend, no
 telemetry, Sparkle's system profiling disabled. The popover exposes a
-"Check for updates…" action and an automatic-check toggle (default on).
+"Check for updates…" action. Background automatic checks are enabled by
+`SUEnableAutomaticChecks` in `Info.plist`; there is no user-facing toggle.
 
 Sparkle is embedded **only in the Xcode `.app`**. The SPM build (`swift run` /
 `swift test`) links a `NoOpUpdateService`, so tests stay Sparkle-free.
