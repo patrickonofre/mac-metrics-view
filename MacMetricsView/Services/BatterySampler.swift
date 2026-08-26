@@ -50,6 +50,7 @@ final class BatterySampler {
     /// Runs the IORegistry read off the main thread (OPT-03 pattern); the sample is
     /// delivered on the main actor. Tests inject `InlineSamplingExecutor` to stay synchronous.
     private let executor: SamplingExecutor
+    private let workGate = CoalescingSamplingGate()
     private var runLoopSource: CFRunLoopSource?
     private(set) var isRunning = false
 
@@ -137,6 +138,7 @@ final class BatterySampler {
         }
         runLoopSource = nil
         pollScheduler.cancel()
+        workGate.cancel()
         isRunning = false
     }
 
@@ -145,9 +147,20 @@ final class BatterySampler {
         // the delivery so a stop() between read and delivery cannot publish a late sample —
         // matters more here than for a plain timer sampler since the IOPS run-loop source
         // can also trigger a collect() concurrently with a poll-scheduler tick.
-        executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
-            guard let self, self.isRunning, let sample else { return }
-            self.delegate?.batterySampler(self, didProduce: sample)
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, let sample else { return }
+                self.delegate?.batterySampler(self, didProduce: sample)
+            }
         }
     }
 }

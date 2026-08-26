@@ -35,6 +35,29 @@ final class BatterySamplerTests: XCTestCase {
         }
     }
 
+    private final class DeferredExecutor: SamplingExecutor {
+        private(set) var queuedReadCount = 0
+        private var queuedDeliveries: [() -> Void] = []
+
+        func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+            queuedReadCount += 1
+            queuedDeliveries.append {
+                let value = read()
+                MainActor.assumeIsolated { deliver(value) }
+            }
+        }
+
+        func completeAll() {
+            while !queuedDeliveries.isEmpty {
+                queuedDeliveries.removeFirst()()
+            }
+        }
+
+        func completeNext() {
+            queuedDeliveries.removeFirst()()
+        }
+    }
+
     private func sample(charge: Int = 80) -> BatterySample {
         BatterySample(chargePercent: charge, powerSource: .battery, isCharging: false, timeRemaining: 3600, healthCondition: .normal, cycleCount: 10)
     }
@@ -127,5 +150,42 @@ final class BatterySamplerTests: XCTestCase {
         XCTAssertEqual(scheduler.scheduleCount, 1)
         XCTAssertEqual(scheduler.cancelCount, 0)
         sampler.stop()
+    }
+
+    func testBlockedSafetyPollKeepsOnePendingRefresh() {
+        let reader = FakeReader(sample: sample())
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: executor)
+        let delegate = RecordingDelegate()
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        scheduler.fire()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+
+        executor.completeAll()
+
+        XCTAssertEqual(delegate.samples.count, 2)
+        sampler.stop()
+    }
+
+    func testStopDropsInFlightBatteryDeliveryAndPendingRefresh() {
+        let reader = FakeReader(sample: sample())
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let sampler = BatterySampler(reader: reader, pollScheduler: scheduler, executor: executor)
+        let delegate = RecordingDelegate()
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        sampler.stop()
+        executor.completeNext()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+        XCTAssertTrue(delegate.samples.isEmpty)
     }
 }
