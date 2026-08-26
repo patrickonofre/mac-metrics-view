@@ -48,6 +48,7 @@ final class TemperatureSampler {
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: TemperaturePollScheduler
     private let executor: SamplingExecutor
+    private let workGate = CoalescingSamplingGate()
     private var observer: NSObjectProtocol?
     private(set) var isRunning = false
 
@@ -114,15 +115,27 @@ final class TemperatureSampler {
         }
         observer = nil
         pollScheduler.cancel()
+        workGate.cancel()
         isRunning = false
     }
 
     private func collect() {
         // The numeric SMC/IOKit read runs off the main thread (PERF-01); the sample is
         // delivered on the main actor. A nil read never notifies the delegate.
-        executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
-            guard let self, let sample else { return }
-            self.delegate?.temperatureSampler(self, didProduce: sample)
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, let sample else { return }
+                self.delegate?.temperatureSampler(self, didProduce: sample)
+            }
         }
     }
 }

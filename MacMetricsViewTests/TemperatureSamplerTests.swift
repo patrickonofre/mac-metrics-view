@@ -38,6 +38,29 @@ final class TemperatureSamplerTests: XCTestCase {
         }
     }
 
+    private final class DeferredExecutor: SamplingExecutor {
+        private(set) var queuedReadCount = 0
+        private var queuedDeliveries: [() -> Void] = []
+
+        func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+            queuedReadCount += 1
+            queuedDeliveries.append {
+                let value = read()
+                MainActor.assumeIsolated { deliver(value) }
+            }
+        }
+
+        func completeAll() {
+            while !queuedDeliveries.isEmpty {
+                queuedDeliveries.removeFirst()()
+            }
+        }
+
+        func completeNext() {
+            queuedDeliveries.removeFirst()()
+        }
+    }
+
     private func makeSampler(
         reader: FakeReader,
         center: NotificationCenter,
@@ -151,5 +174,55 @@ final class TemperatureSamplerTests: XCTestCase {
         sampler.start(interval: 5)
         XCTAssertEqual(scheduler.scheduleCount, 1)
         XCTAssertEqual(scheduler.cancelCount, 0)
+    }
+
+    func testRepeatedSignalsQueueOnlyOnePendingTemperatureRead() {
+        let reader = FakeReader()
+        let center = NotificationCenter()
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = TemperatureSampler(
+            reader: reader,
+            notificationCenter: center,
+            deliveryQueue: nil,
+            pollScheduler: scheduler,
+            executor: executor
+        )
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        scheduler.fire()
+        center.post(name: ProcessInfo.thermalStateDidChangeNotification, object: nil)
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+
+        executor.completeAll()
+
+        XCTAssertEqual(delegate.samples.count, 2)
+    }
+
+    func testStopDropsInFlightTemperatureDeliveryAndPendingRefresh() {
+        let reader = FakeReader()
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = TemperatureSampler(
+            reader: reader,
+            notificationCenter: NotificationCenter(),
+            deliveryQueue: nil,
+            pollScheduler: scheduler,
+            executor: executor
+        )
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        sampler.stop()
+        executor.completeNext()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+        XCTAssertTrue(delegate.samples.isEmpty)
     }
 }
