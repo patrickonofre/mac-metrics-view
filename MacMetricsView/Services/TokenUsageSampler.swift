@@ -39,6 +39,7 @@ final class TokenUsageSampler {
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: TokenPollScheduler
     private let executor: SamplingExecutor
+    private let workGate = CoalescingSamplingGate()
     private(set) var isRunning = false
 
     weak var delegate: TokenUsageSamplerDelegate?
@@ -80,6 +81,7 @@ final class TokenUsageSampler {
 
     func stop() {
         pollScheduler.cancel()
+        workGate.cancel()
         isRunning = false
     }
 
@@ -87,9 +89,20 @@ final class TokenUsageSampler {
     /// batch is delivered on the main actor; an empty read never notifies the delegate. The
     /// reader's per-file state is touched only inside the executor's serial queue.
     func poll() {
-        executor.run({ [reader] in reader.readNewEvents() }) { [weak self] events in
-            guard let self, !events.isEmpty else { return }
-            self.delegate?.tokenUsageSampler(self, didProduce: events)
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.executor.run({ [reader] in reader.readNewEvents() }) { [weak self] events in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, !events.isEmpty else { return }
+                self.delegate?.tokenUsageSampler(self, didProduce: events)
+            }
         }
     }
 }

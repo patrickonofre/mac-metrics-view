@@ -71,8 +71,12 @@ final class TokenUsageSamplerTests: XCTestCase {
 
         func completeAll() {
             while !queuedDeliveries.isEmpty {
-                queuedDeliveries.removeFirst()()
+                completeNext()
             }
+        }
+
+        func completeNext() {
+            queuedDeliveries.removeFirst()()
         }
     }
 
@@ -134,7 +138,7 @@ final class TokenUsageSamplerTests: XCTestCase {
         XCTAssertEqual(scheduler.scheduleCount, 1)
     }
 
-    func testRepeatedTicksQueueMultipleReadsBeforeExecutorRuns() {
+    func testRepeatedTicksQueueOnlyOneReadBeforeExecutorRuns() {
         let reader = ScriptedReader(batches: [[event(1)], [event(2)], [event(3)]])
         let scheduler = FakeScheduler()
         let executor = DeferredExecutor()
@@ -147,11 +151,29 @@ final class TokenUsageSamplerTests: XCTestCase {
         scheduler.fire()
         scheduler.fire()
 
-        XCTAssertEqual(executor.queuedReadCount, 3)
+        XCTAssertEqual(executor.queuedReadCount, 1)
 
         executor.completeAll()
 
-        XCTAssertEqual(delegate.batches.map { $0.map(\.inputTokens) }, [[1], [2], [3]])
+        XCTAssertEqual(delegate.batches.map { $0.map(\.inputTokens) }, [[1], [2]])
+    }
+
+    func testStopDropsInFlightTokenDeliveryAndPendingRefresh() {
+        let reader = ScriptedReader(batches: [[event(1)], [event(2)]])
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = TokenUsageSampler(reader: reader, interval: 1, pollScheduler: scheduler, executor: executor)
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        scheduler.fire()
+        sampler.stop()
+        executor.completeNext()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+        XCTAssertTrue(delegate.batches.isEmpty)
     }
 
     // MARK: - Integration
