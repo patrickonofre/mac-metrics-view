@@ -48,12 +48,12 @@ enum MainRunLoopTimer {
 @MainActor
 final class CoalescingSamplingGate {
     private var isReadInFlight = false
-    private var hasPendingRefresh = false
+    private var pendingWork: ((@escaping @MainActor () -> Void) -> Void)?
     private var generation = 0
 
     func request(_ work: @escaping (@escaping @MainActor () -> Void) -> Void) {
         guard !isReadInFlight else {
-            hasPendingRefresh = true
+            pendingWork = work
             return
         }
         start(work)
@@ -62,26 +62,23 @@ final class CoalescingSamplingGate {
     func cancel() {
         generation &+= 1
         isReadInFlight = false
-        hasPendingRefresh = false
+        pendingWork = nil
     }
 
     private func start(_ work: @escaping (@escaping @MainActor () -> Void) -> Void) {
         isReadInFlight = true
         let activeGeneration = generation
         work { [weak self] in
-            self?.complete(generation: activeGeneration, work: work)
+            self?.complete(generation: activeGeneration)
         }
     }
 
-    private func complete(
-        generation: Int,
-        work: @escaping (@escaping @MainActor () -> Void) -> Void
-    ) {
+    private func complete(generation: Int) {
         guard generation == self.generation, isReadInFlight else { return }
         isReadInFlight = false
-        guard hasPendingRefresh else { return }
-        hasPendingRefresh = false
-        start(work)
+        guard let pendingWork else { return }
+        self.pendingWork = nil
+        start(pendingWork)
     }
 }
 

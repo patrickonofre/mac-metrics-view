@@ -134,4 +134,17 @@ final class MainRunLoopTimerTests: XCTestCase {
 
         XCTAssertEqual(work.startCount, 1)
     }
+
+    func testCoalescingGateRunsTheLatestPendingWork() {
+        let gate = CoalescingSamplingGate()
+        let firstWork = ControlledWork()
+        let latestWork = ControlledWork()
+
+        gate.request(firstWork.start)
+        gate.request(latestWork.start)
+        firstWork.completeNext()
+
+        XCTAssertEqual(firstWork.startCount, 1)
+        XCTAssertEqual(latestWork.startCount, 1)
+    }
 }
