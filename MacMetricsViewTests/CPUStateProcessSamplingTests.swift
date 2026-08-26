@@ -14,8 +14,25 @@ final class FakeProcessReader: ProcessReading {
 @MainActor
 final class CPUStateProcessSamplingTests: XCTestCase {
     private var processReader: FakeProcessReader!
+
+    private final class DeferredExecutor: SamplingExecutor {
+        private(set) var queuedReadCount = 0
+        private var queuedDeliveries: [() -> Void] = []
+
+        func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+            queuedReadCount += 1
+            queuedDeliveries.append {
+                let value = read()
+                MainActor.assumeIsolated { deliver(value) }
+            }
+        }
+
+        func completeNext() {
+            queuedDeliveries.removeFirst()()
+        }
+    }
     
-    private func makeState() -> CPUState {
+    private func makeState(executor: SamplingExecutor = InlineSamplingExecutor()) -> CPUState {
         let suiteName = "MacMetricsViewTests.CPUStateProcessSampling.\(UUID().uuidString)"
         let ud = UserDefaults(suiteName: suiteName)!
         ud.removePersistentDomain(forName: suiteName)
@@ -25,7 +42,7 @@ final class CPUStateProcessSamplingTests: XCTestCase {
             userDefaults: ud,
             accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false),
             processReader: processReader,
-            samplingExecutor: InlineSamplingExecutor()
+            samplingExecutor: executor
         )
     }
     
@@ -128,5 +145,50 @@ final class CPUStateProcessSamplingTests: XCTestCase {
         state.metrics.processSamplingTick()
         
         XCTAssertEqual(processReader.readCount, previousReadCount, "Tick after end should not perform reads")
+    }
+
+    func testBlockedProcessSamplingKeepsOnePendingRefresh() {
+        let executor = DeferredExecutor()
+        let state = makeState(executor: executor)
+        let now = Date()
+        processReader.snapshotToReturn = ProcessCPUSnapshot(
+            timestamp: now,
+            entries: [1: .init(name: "p1", cpuNanos: 1_000_000_000)]
+        )
+
+        state.metrics.beginProcessSampling()
+        state.metrics.processSamplingTick()
+        state.metrics.processSamplingTick()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+
+        executor.completeNext()
+        XCTAssertEqual(executor.queuedReadCount, 2)
+
+        processReader.snapshotToReturn = ProcessCPUSnapshot(
+            timestamp: now.addingTimeInterval(2),
+            entries: [1: .init(name: "p1", cpuNanos: 3_000_000_000)]
+        )
+        executor.completeNext()
+
+        XCTAssertEqual(state.metrics.topCPUProcesses.count, 1)
+        state.metrics.endProcessSampling()
+    }
+
+    func testEndProcessSamplingDropsInFlightSnapshotAndPendingRefresh() {
+        let executor = DeferredExecutor()
+        let state = makeState(executor: executor)
+        processReader.snapshotToReturn = ProcessCPUSnapshot(
+            timestamp: Date(),
+            entries: [1: .init(name: "p1", cpuNanos: 1_000_000_000)]
+        )
+
+        state.metrics.beginProcessSampling()
+        state.metrics.processSamplingTick()
+        state.metrics.endProcessSampling()
+        executor.completeNext()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty)
     }
 }

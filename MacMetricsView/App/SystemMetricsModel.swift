@@ -51,6 +51,7 @@ final class SystemMetricsModel: ObservableObject {
     /// state (its PID→name cache) is touched only inside the executor; `previousProcessSnapshot`
     /// stays main-confined and is read/written only in the main-actor delivery closure.
     private let samplingExecutor: SamplingExecutor
+    private let processSamplingGate = CoalescingSamplingGate()
     private var previousProcessSnapshot: ProcessCPUSnapshot?
     private var processSamplingTimer: Timer?
     /// One-shot battery reader used to refresh the popover row on open, so the popover
@@ -368,29 +369,58 @@ final class SystemMetricsModel: ObservableObject {
         guard processSamplingTimer == nil else { return } // idempotent
         // Baseline read runs off the main thread (PERF-01); the snapshot is stored on the
         // main actor. The first tick is a no-op until it lands (guarded on a nil baseline).
-        samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] snapshot in
-            self?.previousProcessSnapshot = snapshot
-        }
         processSamplingTimer = MainRunLoopTimer.repeating(every: 2) { [weak self] in
             self?.processSamplingTick()
+        }
+        processSamplingGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] snapshot in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.processSamplingTimer != nil else { return }
+                self.previousProcessSnapshot = snapshot
+            }
         }
     }
 
     func endProcessSampling() {
         processSamplingTimer?.invalidate()
         processSamplingTimer = nil
+        processSamplingGate.cancel()
         previousProcessSnapshot = nil
     }
 
     func processSamplingTick(now: Date = Date()) {
-        guard processSamplingTimer != nil, let prev = previousProcessSnapshot else { return }
+        guard processSamplingTimer != nil else { return }
         // Enumerate all PIDs off the main thread (PERF-01); rank and publish on the main actor.
         // Re-check the timer in the delivery closure so a stop() between read and delivery
         // cannot publish a late ranking.
-        samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] cur in
-            guard let self, self.processSamplingTimer != nil, let cur else { return }
-            self.topCPUProcesses = ProcessCPURanking.topProcesses(previous: prev, current: cur)
-            self.previousProcessSnapshot = cur
+        processSamplingGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] cur in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.processSamplingTimer != nil,
+                      let previous = self.previousProcessSnapshot,
+                      let cur
+                else {
+                    return
+                }
+                self.topCPUProcesses = ProcessCPURanking.topProcesses(previous: previous, current: cur)
+                self.previousProcessSnapshot = cur
+            }
         }
     }
 }
