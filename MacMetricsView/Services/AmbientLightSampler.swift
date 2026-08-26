@@ -42,6 +42,7 @@ final class AmbientLightSampler {
     private(set) var tolerance: TimeInterval = 0
     private let pollScheduler: AmbientLightPollScheduler
     private let executor: SamplingExecutor
+    private let workGate = CoalescingSamplingGate()
     private(set) var isRunning = false
 
     weak var delegate: AmbientLightSamplerDelegate?
@@ -86,15 +87,27 @@ final class AmbientLightSampler {
 
     func stop() {
         pollScheduler.cancel()
+        workGate.cancel()
         isRunning = false
     }
 
     private func collect() {
         // The private-API read runs off the main thread (PERF-01); the sample is
         // delivered on the main actor. A nil read never notifies the delegate.
-        executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
-            guard let self, let sample else { return }
-            self.delegate?.ambientLightSampler(self, didProduce: sample)
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, let sample else { return }
+                self.delegate?.ambientLightSampler(self, didProduce: sample)
+            }
         }
     }
 }

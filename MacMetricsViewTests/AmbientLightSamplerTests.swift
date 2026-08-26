@@ -38,6 +38,29 @@ final class AmbientLightSamplerTests: XCTestCase {
         }
     }
 
+    private final class DeferredExecutor: SamplingExecutor {
+        private(set) var queuedReadCount = 0
+        private var queuedDeliveries: [() -> Void] = []
+
+        func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+            queuedReadCount += 1
+            queuedDeliveries.append {
+                let value = read()
+                MainActor.assumeIsolated { deliver(value) }
+            }
+        }
+
+        func completeAll() {
+            while !queuedDeliveries.isEmpty {
+                queuedDeliveries.removeFirst()()
+            }
+        }
+
+        func completeNext() {
+            queuedDeliveries.removeFirst()()
+        }
+    }
+
     private func makeSampler(reader: FakeReader, scheduler: FakeScheduler) -> (AmbientLightSampler, SpyDelegate) {
         let delegate = SpyDelegate()
         let sampler = AmbientLightSampler(
@@ -117,5 +140,41 @@ final class AmbientLightSamplerTests: XCTestCase {
         XCTAssertEqual(scheduler.cancelCount, 1)
         XCTAssertEqual(scheduler.scheduleCount, 2)
         XCTAssertEqual(sampler.pollInterval, 5)
+    }
+
+    func testBlockedAmbientReadsKeepOnePendingRefresh() {
+        let reader = FakeReader(); reader.lux = 261
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = AmbientLightSampler(reader: reader, pollScheduler: scheduler, executor: executor)
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        scheduler.fire()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+
+        executor.completeAll()
+
+        XCTAssertEqual(delegate.samples.map(\.lux), [261, 261])
+    }
+
+    func testStopDropsInFlightAmbientDeliveryAndPendingRefresh() {
+        let reader = FakeReader(); reader.lux = 261
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = AmbientLightSampler(reader: reader, pollScheduler: scheduler, executor: executor)
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        sampler.stop()
+        executor.completeNext()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+        XCTAssertTrue(delegate.samples.isEmpty)
     }
 }
