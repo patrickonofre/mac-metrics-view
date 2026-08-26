@@ -37,7 +37,7 @@ Design: ../specs/design-remove-token-usage.md
 
 ### T2: Delete token collection stack
 
-**Status**: pending
+**Status**: completed
 
 **What**: Delete all token readers, samplers, models, stores, calculations, formatters, and token-only tests. Remove now-orphaned helpers only when they were exclusively token code.
 **Where**: token files under `MacMetricsView/App`, `MacMetricsView/Models`, `MacMetricsView/Services`, and token-only `MacMetricsViewTests` files.
@@ -47,6 +47,8 @@ Design: ../specs/design-remove-token-usage.md
 **Tests**: SwiftPM compilation and production-source search.
 **Gate**: Full.
 **Commit**: `refactor(tokens): delete collection stack`
+
+**Evidence**: `swift test` passed 719 tests on 2026-08-26. Production-source searches returned no `TokenUsage`, `TokenProvider`, `TokenPricing`, Claude Code, Codex, Gemini, or legacy token preference reads/removals.
 
 ### T3: Remove Xcode token references
 

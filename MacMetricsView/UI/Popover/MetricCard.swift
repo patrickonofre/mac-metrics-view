@@ -29,7 +29,7 @@ enum MetricCardAccessibility {
 }
 
 /// One metric rendered as a card: header (icon + title), prominent value, sparkline,
-/// and severity color. Detail-heavy kinds (Tokens, Battery) reveal an inline
+/// and severity color. Detail-heavy kinds (such as Battery) reveal an inline
 /// `expanded` region when `isExpanded` — summary-only kinds ignore the binding and
 /// show no expand affordance. Replaces the flat `MetricRow` of the old popover.
 struct MetricCard<Expanded: View>: View {

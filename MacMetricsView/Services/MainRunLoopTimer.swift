@@ -83,7 +83,7 @@ final class CoalescingSamplingGate {
 }
 
 /// Runs a sampler's blocking read off the main thread, then delivers the result back on the
-/// main actor (PERF-01). Lets the I/O-bound readers (token logs, SMC temperature, process
+/// main actor (PERF-01). Lets the I/O-bound readers (SMC temperature, process
 /// enumeration) leave the main run loop without changing the `@MainActor` delegate contract.
 ///
 /// The read closure captures a reader whose mutable state must therefore be touched *only*

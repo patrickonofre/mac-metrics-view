@@ -151,69 +151,6 @@ enum Strings {
     static let diskMetricCombinedShort = LocalizedText(en: "Total", pt: "Total")
     static let diskMetricSplitShort = LocalizedText(en: "R/W", pt: "L/E")
 
-    // Retained until the token collection stack is deleted in T2.
-    static let tokens = LocalizedText(en: "Tokens", pt: "Tokens")
-    static let tokenInput = LocalizedText(en: "Input", pt: "Entrada")
-    static let tokenOutput = LocalizedText(en: "Output", pt: "Saída")
-    static let tokenReasoning = LocalizedText(en: "Reasoning", pt: "Raciocínio")
-    static let tokenCache = LocalizedText(en: "Cache", pt: "Cache")
-    static let tokenReset = LocalizedText(en: "Reset counter", pt: "Zerar contador")
-    static let tokenEmptyState = LocalizedText(en: "No token usage yet", pt: "Sem uso de tokens ainda")
-    static let tokenScopeLabel = LocalizedText(en: "Scope", pt: "Escopo")
-    static let tokenScopeGlobal = LocalizedText(en: "Global", pt: "Global")
-    static let tokenScopeProject = LocalizedText(en: "Project", pt: "Projeto")
-    static let tokenScopeSession = LocalizedText(en: "Session", pt: "Sessão")
-    static let tokenProviderLabel = LocalizedText(en: "Provider", pt: "Provedor")
-    static let tokenProviderClaude = LocalizedText(en: "Claude", pt: "Claude")
-    static let tokenProviderCodex = LocalizedText(en: "Codex", pt: "Codex")
-    static let tokenProviderCombined = LocalizedText(en: "Combined", pt: "Combinado")
-    static let tokenWindowLabel = LocalizedText(en: "Token window", pt: "Janela de tokens")
-    static let tokenWindowToday = LocalizedText(en: "Today", pt: "Hoje")
-    static let tokenWindowLastHour = LocalizedText(en: "Last hour", pt: "Última hora")
-    static let tokenWindowLast24h = LocalizedText(en: "Last 24h", pt: "Últimas 24h")
-    static let tokenWindowSinceReset = LocalizedText(en: "Since reset", pt: "Desde o reset")
-    static let tokenCostLabel = LocalizedText(en: "Est. cost", pt: "Custo est.")
-    static let tokenCostEstimatedNote = LocalizedText(en: "Estimated at API list prices — not a bill.", pt: "Estimativa pelos preços de tabela da API — não é uma fatura.")
-    static let tokenCostUnpricedNote = LocalizedText(en: "≈ usage from unrecognized models not included", pt: "≈ uso de modelos não reconhecidos não incluído")
-    static let tokenPaceLabel = LocalizedText(en: "Pace", pt: "Ritmo")
-    static let tokenPerDayUnit = LocalizedText(en: "day", pt: "dia")
-    static let tokenLimitBlockLabel = LocalizedText(en: "5h block", pt: "Bloco 5h")
-    static let tokenLimitWeekLabel = LocalizedText(en: "7 days", pt: "7 dias")
-    static let tokenLimitResetsAt = LocalizedText(en: "resets", pt: "reinicia")
-    static let tokenLimitNoActiveBlock = LocalizedText(en: "No active block", pt: "Nenhum bloco ativo")
-    static let tokenLimitDisclaimer = LocalizedText(en: "Estimate — this Mac only.", pt: "Estimativa — só este Mac.")
-    static let tokenBudgetSessionLabel = LocalizedText(en: "5h budget", pt: "Orçamento 5h")
-    static let tokenBudgetWeeklyLabel = LocalizedText(en: "Weekly budget", pt: "Orçamento semanal")
-    static let tokenBudgetOver = LocalizedText(en: "over budget", pt: "acima do orçamento")
-    static let tokenBudgetPlaceholder = LocalizedText(en: "0 = off", pt: "0 = desligado")
-    static let tokenSourceHelpTitle = LocalizedText(en: "Which usage is counted", pt: "Qual uso é contabilizado")
-    static let tokenSourceHelp = LocalizedText(en: "Counts come from Claude Code session logs (~/.claude). Every Claude model used in Claude Code is included (Opus, Sonnet, Haiku). API usage and other apps aren't tracked.", pt: "A contagem vem dos logs de sessão do Claude Code (~/.claude). Inclui todos os modelos Claude usados no Claude Code (Opus, Sonnet, Haiku). Uso via API ou outros apps não é contabilizado.")
-
-    static func tokenScopeName(_ scope: TokenScope) -> LocalizedText {
-        switch scope {
-        case .global: return tokenScopeGlobal
-        case .project: return tokenScopeProject
-        case .session: return tokenScopeSession
-        }
-    }
-
-    static func tokenWindowName(_ window: TokenWindow) -> LocalizedText {
-        switch window {
-        case .today: return tokenWindowToday
-        case .lastHour: return tokenWindowLastHour
-        case .last24h: return tokenWindowLast24h
-        case .sinceReset: return tokenWindowSinceReset
-        }
-    }
-
-    static func tokenProviderName(_ selection: TokenProviderSelection) -> LocalizedText {
-        switch selection {
-        case .claude: return tokenProviderClaude
-        case .codex: return tokenProviderCodex
-        case .combined: return tokenProviderCombined
-        }
-    }
-
     // Visibility / display controls
     static let displayLabel = LocalizedText(en: "Display", pt: "Exibição")
     static let displayIcon = LocalizedText(en: "Icon", pt: "Ícone")

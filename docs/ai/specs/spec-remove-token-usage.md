@@ -90,9 +90,9 @@ AI token tracking duplicates source-tool controls and dilutes the app's focus on
 | TOKRM-01 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
 | TOKRM-02 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
 | TOKRM-03 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
-| TOKRM-04 | P1: Remove Token Collection | Implementation | Pending |
-| TOKRM-05 | P1: Remove Token Collection | Implementation | Pending |
-| TOKRM-06 | P1: Remove Token Collection | Implementation | Pending |
+| TOKRM-04 | P1: Remove Token Collection | Implementation | Implemented (T2; Xcode cleanup pending T3) |
+| TOKRM-05 | P1: Remove Token Collection | Implementation | Implemented (T2) |
+| TOKRM-06 | P1: Remove Token Collection | Implementation | Implemented (T2) |
 | TOKRM-07 | P2: Focused Current Documentation | Implementation | Pending |
 | TOKRM-08 | P2: Focused Current Documentation | Implementation | Pending |
 
