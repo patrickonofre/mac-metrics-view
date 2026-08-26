@@ -42,6 +42,7 @@ final class GPUSampler {
     /// main actor. The reader's cached `io_service_t` is therefore touched only on the
     /// executor's serial queue. Tests inject `InlineSamplingExecutor` to stay synchronous.
     private let executor: SamplingExecutor
+    private let workGate = CoalescingSamplingGate()
     private(set) var isRunning = false
 
     weak var delegate: GPUSamplerDelegate?
@@ -84,15 +85,27 @@ final class GPUSampler {
 
     func stop() {
         pollScheduler.cancel()
+        workGate.cancel()
         isRunning = false
     }
 
     private func collect() {
         // Read off-main (OPT-03); deliver on the main actor. Re-check `isRunning` in the
         // delivery so a stop() between read and delivery cannot publish a late sample.
-        executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
-            guard let self, self.isRunning, let sample else { return }
-            self.delegate?.gpuSampler(self, didProduce: sample)
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, let sample else { return }
+                self.delegate?.gpuSampler(self, didProduce: sample)
+            }
         }
     }
 }
