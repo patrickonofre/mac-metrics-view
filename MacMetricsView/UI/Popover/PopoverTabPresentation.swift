@@ -18,7 +18,6 @@ enum MetricCardKind: Hashable {
     case temperature
     case disk
     case battery
-    case tokens
 }
 
 /// Semantic color role a metric card uses for its value, derived from the metric's
@@ -52,11 +51,11 @@ enum PopoverTabPresentation {
 
     /// Default top-to-bottom, left-to-right card order in the Metrics grid.
     static let cardOrder: [MetricCardKind] =
-        [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery, .tokens]
+        [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery]
 
     /// Cards that can expand to double width; all others are summary-only.
     static func isExpandable(_ kind: MetricCardKind) -> Bool {
-        kind == .tokens || kind == .battery || kind == .cpu || kind == .ram || kind == .network || kind == .disk
+        kind == .battery || kind == .cpu || kind == .ram || kind == .network || kind == .disk
     }
 
     /// Maps a metric's menu-bar severity to the card's value color role.

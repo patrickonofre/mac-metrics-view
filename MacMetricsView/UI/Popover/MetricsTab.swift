@@ -48,18 +48,14 @@ enum MetricGridLayout {
     }
 }
 
-/// Metrics tab body: the seven metric cards in a two-column `Grid`, ordered by
-/// `PopoverTabPresentation.cardOrder`. Expandable cards (Tokens, Battery) span both
+/// Metrics tab body: machine metric cards in a two-column `Grid`, ordered by
+/// `PopoverTabPresentation.cardOrder`. Expandable cards span both
 /// columns when their kind is in the bound `expandedCards` set (ADR-004); expansion
 /// state is ephemeral and owned by the shell (ADR-002). Read-only — no settings here.
 struct MetricsTab: View {
     /// This is the data the grid actually renders, so MetricsTab reads it at the point
     /// of use (task-005) — no `CPUState` reference needed here at all.
     @ObservedObject var metrics: SystemMetricsModel
-    /// Observed separately (task-002): the Dev/AI pillar's popover-open 30s refresh
-    /// (ADR-005) mutates only this object, so isolating the observation here keeps that
-    /// tick from re-rendering the rest of the metrics grid.
-    @ObservedObject var token: TokenUsageModel
     @Binding var expandedCards: Set<MetricCardKind>
 
     private var layoutRows: [[MetricCardKind]] {
@@ -188,18 +184,6 @@ struct MetricsTab: View {
                 batteryDetail
             }
 
-        case .tokens:
-            MetricCard(
-                kind: .tokens,
-                symbol: "number",
-                title: Strings.tokens(),
-                value: token.rowValue,
-                sparkline: token.sparkline,
-                severity: .normal,
-                isExpanded: expansionBinding(for: .tokens)
-            ) {
-                tokenDetail
-            }
         }
     }
 
@@ -239,32 +223,6 @@ struct MetricsTab: View {
         } else {
             BatteryDetailRow(details: metrics.batteryDetailRows)
         }
-    }
-
-    @ViewBuilder
-    private var tokenDetail: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            if token.isEmpty {
-                Text(Strings.tokenEmptyState())
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-            } else {
-                TokenBreakdownRow(breakdown: token.breakdown)
-            }
-
-            if let totalCost = token.costRowValue {
-                TokenCostRow(
-                    total: totalCost,
-                    perModel: token.costPerModel,
-                    showsUnpricedNote: token.costHasUnpricedTokens
-                )
-            }
-
-            if let pace = token.paceRowValue {
-                TokenPaceRow(value: pace)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     @ViewBuilder
@@ -401,103 +359,6 @@ struct BatteryDetailRow: View {
         }
         .font(.caption2)
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// Input / output / cache breakdown, shown inside the expanded Tokens card.
-/// Relocated from `PopoverView.swift` (task_04).
-struct TokenBreakdownRow: View {
-    let breakdown: [(label: String, value: String)]
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ForEach(breakdown, id: \.label) { item in
-                HStack(spacing: 3) {
-                    Text(item.label)
-                        .foregroundStyle(.secondary)
-                    Text(item.value)
-                        .foregroundStyle(.primary)
-                        .monospacedDigit()
-                }
-            }
-
-            Spacer(minLength: 0)
-        }
-        .font(.caption2)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-/// Estimated USD cost under the token breakdown: headline total, per-model
-/// attribution (only when more than one model contributed), and the always-visible
-/// "estimated" note. A `≈` prefix plus a footnote flag totals that exclude
-/// unrecognized models (ADR-003). Relocated from `PopoverView.swift` (task_04).
-struct TokenCostRow: View {
-    let total: String
-    let perModel: [(label: String, value: String)]
-    let showsUnpricedNote: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 12) {
-                HStack(spacing: 3) {
-                    Text(Strings.tokenCostLabel())
-                        .foregroundStyle(.secondary)
-                    Text(showsUnpricedNote ? "≈ \(total)" : total)
-                        .foregroundStyle(.primary)
-                        .monospacedDigit()
-                }
-
-                if perModel.count > 1 {
-                    ForEach(perModel, id: \.label) { item in
-                        HStack(spacing: 3) {
-                            Text(item.label)
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                            Text(item.value)
-                                .foregroundStyle(.primary)
-                                .monospacedDigit()
-                        }
-                    }
-                }
-
-                Spacer(minLength: 0)
-            }
-
-            Text(note)
-                .foregroundStyle(.tertiary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .font(.caption2)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-    }
-
-    private var note: String {
-        showsUnpricedNote
-            ? "\(Strings.tokenCostEstimatedNote()) \(Strings.tokenCostUnpricedNote())"
-            : Strings.tokenCostEstimatedNote()
-    }
-}
-
-/// Current pace under the cost row: tokens/hour, cost/hour, and the daily projection
-/// (ADR-004). Relocated from `PopoverView.swift` (task_04).
-struct TokenPaceRow: View {
-    let value: String
-
-    var body: some View {
-        HStack(spacing: 3) {
-            Text(Strings.tokenPaceLabel())
-                .foregroundStyle(.secondary)
-            Text(value)
-                .foregroundStyle(.primary)
-                .monospacedDigit()
-            Spacer(minLength: 0)
-        }
-        .font(.caption2)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(Strings.tokenPaceLabel()), \(value)")
     }
 }
 

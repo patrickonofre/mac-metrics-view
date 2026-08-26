@@ -182,19 +182,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
             ))
         }
 
-        if state.metrics.visibility.showTokens {
-            if attributedTitle.length > 0 {
-                attributedTitle.append(separator)
-            }
-
-            attributedTitle.append(statusSegment(
-                metric: .tokens,
-                value: TokenFormatter.menuBarTitle(for: state.token.aggregate, showLabel: false),
-                style: state.token.menuBarTextStyle,
-                labelOverride: TokenFormatter.menuBarLabel(for: state.tokenProvider)
-            ))
-        }
-
         if attributedTitle.length == 0 {
             attributedTitle.append(NSAttributedString(
                 string: Strings.metricsPlaceholder(),
@@ -269,8 +256,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
         switch state.metrics.display.identifierStyle {
         case .labels:
-            // `labelOverride` lets the token segment show the provider-aware name
-            // (Claude / Codex / Combined) instead of the fixed metric label.
             segment.append(NSAttributedString(
                 string: "\(labelOverride ?? metric.label) ",
                 attributes: baseAttributes(color: identifierColor)
@@ -475,7 +460,6 @@ private enum MenuBarMetric {
     case network
     case temperature
     case disk
-    case tokens
     case battery
     case gpu
 
@@ -491,8 +475,6 @@ private enum MenuBarMetric {
             return "TEMP"
         case .disk:
             return "DISK"
-        case .tokens:
-            return TokenFormatter.menuBarLabel
         case .battery:
             return "BAT"
         case .gpu:
@@ -512,8 +494,6 @@ private enum MenuBarMetric {
             return "thermometer"
         case .disk:
             return "circle.fill"
-        case .tokens:
-            return "number"
         case .battery:
             // Static fallback; the live segment passes a charge-level glyph override.
             return "battery.100"
@@ -536,8 +516,6 @@ private enum MenuBarMetric {
             return Strings.temperature()
         case .disk:
             return Strings.disk()
-        case .tokens:
-            return Strings.tokens()
         case .battery:
             return Strings.battery()
         case .gpu:

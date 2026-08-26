@@ -1,6 +1,6 @@
 # Tasks: Remove Token Usage
 
-Status: ready
+Status: in_progress
 Spec: ../specs/spec-remove-token-usage.md
 Design: ../specs/design-remove-token-usage.md
 
@@ -22,7 +22,7 @@ Design: ../specs/design-remove-token-usage.md
 
 ### T1: Remove token integration and presentation
 
-**Status**: pending
+**Status**: completed
 
 **What**: Remove token samplers, callbacks, state, menu-bar output, popover lifecycle, metric card, settings controls, visibility, presentation enum entry, and localization while retaining all non-token machine surfaces.
 **Where**: app integration and presentation boundary: `MacMetricsView/App/`, `MacMetricsView/UI/Popover/`, affected settings/models, and mixed XCTest coverage.
@@ -32,6 +32,8 @@ Design: ../specs/design-remove-token-usage.md
 **Tests**: XCTest unit.
 **Gate**: Quick.
 **Commit**: `refactor(tokens): remove app integration`
+
+**Evidence**: `swift test --filter 'PopoverTabPresentationTests|MetricsTabLayoutTests|MetricVisibilitySettingsTests|CPUStatePopoverTests'` passed 59 tests on 2026-08-26. Token-only localization remains temporarily because the token implementation still compiles until T2; no app-facing call site reaches it.
 
 ### T2: Delete token collection stack
 

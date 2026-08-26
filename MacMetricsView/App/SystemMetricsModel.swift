@@ -4,7 +4,7 @@ import Foundation
 /// samples, history, menu-bar visibility/display settings, and process sampling.
 /// Extracted from `CPUState` (spec `spec-cpustate-pillar-decouple`, task-005) — the
 /// last and largest pillar, leaving `CPUState` as a pure coordinator (children +
-/// menu-bar title composition + cross-cutting state). Like `token`, `StatusItemController`
+/// menu-bar title composition + cross-cutting state). `StatusItemController`
 /// never needs to observe this model reactively: `AppDelegate`'s sampler delegates push
 /// `setNeedsTitleUpdate()` explicitly after every `update(with:)` call. SwiftUI consumers
 /// (`MetricsTab`, `SettingsTab`) observe `metrics` directly as their own `@ObservedObject`.
@@ -266,13 +266,6 @@ final class SystemMetricsModel: ObservableObject {
         updateVisibility(metric: .gpu, isVisible: isVisible)
     }
 
-    /// Forwards the token visibility toggle: `MetricVisibilitySettings` covers all
-    /// metric segments including tokens, even though token data itself lives in
-    /// `TokenUsageModel`.
-    func setTokenVisible(_ isVisible: Bool) {
-        updateVisibility(metric: .tokens, isVisible: isVisible)
-    }
-
     func setMetricIdentifierStyle(_ identifierStyle: MetricDisplaySettings.IdentifierStyle) {
         guard display.identifierStyle != identifierStyle else { return }
 
@@ -305,10 +298,6 @@ final class SystemMetricsModel: ObservableObject {
         onDisplayChange?()
     }
 
-    /// Persists a token-related display setting (scope/window/provider/budgets) saved by
-    /// the coordinator and republishes `display` so SwiftUI pickers reflect it. The
-    /// coordinator owns pushing the change into `TokenUsageModel` — this model only
-    /// stores the persisted slice, since token *data* lives in `TokenUsageModel`.
     func replaceDisplay(_ newDisplay: MetricDisplaySettings) {
         display = newDisplay
         display.save(to: userDefaults)
@@ -330,8 +319,6 @@ final class SystemMetricsModel: ObservableObject {
             visibility.showTemperature = isVisible
         case .disk:
             visibility.showDisk = isVisible
-        case .tokens:
-            visibility.showTokens = isVisible
         case .battery:
             visibility.showBattery = isVisible
         case .gpu:
@@ -354,8 +341,6 @@ final class SystemMetricsModel: ObservableObject {
             return visibility.showTemperature
         case .disk:
             return visibility.showDisk
-        case .tokens:
-            return visibility.showTokens
         case .battery:
             return visibility.showBattery
         case .gpu:

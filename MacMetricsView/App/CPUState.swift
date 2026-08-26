@@ -5,7 +5,7 @@ import Combine
 final class CPUState: ObservableObject {
     /// The System metrics pillar (TD-012): CPU/RAM/network/disk/temperature/battery/GPU
     /// samples, history, and visibility/display settings. Extracted to `SystemMetricsModel`
-    /// (task-005) — like `token`, `StatusItemController` reads it imperatively (no
+    /// (task-005) — `StatusItemController` reads it imperatively (no
     /// observation needed; `AppDelegate`'s sampler delegates push `setNeedsTitleUpdate()`).
     /// SwiftUI consumers (`MetricsTab`, `SettingsTab`) observe `metrics` directly.
     let metrics: SystemMetricsModel
@@ -17,23 +17,11 @@ final class CPUState: ObservableObject {
     /// it only exists in SwiftUI, so it must react to the model's own publisher.
     let ambient: AmbientThemeModel
 
-    /// The Dev/AI pillar (TD-012): token stores, the derived aggregate/cost/burn-rate/
-    /// rate-limit surfaces, the daily ledger and the popover-open refresh (ADR-005).
-    /// Extracted to `TokenUsageModel` (task-001/002). Deliberately **not** bridged to this
-    /// coordinator's `objectWillChange`: `StatusItemController` is AppKit-imperative and
-    /// learns about token changes via an explicit `setNeedsTitleUpdate()` push from
-    /// `AppDelegate.tokenUsageSampler(_:didProduce:)`, never through Combine. SwiftUI
-    /// consumers that need live token reactivity observe `token` directly at the point of
-    /// use (e.g. `MetricsTab`) — bridging here would re-invalidate every `CPUState`
-    /// observer (Settings/Actions tabs) on every token tick, including the popover-open
-    /// 30s auto-refresh (ADR-005), defeating the churn isolation this split exists for.
-    let token: TokenUsageModel
-
     /// The Utilities pillar (TD-012): cleaning-mode input lock + the Accessibility
     /// recovery flow that gates it. Extracted to `CleaningLockModel` (task-004), which
     /// composes `AccessibilityRecoveryModel` and bridges its changes internally. UI
     /// observes `lock` directly at the point of use (`ActionsTab`, `LockOverlayView`,
-    /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `token`/`ambient`.
+    /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `ambient`.
     let lock: CleaningLockModel
 
     /// The Utilities pillar (TD-012): the keep-awake toggle (feature `keep-awake-toggle`,
@@ -136,16 +124,6 @@ final class CPUState: ObservableObject {
             powerSourceMonitor: powerSourceMonitor
         )
 
-        token = TokenUsageModel(
-            userDefaults: userDefaults,
-            selection: TokenDisplaySelection(
-                scope: metrics.display.tokenScope,
-                window: metrics.display.tokenMenuBarWindow,
-                provider: metrics.display.tokenProvider,
-                sessionBudget: metrics.display.tokenSessionBudget,
-                weeklyBudget: metrics.display.tokenWeeklyBudget
-            )
-        )
     }
 
     var menuBarTitle: String {
@@ -188,41 +166,7 @@ final class CPUState: ObservableObject {
             titles.append(BatteryFormatter.menuBarTitle(for: metrics.latestBatterySample, showLabel: showLabel))
         }
 
-        if metrics.visibility.showTokens {
-            let value = TokenFormatter.menuBarTitle(for: token.aggregate, showLabel: false)
-            if showLabel {
-                titles.append("\(TokenFormatter.menuBarLabel(for: metrics.display.tokenProvider)) \(value)")
-            } else {
-                titles.append(value)
-            }
-        }
-
         return titles
-    }
-
-    var tokenScope: TokenScope {
-        metrics.display.tokenScope
-    }
-
-    var tokenMenuBarWindow: TokenWindow {
-        metrics.display.tokenMenuBarWindow
-    }
-
-    /// The selected provider (Claude / Codex / Combined) the meter currently shows.
-    var tokenProvider: TokenProviderSelection {
-        metrics.display.tokenProvider
-    }
-
-    /// The token-relevant slice of `metrics.display`, pushed into the model on each
-    /// picker change.
-    private var tokenSelection: TokenDisplaySelection {
-        TokenDisplaySelection(
-            scope: metrics.display.tokenScope,
-            window: metrics.display.tokenMenuBarWindow,
-            provider: metrics.display.tokenProvider,
-            sessionBudget: metrics.display.tokenSessionBudget,
-            weeklyBudget: metrics.display.tokenWeeklyBudget
-        )
     }
 
     var accessibilityMenuBarTitle: String {
@@ -256,10 +200,6 @@ final class CPUState: ObservableObject {
             segments.append("\(Strings.battery()) \(BatteryFormatter.menuBarValue(for: metrics.latestBatterySample))")
         }
 
-        if metrics.visibility.showTokens {
-            segments.append("\(Strings.tokens()) \(TokenFormatter.menuBarTitle(for: token.aggregate, showLabel: false))")
-        }
-
         guard !segments.isEmpty else { return Strings.metricsPlaceholder() }
         return segments.joined(separator: ", ")
     }
@@ -290,87 +230,6 @@ final class CPUState: ObservableObject {
     func setAmbientThemeSettings(_ settings: AmbientThemeSettings) {
         guard ambient.setSettings(settings) else { return }
         onAmbientThemeSettingsChange?(settings)
-    }
-
-    /// Forwards token ingest to the model (task-001 shim).
-    func update(provider: TokenProvider, with events: [TokenUsageEvent]) {
-        token.update(provider: provider, with: events)
-    }
-
-    /// Claude-provider convenience used by the existing Claude sampler path and tests.
-    func update(with events: [TokenUsageEvent]) {
-        token.update(with: events)
-    }
-
-    /// Token picker setters mutate `metrics.display` (the persisted slice they live in)
-    /// and then push the change into `token` — coordination only `CPUState` can do since
-    /// it owns both models.
-    func setTokenScope(_ scope: TokenScope) {
-        guard metrics.display.tokenScope != scope else { return }
-        var newDisplay = metrics.display
-        newDisplay.tokenScope = scope
-        metrics.replaceDisplay(newDisplay)
-        token.apply(selection: tokenSelection)
-        onDisplayChange?()
-    }
-
-    func setTokenMenuBarWindow(_ window: TokenWindow) {
-        guard metrics.display.tokenMenuBarWindow != window else { return }
-        var newDisplay = metrics.display
-        newDisplay.tokenMenuBarWindow = window
-        metrics.replaceDisplay(newDisplay)
-        token.apply(selection: tokenSelection)
-        onDisplayChange?()
-    }
-
-    /// Switches the displayed provider (Claude / Codex / Combined), persists it, and
-    /// republishes every token-derived surface from the already-ingested stores.
-    func setTokenProvider(_ selection: TokenProviderSelection) {
-        guard metrics.display.tokenProvider != selection else { return }
-        var newDisplay = metrics.display
-        newDisplay.tokenProvider = selection
-        metrics.replaceDisplay(newDisplay)
-        token.apply(selection: tokenSelection)
-        onDisplayChange?()
-    }
-
-    /// Persists the 5h-block token budget (0 = off, negatives clamp to 0 —
-    /// ADR-008) and republishes the snapshot so the bar appears immediately.
-    func setTokenSessionBudget(_ budget: Int) {
-        let sanitized = max(0, budget)
-        guard metrics.display.tokenSessionBudget != sanitized else { return }
-        var newDisplay = metrics.display
-        newDisplay.tokenSessionBudget = sanitized
-        metrics.replaceDisplay(newDisplay)
-        token.apply(selection: tokenSelection)
-    }
-
-    /// Persists the weekly token budget (0 = off, negatives clamp to 0 — ADR-008).
-    func setTokenWeeklyBudget(_ budget: Int) {
-        let sanitized = max(0, budget)
-        guard metrics.display.tokenWeeklyBudget != sanitized else { return }
-        var newDisplay = metrics.display
-        newDisplay.tokenWeeklyBudget = sanitized
-        metrics.replaceDisplay(newDisplay)
-        token.apply(selection: tokenSelection)
-    }
-
-    /// Forwards the since-reset counter restart to the model (task-001 shim).
-    func resetTokenCounter() {
-        token.resetCounter()
-    }
-
-    /// Forwards the popover-open token refresh lifecycle to the model (ADR-005 shims).
-    func beginTokenAutoRefresh() {
-        token.beginAutoRefresh()
-    }
-
-    func endTokenAutoRefresh() {
-        token.endAutoRefresh()
-    }
-
-    func tokenAutoRefreshTick(now: Date = Date()) {
-        token.autoRefreshTick(now: now)
     }
 
     // MARK: - Cleaning lock + Accessibility recovery (forwards to `CleaningLockModel`, task-004)

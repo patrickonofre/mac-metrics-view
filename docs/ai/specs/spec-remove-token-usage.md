@@ -87,9 +87,9 @@ AI token tracking duplicates source-tool controls and dilutes the app's focus on
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| TOKRM-01 | P1: Machine-Only Monitoring | Implementation | Pending |
-| TOKRM-02 | P1: Machine-Only Monitoring | Implementation | Pending |
-| TOKRM-03 | P1: Machine-Only Monitoring | Implementation | Pending |
+| TOKRM-01 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
+| TOKRM-02 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
+| TOKRM-03 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
 | TOKRM-04 | P1: Remove Token Collection | Implementation | Pending |
 | TOKRM-05 | P1: Remove Token Collection | Implementation | Pending |
 | TOKRM-06 | P1: Remove Token Collection | Implementation | Pending |

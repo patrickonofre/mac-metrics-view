@@ -44,7 +44,7 @@ final class PopoverTabPresentationTests: XCTestCase {
     func testCardOrder() {
         XCTAssertEqual(
             PopoverTabPresentation.cardOrder,
-            [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery, .tokens]
+            [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery]
         )
     }
 
@@ -55,7 +55,6 @@ final class PopoverTabPresentationTests: XCTestCase {
     // MARK: - Expandability
 
     func testExpandableKinds() {
-        XCTAssertTrue(PopoverTabPresentation.isExpandable(.tokens))
         XCTAssertTrue(PopoverTabPresentation.isExpandable(.battery))
         XCTAssertTrue(PopoverTabPresentation.isExpandable(.cpu))
         XCTAssertTrue(PopoverTabPresentation.isExpandable(.ram))

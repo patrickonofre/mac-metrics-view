@@ -7,7 +7,6 @@ struct MetricVisibilitySettings: Equatable {
         case network
         case temperature
         case disk
-        case tokens
         case battery
         case gpu
     }
@@ -18,7 +17,6 @@ struct MetricVisibilitySettings: Equatable {
         static let showNetwork = "MetricVisibilitySettings.showNetwork"
         static let showTemperature = "MetricVisibilitySettings.showTemperature"
         static let showDisk = "MetricVisibilitySettings.showDisk"
-        static let showTokens = "MetricVisibilitySettings.showTokens"
         static let showBattery = "MetricVisibilitySettings.showBattery"
         static let showGPU = "MetricVisibilitySettings.showGPU"
         static let firstRunPresetApplied = "MetricVisibilitySettings.firstRunPresetApplied"
@@ -33,7 +31,6 @@ struct MetricVisibilitySettings: Equatable {
         showNetwork: false,
         showTemperature: true,
         showDisk: false,
-        showTokens: false,
         showBattery: false,
         showGPU: false
     )
@@ -45,13 +42,10 @@ struct MetricVisibilitySettings: Equatable {
     /// Disk defaults to `false` per ADR-005 — matches the Temperature opt-in
     /// precedent and avoids a menu-bar layout shift for existing users on update.
     var showDisk: Bool
-    /// Tokens default to `false` (ADR-001/005) — opt-in like Disk/Temperature, so an
-    /// update never adds a token segment to an existing user's menu bar.
-    var showTokens: Bool
-    /// Battery defaults to `false` (ADR-005 precedent) — opt-in like Disk/Tokens, so an
+    /// Battery defaults to `false` (ADR-005 precedent) — opt-in like Disk, so an
     /// update never adds a battery segment to an existing user's menu bar.
     var showBattery: Bool
-    /// GPU defaults to `false` (ADR-005 precedent) — opt-in like Disk/Tokens/Battery, so an
+    /// GPU defaults to `false` (ADR-005 precedent) — opt-in like Disk/Battery, so an
     /// update never adds a GPU segment to an existing user's menu bar.
     var showGPU: Bool
 
@@ -61,7 +55,6 @@ struct MetricVisibilitySettings: Equatable {
         showNetwork: Bool = true,
         showTemperature: Bool = false,
         showDisk: Bool = false,
-        showTokens: Bool = false,
         showBattery: Bool = false,
         showGPU: Bool = false
     ) {
@@ -70,13 +63,12 @@ struct MetricVisibilitySettings: Equatable {
         self.showNetwork = showNetwork
         self.showTemperature = showTemperature
         self.showDisk = showDisk
-        self.showTokens = showTokens
         self.showBattery = showBattery
         self.showGPU = showGPU
     }
 
     var hasVisibleMetric: Bool {
-        showCPU || showRAM || showNetwork || showTemperature || showDisk || showTokens || showBattery || showGPU
+        showCPU || showRAM || showNetwork || showTemperature || showDisk || showBattery || showGPU
     }
 
     static func load(from userDefaults: UserDefaults = .standard) -> MetricVisibilitySettings {
@@ -86,7 +78,6 @@ struct MetricVisibilitySettings: Equatable {
             showNetwork: bool(forKey: Keys.showNetwork, defaultValue: true, userDefaults: userDefaults),
             showTemperature: bool(forKey: Keys.showTemperature, defaultValue: false, userDefaults: userDefaults),
             showDisk: bool(forKey: Keys.showDisk, defaultValue: false, userDefaults: userDefaults),
-            showTokens: bool(forKey: Keys.showTokens, defaultValue: false, userDefaults: userDefaults),
             showBattery: bool(forKey: Keys.showBattery, defaultValue: false, userDefaults: userDefaults),
             showGPU: bool(forKey: Keys.showGPU, defaultValue: false, userDefaults: userDefaults)
         )
@@ -98,7 +89,6 @@ struct MetricVisibilitySettings: Equatable {
         userDefaults.set(showNetwork, forKey: Keys.showNetwork)
         userDefaults.set(showTemperature, forKey: Keys.showTemperature)
         userDefaults.set(showDisk, forKey: Keys.showDisk)
-        userDefaults.set(showTokens, forKey: Keys.showTokens)
         userDefaults.set(showBattery, forKey: Keys.showBattery)
         userDefaults.set(showGPU, forKey: Keys.showGPU)
     }
@@ -137,7 +127,7 @@ struct MetricVisibilitySettings: Equatable {
     }
 
     private static func hasStoredVisibility(in userDefaults: UserDefaults) -> Bool {
-        [Keys.showCPU, Keys.showRAM, Keys.showNetwork, Keys.showTemperature, Keys.showDisk, Keys.showTokens, Keys.showBattery, Keys.showGPU]
+        [Keys.showCPU, Keys.showRAM, Keys.showNetwork, Keys.showTemperature, Keys.showDisk, Keys.showBattery, Keys.showGPU]
             .contains { userDefaults.object(forKey: $0) != nil }
     }
 

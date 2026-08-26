@@ -151,7 +151,7 @@ enum Strings {
     static let diskMetricCombinedShort = LocalizedText(en: "Total", pt: "Total")
     static let diskMetricSplitShort = LocalizedText(en: "R/W", pt: "L/E")
 
-    // Token usage meter (Claude Code). "Tokens" is a loanword, identical in both.
+    // Retained until the token collection stack is deleted in T2.
     static let tokens = LocalizedText(en: "Tokens", pt: "Tokens")
     static let tokenInput = LocalizedText(en: "Input", pt: "Entrada")
     static let tokenOutput = LocalizedText(en: "Output", pt: "Saída")
@@ -159,72 +159,35 @@ enum Strings {
     static let tokenCache = LocalizedText(en: "Cache", pt: "Cache")
     static let tokenReset = LocalizedText(en: "Reset counter", pt: "Zerar contador")
     static let tokenEmptyState = LocalizedText(en: "No token usage yet", pt: "Sem uso de tokens ainda")
-    // Scope picker (which Claude Code activity is counted)
     static let tokenScopeLabel = LocalizedText(en: "Scope", pt: "Escopo")
     static let tokenScopeGlobal = LocalizedText(en: "Global", pt: "Global")
     static let tokenScopeProject = LocalizedText(en: "Project", pt: "Projeto")
     static let tokenScopeSession = LocalizedText(en: "Session", pt: "Sessão")
-    // Provider picker (which tool's local logs are counted). "Claude"/"Codex" are product
-    // names, identical in both languages; only "Combined" translates.
     static let tokenProviderLabel = LocalizedText(en: "Provider", pt: "Provedor")
     static let tokenProviderClaude = LocalizedText(en: "Claude", pt: "Claude")
     static let tokenProviderCodex = LocalizedText(en: "Codex", pt: "Codex")
     static let tokenProviderCombined = LocalizedText(en: "Combined", pt: "Combinado")
-    // Window picker (rolling range shown)
     static let tokenWindowLabel = LocalizedText(en: "Token window", pt: "Janela de tokens")
     static let tokenWindowToday = LocalizedText(en: "Today", pt: "Hoje")
     static let tokenWindowLastHour = LocalizedText(en: "Last hour", pt: "Última hora")
     static let tokenWindowLast24h = LocalizedText(en: "Last 24h", pt: "Últimas 24h")
     static let tokenWindowSinceReset = LocalizedText(en: "Since reset", pt: "Desde o reset")
-    // Estimated cost (Phase 1). The label itself carries the "estimated" qualifier and
-    // the note reinforces it — the app must never imply billing authority (PRD).
     static let tokenCostLabel = LocalizedText(en: "Est. cost", pt: "Custo est.")
-    static let tokenCostEstimatedNote = LocalizedText(
-        en: "Estimated at API list prices — not a bill.",
-        pt: "Estimativa pelos preços de tabela da API — não é uma fatura."
-    )
-    /// Shown when events from unrecognized models were excluded from the total
-    /// (ADR-003): the figure under-reports rather than guessing a price.
-    static let tokenCostUnpricedNote = LocalizedText(
-        en: "≈ usage from unrecognized models not included",
-        pt: "≈ uso de modelos não reconhecidos não incluído"
-    )
-    // Burn rate / pace line (Phase 2, ADR-004). One-word label — the pace line is
-    // already dense. No "estimated" disclaimer here: the line lives in the block
-    // that carries the Phase 1 note.
+    static let tokenCostEstimatedNote = LocalizedText(en: "Estimated at API list prices — not a bill.", pt: "Estimativa pelos preços de tabela da API — não é uma fatura.")
+    static let tokenCostUnpricedNote = LocalizedText(en: "≈ usage from unrecognized models not included", pt: "≈ uso de modelos não reconhecidos não incluído")
     static let tokenPaceLabel = LocalizedText(en: "Pace", pt: "Ritmo")
-    /// Per-day unit word for the "~$X/day" projection; "/h" reads the same in both.
     static let tokenPerDayUnit = LocalizedText(en: "day", pt: "dia")
-
-    // Rate-limit window estimate (Phase 3, ADR-006/007/008). Short labels — the
-    // limit rows are caption-sized; the disclaimer carries the mandatory
-    // "estimate, this Mac only" qualifier (PRD UX rule).
     static let tokenLimitBlockLabel = LocalizedText(en: "5h block", pt: "Bloco 5h")
     static let tokenLimitWeekLabel = LocalizedText(en: "7 days", pt: "7 dias")
-    /// Verb preceding the block's reset time, e.g. "resets 17:30".
     static let tokenLimitResetsAt = LocalizedText(en: "resets", pt: "reinicia")
     static let tokenLimitNoActiveBlock = LocalizedText(en: "No active block", pt: "Nenhum bloco ativo")
-    static let tokenLimitDisclaimer = LocalizedText(
-        en: "Estimate — this Mac only.",
-        pt: "Estimativa — só este Mac."
-    )
-    // Optional user-set budgets (ADR-008): plain token counts, 0 = off.
+    static let tokenLimitDisclaimer = LocalizedText(en: "Estimate — this Mac only.", pt: "Estimativa — só este Mac.")
     static let tokenBudgetSessionLabel = LocalizedText(en: "5h budget", pt: "Orçamento 5h")
     static let tokenBudgetWeeklyLabel = LocalizedText(en: "Weekly budget", pt: "Orçamento semanal")
-    /// Suffix marking usage past the configured budget — clamped, never "150%".
     static let tokenBudgetOver = LocalizedText(en: "over budget", pt: "acima do orçamento")
-    /// Placeholder suggesting how to derive a value (tokens, 0 = off).
     static let tokenBudgetPlaceholder = LocalizedText(en: "0 = off", pt: "0 = desligado")
-
-    // Source/coverage note: explains which usage the counter can see.
-    static let tokenSourceHelpTitle = LocalizedText(
-        en: "Which usage is counted",
-        pt: "Qual uso é contabilizado"
-    )
-    static let tokenSourceHelp = LocalizedText(
-        en: "Counts come from Claude Code session logs (~/.claude). Every Claude model used in Claude Code is included (Opus, Sonnet, Haiku). API usage and other apps aren't tracked.",
-        pt: "A contagem vem dos logs de sessão do Claude Code (~/.claude). Inclui todos os modelos Claude usados no Claude Code (Opus, Sonnet, Haiku). Uso via API ou outros apps não é contabilizado."
-    )
+    static let tokenSourceHelpTitle = LocalizedText(en: "Which usage is counted", pt: "Qual uso é contabilizado")
+    static let tokenSourceHelp = LocalizedText(en: "Counts come from Claude Code session logs (~/.claude). Every Claude model used in Claude Code is included (Opus, Sonnet, Haiku). API usage and other apps aren't tracked.", pt: "A contagem vem dos logs de sessão do Claude Code (~/.claude). Inclui todos os modelos Claude usados no Claude Code (Opus, Sonnet, Haiku). Uso via API ou outros apps não é contabilizado.")
 
     static func tokenScopeName(_ scope: TokenScope) -> LocalizedText {
         switch scope {

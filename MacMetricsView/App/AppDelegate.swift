@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, TokenUsageSamplerDelegate, BatterySamplerDelegate, AmbientLightSamplerDelegate, GPUSamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, BatterySamplerDelegate, AmbientLightSamplerDelegate, GPUSamplerDelegate {
     // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
     // its visibility (see applyFirstRunMetricPresetIfNeeded()). Internal (not private) so
     // wiring tests can observe the published state after a delegate callback.
@@ -19,10 +19,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     // (not menu-bar visibility): it runs whenever the feature is enabled. Internal so
     // wiring tests can drive the gated lifecycle.
     let ambientLightSampler = AmbientLightSampler()
-    // Internal (not private) so wiring tests can drive the delegate with the exact sampler
-    // instances and assert provider-tagged routing, mirroring `state`.
-    let tokenSampler = TokenUsageSampler()
-    let codexTokenSampler = TokenUsageSampler(reader: CodexLogReader())
     private var statusItemController: StatusItemController?
 
     /// Battery presence is fixed by hardware for the process lifetime, so the full IOPS
@@ -132,8 +128,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         gpuSampler.delegate = self
         batterySampler.delegate = self
         ambientLightSampler.delegate = self
-        tokenSampler.delegate = self
-        codexTokenSampler.delegate = self
 
         // The ambient sampler runs independently of menu-bar visibility / popover state:
         // it is gated purely by the opt-in flag, so re-evaluate it whenever the setting
@@ -154,9 +148,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         // Failsafe (LIDC-11): a normal quit must clear the system sleep-disabled
         // flag before the process exits.
         deactivateLidCloseBeforeExit()
-        // Flush any ledger write the debounce (OPT-09) is still holding, so a clean quit
-        // never loses the last ≤30s of token accounting.
-        state.token.flushLedgerIfDirty()
         cpuSampler.stop()
         ramSampler.stop()
         networkSampler.stop()
@@ -165,8 +156,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         gpuSampler.stop()
         batterySampler.stop()
         ambientLightSampler.stop()
-        tokenSampler.stop()
-        codexTokenSampler.stop()
     }
 
     /// Handle to the quit-failsafe deactivation (LIDC-11). Internal so wiring tests
@@ -298,19 +287,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         state.update(with: sample)
     }
 
-    func tokenUsageSampler(_ sampler: TokenUsageSampler, didProduce events: [TokenUsageEvent]) {
-        // Route each sampler's batch to its provider store by instance identity; default
-        // to Claude for any other sampler (back-compat with the single-sampler call sites).
-        let provider: TokenProvider
-        if sampler === codexTokenSampler {
-            provider = .codex
-        } else {
-            provider = .claude
-        }
-        state.update(provider: provider, with: events)
-        statusItemController?.setNeedsTitleUpdate()
-    }
-
     func reevaluateSamplers() {
         let isPopoverOpen = state.isPopoverOpen
         let bgInterval = TimeInterval(state.metrics.display.updateRate)
@@ -329,8 +305,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             temperatureSampler.start(interval: temperaturePopoverInterval, tolerance: 0)
             diskSampler.start(interval: 1.0, tolerance: 0)
             gpuSampler.start(interval: 1.0, tolerance: 0)
-            tokenSampler.start(interval: 1.0, tolerance: 0)
-            codexTokenSampler.start(interval: 1.0, tolerance: 0)
 
             // Battery keeps its event-driven + 30s safety poll cadence even with the popover
             // open (OPT-05): plug/unplug and charge ticks arrive as IOPS events in real time,
@@ -382,16 +356,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
                 gpuSampler.start(interval: bgInterval, tolerance: bgTolerance)
             } else {
                 gpuSampler.stop()
-            }
-
-            if state.metrics.visibility.showTokens {
-                let tokenBgInterval = bgInterval * 5.0
-                let tokenTolerance = tokenBgInterval * 0.25
-                tokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
-                codexTokenSampler.start(interval: tokenBgInterval, tolerance: tokenTolerance)
-            } else {
-                tokenSampler.stop()
-                codexTokenSampler.stop()
             }
 
             if state.metrics.visibility.showBattery && batteryIsPresent {

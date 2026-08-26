@@ -65,27 +65,6 @@ final class MetricDisplaySettingsTests: XCTestCase {
         XCTAssertEqual(settings.diskMenuBarMetric, .combined)
     }
 
-    // MARK: - Token budgets (Phase 3, ADR-008)
-
-    func testFreshDefaultsLoadBothBudgetsAsZero() {
-        let settings = MetricDisplaySettings.load(from: userDefaults)
-
-        XCTAssertEqual(settings.tokenSessionBudget, 0)
-        XCTAssertEqual(settings.tokenWeeklyBudget, 0)
-    }
-
-    func testBudgetsRoundTripThroughUserDefaults() {
-        var settings = MetricDisplaySettings()
-        settings.tokenSessionBudget = 2_000_000
-        settings.tokenWeeklyBudget = 10_000_000
-
-        settings.save(to: userDefaults)
-        let reloaded = MetricDisplaySettings.load(from: userDefaults)
-
-        XCTAssertEqual(reloaded.tokenSessionBudget, 2_000_000)
-        XCTAssertEqual(reloaded.tokenWeeklyBudget, 10_000_000)
-    }
-    
     func testUpdateRateRoundTripThroughUserDefaults() {
         var settings = MetricDisplaySettings()
         settings.updateRate = 3
@@ -104,16 +83,6 @@ final class MetricDisplaySettingsTests: XCTestCase {
         userDefaults.set(0, forKey: "MetricDisplaySettings.updateRate")
         let reloadedZero = MetricDisplaySettings.load(from: userDefaults)
         XCTAssertEqual(reloadedZero.updateRate, 1)
-    }
-
-    func testNegativeOrNonNumericStoredBudgetLoadsAsZero() {
-        userDefaults.set(-5, forKey: "MetricDisplaySettings.tokenSessionBudget")
-        userDefaults.set("not-a-number", forKey: "MetricDisplaySettings.tokenWeeklyBudget")
-
-        let settings = MetricDisplaySettings.load(from: userDefaults)
-
-        XCTAssertEqual(settings.tokenSessionBudget, 0)
-        XCTAssertEqual(settings.tokenWeeklyBudget, 0)
     }
 
     // MARK: - usedTotal one-time migration (ADR-002)
@@ -157,18 +126,4 @@ final class MetricDisplaySettingsTests: XCTestCase {
         XCTAssertTrue(userDefaults.bool(forKey: migrationKey))
     }
 
-    func testSavingBudgetsLeavesOtherDisplaySettingsUntouched() {
-        var settings = MetricDisplaySettings.load(from: userDefaults)
-        settings.tokenProvider = .codex
-        settings.save(to: userDefaults)
-
-        var withBudgets = MetricDisplaySettings.load(from: userDefaults)
-        withBudgets.tokenSessionBudget = 1_500_000
-        withBudgets.save(to: userDefaults)
-
-        let reloaded = MetricDisplaySettings.load(from: userDefaults)
-        XCTAssertEqual(reloaded.tokenProvider, .codex)   // unrelated key intact
-        XCTAssertEqual(reloaded.tokenSessionBudget, 1_500_000)
-        XCTAssertEqual(reloaded.tokenWeeklyBudget, 0)
-    }
 }

@@ -73,18 +73,6 @@ final class SystemMetricsModelTests: XCTestCase {
         XCTAssertEqual(model.updateRate, 1)
     }
 
-    func testReplaceDisplayPersistsAndRepublishes() {
-        let defaults = makeDefaults()
-        let model = makeModel(userDefaults: defaults)
-        var newDisplay = model.display
-        newDisplay.tokenScope = .session
-
-        model.replaceDisplay(newDisplay)
-
-        XCTAssertEqual(model.display.tokenScope, .session)
-        XCTAssertEqual(MetricDisplaySettings.resolved(from: defaults).tokenScope, .session)
-    }
-
     func testRefreshBatteryReadingPublishesLatestSample() {
         let sample = BatterySample(
             chargePercent: 80,

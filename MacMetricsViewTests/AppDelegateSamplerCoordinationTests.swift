@@ -15,7 +15,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showNetwork")
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showTemperature")
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showDisk")
-        UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showTokens")
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showBattery")
         
         appDelegate = AppDelegate()
@@ -32,7 +31,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showNetwork")
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showTemperature")
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showDisk")
-        UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showTokens")
         UserDefaults.standard.removeObject(forKey: "MetricVisibilitySettings.showBattery")
         super.tearDown()
     }
@@ -46,7 +44,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         // Open popover runs at an exact 1s cadence: tolerance must be 0.
         XCTAssertEqual(appDelegate.cpuSampler.tolerance, 0)
         XCTAssertEqual(appDelegate.diskSampler.tolerance, 0)
-        XCTAssertEqual(appDelegate.tokenSampler.tolerance, 0)
 
         XCTAssertTrue(appDelegate.ramSampler.isRunning)
         XCTAssertEqual(appDelegate.ramSampler.interval, 1.0)
@@ -62,12 +59,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertTrue(appDelegate.diskSampler.isRunning)
         XCTAssertEqual(appDelegate.diskSampler.interval, 1.0)
         
-        XCTAssertTrue(appDelegate.tokenSampler.isRunning)
-        XCTAssertEqual(appDelegate.tokenSampler.interval, 1.0)
-        
-        XCTAssertTrue(appDelegate.codexTokenSampler.isRunning)
-        XCTAssertEqual(appDelegate.codexTokenSampler.interval, 1.0)
-
         // Battery keeps its event-driven + 30s safety poll cadence even with the popover
         // open (OPT-05), rather than following the 1s popover cadence of the other samplers.
         if BatterySampler.batteryIsPresent() {
@@ -88,7 +79,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         appDelegate.state.metrics.setNetworkVisible(true)
         appDelegate.state.metrics.setTemperatureVisible(false)
         appDelegate.state.metrics.setDiskVisible(true)
-        appDelegate.state.metrics.setTokenVisible(false)
         appDelegate.state.metrics.setBatteryVisible(false)
         
         // Close popover
@@ -110,8 +100,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         // Hidden metrics: stopped
         XCTAssertFalse(appDelegate.ramSampler.isRunning)
         XCTAssertFalse(appDelegate.temperatureSampler.isRunning)
-        XCTAssertFalse(appDelegate.tokenSampler.isRunning)
-        XCTAssertFalse(appDelegate.codexTokenSampler.isRunning)
         XCTAssertFalse(appDelegate.batterySampler.isRunning)
     }
     
@@ -130,19 +118,6 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         appDelegate.state.metrics.setCPUVisible(false)
         XCTAssertFalse(appDelegate.cpuSampler.isRunning)
 
-        // Start showing Tokens (which run at 5 * background rate in background)
-        appDelegate.state.metrics.setTokenVisible(true)
-        XCTAssertTrue(appDelegate.tokenSampler.isRunning)
-        XCTAssertEqual(appDelegate.tokenSampler.interval, 10.0)
-        // Token interval is 10s -> 25% tolerance = 2.5.
-        XCTAssertEqual(appDelegate.tokenSampler.tolerance, 2.5)
-        XCTAssertTrue(appDelegate.codexTokenSampler.isRunning)
-        XCTAssertEqual(appDelegate.codexTokenSampler.interval, 10.0)
-
-        // Hide Tokens
-        appDelegate.state.metrics.setTokenVisible(false)
-        XCTAssertFalse(appDelegate.tokenSampler.isRunning)
-        XCTAssertFalse(appDelegate.codexTokenSampler.isRunning)
     }
 
     func testChangingUpdateRateWhileClosedReschedulesActiveSamplers() {

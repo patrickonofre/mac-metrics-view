@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Settings tab body: everything the user *sets* — per-metric menu-bar visibility,
-/// identifier style, RAM/Disk metric variants, token-source configuration, and
+/// identifier style, RAM/Disk metric variants, and
 /// launch-at-login. Controls are relocated verbatim from `PopoverView.swift`
 /// (task_05); no cleaning/update actions live here (those are in `ActionsTab`).
 struct SettingsTab: View {
@@ -58,10 +58,6 @@ struct SettingsTab: View {
 
             Divider()
 
-            TokenControls(state: state, metrics: metrics)
-
-            Divider()
-
             AmbientThemeControls(state: state)
 
             Divider()
@@ -69,138 +65,6 @@ struct SettingsTab: View {
             LaunchAtLoginControl(settings: launchAtLoginSettings)
         }
         .font(.caption)
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-// MARK: - Token configuration controls
-
-/// Token meter configuration: menu-bar visibility toggle, scope picker, window
-/// picker, and the Reset button. All controls bind to `CPUState` setters.
-/// Relocated from `PopoverView.swift` (task_05).
-struct TokenControls: View {
-    @ObservedObject var state: CPUState
-    /// Only for the menu-bar visibility toggle below, which lives in `metrics` (task-005).
-    @ObservedObject var metrics: SystemMetricsModel
-
-    @State private var showHelp = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            HStack(spacing: 6) {
-                HStack(spacing: 3) {
-                    Text(Strings.tokens())
-                        .lineLimit(1)
-                        .foregroundStyle(.primary)
-                    Button {
-                        showHelp.toggle()
-                    } label: {
-                        Image(systemName: showHelp ? "info.circle.fill" : "info.circle")
-                            .foregroundStyle(showHelp ? Color.accentColor : .secondary)
-                            .imageScale(.small)
-                    }
-                    .buttonStyle(.plain)
-                    .help(Strings.tokenSourceHelpTitle())
-                }
-                .frame(width: 88, alignment: .leading)
-
-                Toggle(Strings.tokens(), isOn: Binding(
-                    get: { metrics.visibility.showTokens },
-                    set: { metrics.setTokenVisible($0) }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-
-                if let models = state.token.activeModels {
-                    Text(models)
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .accessibilityLabel("\(Strings.tokens()), \(models)")
-                }
-
-                Spacer(minLength: 0)
-            }
-
-            if showHelp {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(Strings.tokenSourceHelpTitle())
-                        .font(.caption.weight(.semibold))
-                        .foregroundStyle(.primary)
-                    Text(Strings.tokenSourceHelp())
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(nsColor: .controlBackgroundColor))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.08))
-                )
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-
-            picker(
-                label: Strings.tokenProviderLabel(),
-                selection: Binding(get: { state.tokenProvider }, set: { state.setTokenProvider($0) })
-            ) {
-                Text(Strings.tokenProviderClaude()).tag(TokenProviderSelection.claude)
-                Text(Strings.tokenProviderCodex()).tag(TokenProviderSelection.codex)
-                Text(Strings.tokenProviderCombined()).tag(TokenProviderSelection.combined)
-            }
-
-            picker(
-                label: Strings.tokenScopeLabel(),
-                selection: Binding(get: { state.tokenScope }, set: { state.setTokenScope($0) })
-            ) {
-                Text(Strings.tokenScopeGlobal()).tag(TokenScope.global)
-                Text(Strings.tokenScopeProject()).tag(TokenScope.project)
-                Text(Strings.tokenScopeSession()).tag(TokenScope.session)
-            }
-
-            picker(
-                label: Strings.tokenWindowLabel(),
-                selection: Binding(get: { state.tokenMenuBarWindow }, set: { state.setTokenMenuBarWindow($0) })
-            ) {
-                Text(Strings.tokenWindowToday()).tag(TokenWindow.today)
-                Text(Strings.tokenWindowLastHour()).tag(TokenWindow.lastHour)
-                Text(Strings.tokenWindowLast24h()).tag(TokenWindow.last24h)
-                Text(Strings.tokenWindowSinceReset()).tag(TokenWindow.sinceReset)
-            }
-
-            Button(Strings.tokenReset()) {
-                state.resetTokenCounter()
-            }
-            .buttonStyle(.borderless)
-            .foregroundStyle(Color.accentColor)
-        }
-        .font(.caption)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(.easeInOut(duration: 0.18), value: showHelp)
-    }
-
-    private func picker<Value: Hashable, Content: View>(
-        label: String,
-        selection: Binding<Value>,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .lineLimit(1)
-                .foregroundStyle(.primary)
-                .frame(width: 88, alignment: .leading)
-
-            Picker(label, selection: selection, content: content)
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(width: 150, alignment: .leading)
-        }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

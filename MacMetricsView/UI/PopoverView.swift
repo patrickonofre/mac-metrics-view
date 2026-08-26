@@ -33,7 +33,7 @@ struct PopoverView: View {
         guard let raw = ProcessInfo.processInfo.environment["MMV_CAPTURE_CARD"] else { return [] }
         let map: [String: MetricCardKind] = [
             "cpu": .cpu, "gpu": .gpu, "ram": .ram, "network": .network,
-            "temperature": .temperature, "disk": .disk, "battery": .battery, "tokens": .tokens,
+            "temperature": .temperature, "disk": .disk, "battery": .battery,
         ]
         return Set(raw.split(separator: ",").compactMap { map[$0.trimmingCharacters(in: .whitespaces)] })
     }
@@ -101,16 +101,12 @@ struct PopoverView: View {
             .frame(width: popoverWidth, alignment: .topLeading)
             .onAppear {
                 state.refreshAccessibilityAuthorization()
-                // Time-derived token figures (burn rate, rolling windows) refresh on a
-                // ~30s timer only while the popover is open (ADR-005).
-                state.beginTokenAutoRefresh()
                 state.metrics.beginProcessSampling()
             }
             .onDisappear {
                 // If the popover is dismissed mid-recovery, stop the probe poll loop.
                 // No-op unless we were awaiting a grant.
                 lock.recovery.cancelRecovery()
-                state.endTokenAutoRefresh()
                 state.metrics.endProcessSampling()
             }
         } else {
@@ -153,7 +149,7 @@ struct PopoverView: View {
     private var tabBody: some View {
         switch selectedTab {
         case .metrics:
-            MetricsTab(metrics: state.metrics, token: state.token, expandedCards: $expandedCards)
+            MetricsTab(metrics: state.metrics, expandedCards: $expandedCards)
         case .settings:
             SettingsTab(state: state, metrics: state.metrics, launchAtLoginSettings: launchAtLoginSettings)
         case .actions:
