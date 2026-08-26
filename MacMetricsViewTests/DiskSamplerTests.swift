@@ -45,6 +45,23 @@ final class DiskSamplerTests: XCTestCase {
         }
     }
 
+    private final class DeferredExecutor: SamplingExecutor {
+        private(set) var queuedReadCount = 0
+        private var queuedDeliveries: [() -> Void] = []
+
+        func run<T>(_ read: @escaping () -> T, deliver: @escaping @MainActor (T) -> Void) {
+            queuedReadCount += 1
+            queuedDeliveries.append {
+                let value = read()
+                MainActor.assumeIsolated { deliver(value) }
+            }
+        }
+
+        func completeNext() {
+            queuedDeliveries.removeFirst()()
+        }
+    }
+
     private func makeSampler(
         reader: DiskReading,
         scheduler: FakeScheduler
@@ -151,5 +168,48 @@ final class DiskSamplerTests: XCTestCase {
         sampler.start(interval: 3)
         XCTAssertEqual(scheduler.scheduleCount, 1)
         XCTAssertEqual(scheduler.cancelCount, 0)
+    }
+
+    func testBlockedDiskReadsKeepOnlyOnePendingRefresh() {
+        let reader = ScriptedDiskReader(snapshots: [
+            DiskCounterSnapshot(timestamp: Date(timeIntervalSince1970: 0), bytesRead: 1_000, bytesWritten: 2_000),
+            DiskCounterSnapshot(timestamp: Date(timeIntervalSince1970: 1), bytesRead: 2_024, bytesWritten: 2_256)
+        ])
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = DiskSampler(reader: reader, interval: 1, pollScheduler: scheduler, executor: executor)
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        scheduler.fire()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+
+        executor.completeNext()
+        XCTAssertEqual(executor.queuedReadCount, 2)
+
+        executor.completeNext()
+        XCTAssertEqual(delegate.samples.count, 1)
+    }
+
+    func testStopDropsInFlightDiskBaselineAndPendingRefresh() {
+        let reader = ScriptedDiskReader(snapshots: [
+            DiskCounterSnapshot(timestamp: Date(timeIntervalSince1970: 0), bytesRead: 1_000, bytesWritten: 2_000)
+        ])
+        let scheduler = FakeScheduler()
+        let executor = DeferredExecutor()
+        let delegate = SpyDelegate()
+        let sampler = DiskSampler(reader: reader, interval: 1, pollScheduler: scheduler, executor: executor)
+        sampler.delegate = delegate
+
+        sampler.start()
+        scheduler.fire()
+        sampler.stop()
+        executor.completeNext()
+
+        XCTAssertEqual(executor.queuedReadCount, 1)
+        XCTAssertTrue(delegate.samples.isEmpty)
     }
 }

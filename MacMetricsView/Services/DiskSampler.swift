@@ -40,6 +40,7 @@ final class DiskSampler {
     /// sampler. The reader's cached `io_service_t` is touched only on the executor's serial
     /// queue. Tests inject `InlineSamplingExecutor` to stay synchronous.
     private let executor: SamplingExecutor
+    private let workGate = CoalescingSamplingGate()
     private var previousSnapshot: DiskCounterSnapshot?
     private(set) var isRunning = false
 
@@ -62,9 +63,20 @@ final class DiskSampler {
         isRunning = true
         // Baseline read off-main; snapshot stored on the main actor (OPT-03). The `== nil`
         // guard keeps a tick that raced ahead of the baseline from being clobbered.
-        executor.run({ [reader] in reader.readSnapshot() }) { [weak self] snapshot in
-            guard let self, self.isRunning, self.previousSnapshot == nil else { return }
-            self.previousSnapshot = snapshot
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
+                return
+            }
+            self.executor.run({ [reader] in reader.readSnapshot() }) { [weak self] snapshot in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, self.previousSnapshot == nil else { return }
+                self.previousSnapshot = snapshot
+            }
         }
         pollScheduler.schedule(interval: interval, tolerance: tolerance) { [weak self] in
             self?.collect()
@@ -88,6 +100,7 @@ final class DiskSampler {
 
     func stop() {
         pollScheduler.cancel()
+        workGate.cancel()
         previousSnapshot = nil
         isRunning = false
     }
@@ -95,17 +108,28 @@ final class DiskSampler {
     private func collect() {
         // Read off-main; compute the delta and advance `previousSnapshot` on the main actor
         // (OPT-03). Re-check `isRunning` so a stop() between read and delivery cannot publish.
-        executor.run({ [reader] in reader.readSnapshot() }) { [weak self] current in
-            guard let self, self.isRunning, let current else { return }
-            defer { self.previousSnapshot = current }
-
-            guard let previous = self.previousSnapshot,
-                  let sample = DiskSampleCalculator.sample(previous: previous, current: current)
-            else {
+        workGate.request { [weak self] finish in
+            guard let self else {
+                finish()
                 return
             }
+            self.executor.run({ [reader] in reader.readSnapshot() }) { [weak self] current in
+                guard let self else {
+                    finish()
+                    return
+                }
+                defer { finish() }
+                guard self.isRunning, let current else { return }
+                defer { self.previousSnapshot = current }
 
-            self.delegate?.diskSampler(self, didProduce: sample)
+                guard let previous = self.previousSnapshot,
+                      let sample = DiskSampleCalculator.sample(previous: previous, current: current)
+                else {
+                    return
+                }
+
+                self.delegate?.diskSampler(self, didProduce: sample)
+            }
         }
     }
 }
