@@ -42,6 +42,49 @@ enum MainRunLoopTimer {
     }
 }
 
+/// Bounds asynchronous sampling work for one reader. While a read is in flight, repeated
+/// ticks collapse into one follow-up read. `cancel()` invalidates the in-flight completion so
+/// a stopped sampler cannot restart itself after a late delivery.
+@MainActor
+final class CoalescingSamplingGate {
+    private var isReadInFlight = false
+    private var hasPendingRefresh = false
+    private var generation = 0
+
+    func request(_ work: @escaping (@escaping @MainActor () -> Void) -> Void) {
+        guard !isReadInFlight else {
+            hasPendingRefresh = true
+            return
+        }
+        start(work)
+    }
+
+    func cancel() {
+        generation &+= 1
+        isReadInFlight = false
+        hasPendingRefresh = false
+    }
+
+    private func start(_ work: @escaping (@escaping @MainActor () -> Void) -> Void) {
+        isReadInFlight = true
+        let activeGeneration = generation
+        work { [weak self] in
+            self?.complete(generation: activeGeneration, work: work)
+        }
+    }
+
+    private func complete(
+        generation: Int,
+        work: @escaping (@escaping @MainActor () -> Void) -> Void
+    ) {
+        guard generation == self.generation, isReadInFlight else { return }
+        isReadInFlight = false
+        guard hasPendingRefresh else { return }
+        hasPendingRefresh = false
+        start(work)
+    }
+}
+
 /// Runs a sampler's blocking read off the main thread, then delivers the result back on the
 /// main actor (PERF-01). Lets the I/O-bound readers (token logs, SMC temperature, process
 /// enumeration) leave the main run loop without changing the `@MainActor` delegate contract.

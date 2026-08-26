@@ -4,6 +4,21 @@ import XCTest
 @MainActor
 final class MainRunLoopTimerTests: XCTestCase {
 
+    @MainActor
+    private final class ControlledWork {
+        private(set) var startCount = 0
+        private var completions: [@MainActor () -> Void] = []
+
+        func start(_ completion: @escaping @MainActor () -> Void) {
+            startCount += 1
+            completions.append(completion)
+        }
+
+        func completeNext() {
+            completions.removeFirst()()
+        }
+    }
+
     // MARK: - nextFireDate alignment (pure, no run loop)
 
     func testNextFireDateSnapsToNextIntervalMultiple() {
@@ -87,5 +102,36 @@ final class MainRunLoopTimerTests: XCTestCase {
         }
         defer { timer.invalidate() }
         wait(for: [expectation], timeout: 2.0)
+    }
+
+    func testCoalescingGateKeepsOnePendingRefresh() {
+        let gate = CoalescingSamplingGate()
+        let work = ControlledWork()
+
+        gate.request(work.start)
+        gate.request(work.start)
+        gate.request(work.start)
+
+        XCTAssertEqual(work.startCount, 1)
+
+        work.completeNext()
+
+        XCTAssertEqual(work.startCount, 2)
+
+        work.completeNext()
+
+        XCTAssertEqual(work.startCount, 2)
+    }
+
+    func testCoalescingGateCancelDropsPendingRefresh() {
+        let gate = CoalescingSamplingGate()
+        let work = ControlledWork()
+
+        gate.request(work.start)
+        gate.request(work.start)
+        gate.cancel()
+        work.completeNext()
+
+        XCTAssertEqual(work.startCount, 1)
     }
 }
