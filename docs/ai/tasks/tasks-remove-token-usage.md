@@ -52,7 +52,7 @@ Design: ../specs/design-remove-token-usage.md
 
 ### T3: Remove Xcode token references
 
-**Status**: pending
+**Status**: completed
 
 **What**: Remove deleted token file references and source build entries from the Xcode project.
 **Where**: `MacMetricsView.xcodeproj/project.pbxproj`.
@@ -62,6 +62,8 @@ Design: ../specs/design-remove-token-usage.md
 **Tests**: Xcode build.
 **Gate**: Build.
 **Commit**: `build(tokens): remove xcode source entries`
+
+**Evidence**: `rg -n 'Token|Claude|Codex|ActiveFile' MacMetricsView.xcodeproj/project.pbxproj` returned no matches; the Debug Xcode build succeeded on 2026-08-26.
 
 ### T4: Update current product documentation
 

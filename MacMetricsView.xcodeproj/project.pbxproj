@@ -109,7 +109,6 @@
 		1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E01 /* AccessibilityProbe.swift */; };
 		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
 		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
-		B101B101B101B101B101B101 /* TokenUsageModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A101A101A101A101A101A101 /* TokenUsageModel.swift */; };
 		B102B102B102B102B102B102 /* AmbientThemeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A102A102A102A102A102A102 /* AmbientThemeModel.swift */; };
 		B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A103A103A103A103A103A103 /* CleaningLockModel.swift */; };
 		B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */; };
@@ -118,25 +117,6 @@
 		B107B107B107B107B107B107 /* SleepAssertionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A107A107A107A107A107A107 /* SleepAssertionService.swift */; };
 		1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */; };
 		1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E05 /* UpdateBannerPresentation.swift */; };
-		1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F01 /* TokenUsageEvent.swift */; };
-		1000000000000000000000FB02 /* TokenAggregate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F02 /* TokenAggregate.swift */; };
-		1000000000000000000000FB03 /* TokenScope.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F03 /* TokenScope.swift */; };
-		1000000000000000000000FB04 /* TokenWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F04 /* TokenWindow.swift */; };
-		1000000000000000000000FB05 /* TokenWindowStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F05 /* TokenWindowStats.swift */; };
-		1000000000000000000000FB06 /* TokenUsageStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F06 /* TokenUsageStore.swift */; };
-		1000000000000000000000FB07 /* TokenFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F07 /* TokenFormatter.swift */; };
-		1000000000000000000000FB08 /* TokenUsageReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F08 /* TokenUsageReading.swift */; };
-		1000000000000000000000FB09 /* TokenUsageSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F09 /* TokenUsageSampler.swift */; };
-		1000000000000000000000FB0A /* ClaudeCodeLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0A /* ClaudeCodeLogReader.swift */; };
-		1000000000000000000000FB0B /* TokenProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0B /* TokenProvider.swift */; };
-		1000000000000000000000FB0C /* CodexLogReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0C /* CodexLogReader.swift */; };
-		1000000000000000000000FB0D /* ActiveFileSet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0D /* ActiveFileSet.swift */; };
-		1000000000000000000000FB0E /* TokenPricing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0E /* TokenPricing.swift */; };
-		1000000000000000000000FB0F /* TokenCostCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F0F /* TokenCostCalculator.swift */; };
-		1000000000000000000000FB10 /* TokenBurnRate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F10 /* TokenBurnRate.swift */; };
-		1000000000000000000000FB11 /* TokenDailyLedger.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F11 /* TokenDailyLedger.swift */; };
-		1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F12 /* TokenRateLimitWindow.swift */; };
-		1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */; };
 		1000000000000000000000FC05 /* BatterySample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC01 /* BatterySample.swift */; };
 		1000000000000000000000FC06 /* BatteryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC02 /* BatteryFormatter.swift */; };
 		1000000000000000000000FC07 /* BatterySampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000FC03 /* BatterySampler.swift */; };
@@ -261,7 +241,6 @@
 		1000000000000000000000E01 /* AccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityProbe.swift; sourceTree = "<group>"; };
 		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
 		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
-		A101A101A101A101A101A101 /* TokenUsageModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/TokenUsageModel.swift; sourceTree = "<group>"; };
 		A102A102A102A102A102A102 /* AmbientThemeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AmbientThemeModel.swift; sourceTree = "<group>"; };
 		A103A103A103A103A103A103 /* CleaningLockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/CleaningLockModel.swift; sourceTree = "<group>"; };
 		A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AccessibilityRecoveryModel.swift; sourceTree = "<group>"; };
@@ -270,25 +249,6 @@
 		A107A107A107A107A107A107 /* SleepAssertionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/SleepAssertionService.swift; sourceTree = "<group>"; };
 		1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/CleaningRecoveryPresentation.swift; sourceTree = "<group>"; };
 		1000000000000000000000E05 /* UpdateBannerPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UI/UpdateBannerPresentation.swift; sourceTree = "<group>"; };
-		1000000000000000000000F01 /* TokenUsageEvent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageEvent.swift; sourceTree = "<group>"; };
-		1000000000000000000000F02 /* TokenAggregate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenAggregate.swift; sourceTree = "<group>"; };
-		1000000000000000000000F03 /* TokenScope.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenScope.swift; sourceTree = "<group>"; };
-		1000000000000000000000F04 /* TokenWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindow.swift; sourceTree = "<group>"; };
-		1000000000000000000000F05 /* TokenWindowStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenWindowStats.swift; sourceTree = "<group>"; };
-		1000000000000000000000F06 /* TokenUsageStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenUsageStore.swift; sourceTree = "<group>"; };
-		1000000000000000000000F07 /* TokenFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenFormatter.swift; sourceTree = "<group>"; };
-		1000000000000000000000F08 /* TokenUsageReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageReading.swift; sourceTree = "<group>"; };
-		1000000000000000000000F09 /* TokenUsageSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenUsageSampler.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0A /* ClaudeCodeLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeCodeLogReader.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0B /* TokenProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenProvider.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0C /* CodexLogReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/CodexLogReader.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0D /* ActiveFileSet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ActiveFileSet.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0E /* TokenPricing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenPricing.swift; sourceTree = "<group>"; };
-		1000000000000000000000F0F /* TokenCostCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenCostCalculator.swift; sourceTree = "<group>"; };
-		1000000000000000000000F10 /* TokenBurnRate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/TokenBurnRate.swift; sourceTree = "<group>"; };
-		1000000000000000000000F11 /* TokenDailyLedger.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenDailyLedger.swift; sourceTree = "<group>"; };
-		1000000000000000000000F12 /* TokenRateLimitWindow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/TokenRateLimitWindow.swift; sourceTree = "<group>"; };
-		1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/ClaudeHistoryBackfill.swift; sourceTree = "<group>"; };
 		1000000000000000000000FC01 /* BatterySample.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/BatterySample.swift; sourceTree = "<group>"; };
 		1000000000000000000000FC02 /* BatteryFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatteryFormatter.swift; sourceTree = "<group>"; };
 		1000000000000000000000FC03 /* BatterySampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/BatterySampler.swift; sourceTree = "<group>"; };
@@ -498,7 +458,6 @@
 				1000000000000000000000E01 /* AccessibilityProbe.swift */,
 				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
 				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
-				A101A101A101A101A101A101 /* TokenUsageModel.swift */,
 				A102A102A102A102A102A102 /* AmbientThemeModel.swift */,
 				A103A103A103A103A103A103 /* CleaningLockModel.swift */,
 				A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */,
@@ -514,25 +473,6 @@
 				D1DC00000000000000000106 /* IOPSPowerSourceMonitor.swift */,
 				1000000000000000000000E04 /* CleaningRecoveryPresentation.swift */,
 				1000000000000000000000E05 /* UpdateBannerPresentation.swift */,
-				1000000000000000000000F01 /* TokenUsageEvent.swift */,
-				1000000000000000000000F02 /* TokenAggregate.swift */,
-				1000000000000000000000F03 /* TokenScope.swift */,
-				1000000000000000000000F04 /* TokenWindow.swift */,
-				1000000000000000000000F05 /* TokenWindowStats.swift */,
-				1000000000000000000000F06 /* TokenUsageStore.swift */,
-				1000000000000000000000F07 /* TokenFormatter.swift */,
-				1000000000000000000000F08 /* TokenUsageReading.swift */,
-				1000000000000000000000F09 /* TokenUsageSampler.swift */,
-				1000000000000000000000F0A /* ClaudeCodeLogReader.swift */,
-				1000000000000000000000F0B /* TokenProvider.swift */,
-				1000000000000000000000F0C /* CodexLogReader.swift */,
-				1000000000000000000000F0D /* ActiveFileSet.swift */,
-				1000000000000000000000F0E /* TokenPricing.swift */,
-				1000000000000000000000F0F /* TokenCostCalculator.swift */,
-				1000000000000000000000F10 /* TokenBurnRate.swift */,
-				1000000000000000000000F11 /* TokenDailyLedger.swift */,
-				1000000000000000000000F12 /* TokenRateLimitWindow.swift */,
-				1000000000000000000000F13 /* ClaudeHistoryBackfill.swift */,
 				1000000000000000000000A1F0 /* SeverityPalette.swift */,
 				1000000000000000000000A101 /* PopoverTabPresentation.swift */,
 				1000000000000000000000A102 /* MetricCard.swift */,
@@ -797,7 +737,6 @@
 				1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */,
 				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
 				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
-				B101B101B101B101B101B101 /* TokenUsageModel.swift in Sources */,
 				B102B102B102B102B102B102 /* AmbientThemeModel.swift in Sources */,
 				B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */,
 				B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */,
@@ -813,25 +752,6 @@
 				D1DC00000000000000000206 /* IOPSPowerSourceMonitor.swift in Sources */,
 				1000000000000000000000EB04 /* CleaningRecoveryPresentation.swift in Sources */,
 				1000000000000000000000EB05 /* UpdateBannerPresentation.swift in Sources */,
-				1000000000000000000000FB01 /* TokenUsageEvent.swift in Sources */,
-				1000000000000000000000FB02 /* TokenAggregate.swift in Sources */,
-				1000000000000000000000FB03 /* TokenScope.swift in Sources */,
-				1000000000000000000000FB04 /* TokenWindow.swift in Sources */,
-				1000000000000000000000FB05 /* TokenWindowStats.swift in Sources */,
-				1000000000000000000000FB06 /* TokenUsageStore.swift in Sources */,
-				1000000000000000000000FB07 /* TokenFormatter.swift in Sources */,
-				1000000000000000000000FB08 /* TokenUsageReading.swift in Sources */,
-				1000000000000000000000FB09 /* TokenUsageSampler.swift in Sources */,
-				1000000000000000000000FB0A /* ClaudeCodeLogReader.swift in Sources */,
-				1000000000000000000000FB0B /* TokenProvider.swift in Sources */,
-				1000000000000000000000FB0C /* CodexLogReader.swift in Sources */,
-				1000000000000000000000FB0D /* ActiveFileSet.swift in Sources */,
-				1000000000000000000000FB0E /* TokenPricing.swift in Sources */,
-				1000000000000000000000FB0F /* TokenCostCalculator.swift in Sources */,
-				1000000000000000000000FB10 /* TokenBurnRate.swift in Sources */,
-				1000000000000000000000FB11 /* TokenDailyLedger.swift in Sources */,
-				1000000000000000000000FB12 /* TokenRateLimitWindow.swift in Sources */,
-				1000000000000000000000FB13 /* ClaudeHistoryBackfill.swift in Sources */,
 				1000000000000000000000A1F1 /* SeverityPalette.swift in Sources */,
 				1000000000000000000000A111 /* PopoverTabPresentation.swift in Sources */,
 				1000000000000000000000A112 /* MetricCard.swift in Sources */,
