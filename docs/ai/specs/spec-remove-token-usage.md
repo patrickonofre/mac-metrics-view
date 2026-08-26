@@ -93,8 +93,8 @@ AI token tracking duplicates source-tool controls and dilutes the app's focus on
 | TOKRM-04 | P1: Remove Token Collection | Implementation | Implemented (T2-T3) |
 | TOKRM-05 | P1: Remove Token Collection | Implementation | Implemented (T2) |
 | TOKRM-06 | P1: Remove Token Collection | Implementation | Implemented (T2) |
-| TOKRM-07 | P2: Focused Current Documentation | Implementation | Pending |
-| TOKRM-08 | P2: Focused Current Documentation | Implementation | Pending |
+| TOKRM-07 | P2: Focused Current Documentation | Implementation | Implemented (T4) |
+| TOKRM-08 | P2: Focused Current Documentation | Implementation | Implemented (T4) |
 
 **Coverage:** 8 total, 8 mapped to tasks, 0 unmapped.
 

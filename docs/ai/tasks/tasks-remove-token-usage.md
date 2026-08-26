@@ -67,7 +67,7 @@ Design: ../specs/design-remove-token-usage.md
 
 ### T4: Update current product documentation
 
-**Status**: pending
+**Status**: completed
 
 **What**: Remove current token/cost capability claims and supersede the dev/AI product-pillar decision with machine-resource focus. Preserve historical records.
 **Where**: current product documentation.
@@ -77,6 +77,8 @@ Design: ../specs/design-remove-token-usage.md
 **Tests**: Targeted text search.
 **Gate**: Full.
 **Commit**: `docs(tokens): remove current capability claims`
+
+**Evidence**: README already described only machine metrics. PRD and project context now describe system metrics and local utilities; TD-014 supersedes TD-012 without editing prior planning or validation records.
 
 ### T5: Validate removal
 
