@@ -10,7 +10,7 @@ struct ActionsTab: View {
     let dismissPopover: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             CleaningLockSection(
                 lock: lock,
                 onStart: {
@@ -48,7 +48,7 @@ struct KeepAwakeSection: View {
     }
 
     /// Lid-close sub-mode binding (feature `lid-close-keep-awake`). The switch shows
-    /// on only for `.active` — `.pendingApproval` reads as off plus the guidance card,
+    /// on only for `.active` — `.pendingApproval` reads as off plus guidance,
     /// so the toggle never claims the flag is set when it isn't (LIDC-05/08). Writes go
     /// through the model's serialized async transition queue; the switch snaps back on
     /// refusal/failure because it renders `lidClose`, not the user's tap.
@@ -85,7 +85,7 @@ struct KeepAwakeSection: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    // Indented nested control, mirroring the CleaningLockSection conditional-card idiom.
+    // Indented nested control, matching the conditional cleaning controls.
     private var lidCloseSubOption: some View {
         VStack(alignment: .leading, spacing: 4) {
             Toggle(isOn: lidCloseBinding) {
@@ -140,13 +140,14 @@ struct UpdatesControl: View {
     @ObservedObject var state: CPUState
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Button(Strings.autoUpdateCheck()) {
-                state.checkForUpdates()
-            }
-            .buttonStyle(.borderless)
-            .foregroundStyle(Color.accentColor)
+        Button {
+            state.checkForUpdates()
+        } label: {
+            Label(Strings.autoUpdateCheck(), systemImage: "arrow.triangle.2.circlepath")
         }
+        .buttonStyle(.borderless)
+        .foregroundStyle(Color.accentColor)
+        .controlSize(.small)
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -154,7 +155,7 @@ struct UpdatesControl: View {
 
 // MARK: - Cleaning lock section
 
-/// Relocated from `PopoverView.swift` (task_06). The card-state/guidance machine is
+/// Relocated from `PopoverView.swift` (task_06). The state/guidance machine is
 /// already factored through `CleaningRecoveryPresentation`, so no logic moves.
 struct CleaningLockSection: View {
     @ObservedObject var lock: CleaningLockModel
