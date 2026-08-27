@@ -39,17 +39,21 @@ final class PopoverTabPresentationTests: XCTestCase {
         }
     }
 
-    // MARK: - Card order
+    // MARK: - Metric order
 
-    func testCardOrder() {
+    func testMetricOrder() {
         XCTAssertEqual(
-            PopoverTabPresentation.cardOrder,
+            PopoverTabPresentation.metricOrder,
             [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery]
         )
     }
 
-    func testCardOrderHasNoDuplicates() {
-        XCTAssertEqual(Set(PopoverTabPresentation.cardOrder).count, PopoverTabPresentation.cardOrder.count)
+    func testMetricOrderHasNoDuplicates() {
+        XCTAssertEqual(Set(PopoverTabPresentation.metricOrder).count, PopoverTabPresentation.metricOrder.count)
+    }
+
+    func testLegacyCardOrderMatchesMetricOrderDuringGridMigration() {
+        XCTAssertEqual(PopoverTabPresentation.cardOrder, PopoverTabPresentation.metricOrder)
     }
 
     // MARK: - Expandability

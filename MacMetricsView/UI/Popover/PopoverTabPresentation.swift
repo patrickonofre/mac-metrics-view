@@ -8,8 +8,8 @@ enum PopoverTab: CaseIterable, Hashable {
     case actions
 }
 
-/// One metric rendered as a card in the Metrics grid. Order in the grid is supplied
-/// by `PopoverTabPresentation.cardOrder`; expandability by `isExpandable(_:)`.
+/// One metric rendered in the Metrics content list. Order is supplied by
+/// `PopoverTabPresentation.metricOrder`; expandability by `isExpandable(_:)`.
 enum MetricCardKind: Hashable {
     case cpu
     case gpu
@@ -49,9 +49,13 @@ enum PopoverTabPresentation {
         }
     }
 
-    /// Default top-to-bottom, left-to-right card order in the Metrics grid.
-    static let cardOrder: [MetricCardKind] =
+    /// Stable top-to-bottom order in the Metrics content list. This reflects the
+    /// product's information hierarchy, not a layout grid.
+    static let metricOrder: [MetricCardKind] =
         [.cpu, .gpu, .ram, .network, .temperature, .disk, .battery]
+
+    /// Compatibility alias while the view implementation moves away from the old grid.
+    static let cardOrder = metricOrder
 
     /// Cards that can expand to double width; all others are summary-only.
     static func isExpandable(_ kind: MetricCardKind) -> Bool {
