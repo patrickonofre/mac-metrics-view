@@ -28,36 +28,4 @@ final class MetricsTabLayoutTests: XCTestCase {
         XCTAssertEqual(result, [5, 6])
     }
 
-    // MARK: - MetricGridLayout.rows
-
-    func testRowsAllCollapsedPairsTwoPerRow() {
-        let rows = MetricGridLayout.rows(order: PopoverTabPresentation.cardOrder, expanded: [])
-        // 7 cards -> [cpu,gpu][ram,network][temperature,disk][battery]
-        XCTAssertEqual(rows, [
-            [.cpu, .gpu],
-            [.ram, .network],
-            [.temperature, .disk],
-            [.battery]
-        ])
-    }
-
-    func testExpandedCardTakesOwnFullWidthRow() {
-        let rows = MetricGridLayout.rows(order: PopoverTabPresentation.cardOrder, expanded: [.battery])
-        XCTAssertEqual(rows.last, [.battery])
-    }
-
-    func testExpandedCardFlushesPendingPartnerToSingleRow() {
-        // temperature is the pending partner of disk; expanding disk splits the pair.
-        let rows = MetricGridLayout.rows(order: PopoverTabPresentation.cardOrder, expanded: [.disk])
-        XCTAssertTrue(rows.contains([.temperature]))
-        XCTAssertTrue(rows.contains([.disk]))
-        XCTAssertFalse(rows.contains([.temperature, .disk]))
-    }
-
-    func testEveryCardAppearsExactlyOnce() {
-        let rows = MetricGridLayout.rows(order: PopoverTabPresentation.cardOrder, expanded: [.battery])
-        let flat = rows.flatMap { $0 }
-        XCTAssertEqual(Set(flat), Set(PopoverTabPresentation.cardOrder))
-        XCTAssertEqual(flat.count, PopoverTabPresentation.cardOrder.count)
-    }
 }

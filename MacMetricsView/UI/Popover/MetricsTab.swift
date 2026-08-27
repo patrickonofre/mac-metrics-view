@@ -15,51 +15,23 @@ enum MetricTrend {
     }
 }
 
-/// Pure row-packing for the two-column metric grid: an expanded card takes its own
-/// full-width row; summary cards pair two-per-row in `cardOrder`. Testable (ADR-004).
-enum MetricGridLayout {
-    static func rows(order: [MetricCardKind], expanded: Set<MetricCardKind>) -> [[MetricCardKind]] {
-        var rows: [[MetricCardKind]] = []
-        var pending: MetricCardKind?
-
-        for kind in order {
-            if expanded.contains(kind) {
-                if let p = pending { rows.append([p]); pending = nil }
-                rows.append([kind])
-            } else if let p = pending {
-                rows.append([p, kind]); pending = nil
-            } else {
-                pending = kind
-            }
-        }
-
-        if let p = pending { rows.append([p]) }
-        return rows
-    }
-}
-
-/// Metrics tab body: machine metric cards in a two-column `Grid`, ordered by
-/// `PopoverTabPresentation.cardOrder`. Expandable cards span both
-/// columns when their kind is in the bound `expandedCards` set (ADR-004); expansion
-/// state is ephemeral and owned by the shell (ADR-002). Read-only — no settings here.
+/// Metrics tab body: machine metrics in one progressive list, ordered by
+/// `PopoverTabPresentation.metricOrder`. Expansion state is ephemeral and owned by
+/// the shell. Read-only — no settings here.
 struct MetricsTab: View {
     /// This is the data the grid actually renders, so MetricsTab reads it at the point
     /// of use (task-005) — no `CPUState` reference needed here at all.
     @ObservedObject var metrics: SystemMetricsModel
     @Binding var expandedCards: Set<MetricCardKind>
 
-    private var layoutRows: [[MetricCardKind]] {
-        MetricGridLayout.rows(order: PopoverTabPresentation.cardOrder, expanded: expandedCards)
-    }
-
     var body: some View {
-        Grid(alignment: .topLeading, horizontalSpacing: 10, verticalSpacing: 10) {
-            ForEach(Array(layoutRows.enumerated()), id: \.offset) { _, row in
-                GridRow {
-                    ForEach(row, id: \.self) { kind in
-                        card(for: kind)
-                            .gridCellColumns(row.count == 1 && expandedCards.contains(kind) ? 2 : 1)
-                    }
+        VStack(spacing: 0) {
+            ForEach(Array(PopoverTabPresentation.metricOrder.enumerated()), id: \.offset) { index, kind in
+                card(for: kind)
+
+                if index < PopoverTabPresentation.metricOrder.count - 1 {
+                    Divider()
+                        .padding(.leading, 26)
                 }
             }
         }
