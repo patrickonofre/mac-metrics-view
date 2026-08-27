@@ -1,6 +1,6 @@
 # Specification: Remove Token Usage
 
-Status: ready
+Status: done
 Plan: ../plans/plan-remove-token-usage.md
 
 ## Problem Statement
@@ -9,10 +9,10 @@ AI token tracking duplicates source-tool controls and dilutes the app's focus on
 
 ## Goals
 
-- [ ] Remove all user-facing token usage and cost surfaces.
-- [ ] Remove all production token collection and processing code.
-- [ ] Keep machine-resource sampling, settings, and utilities working.
-- [ ] Keep prior token preferences inert without deleting user data.
+- [x] Remove all user-facing token usage and cost surfaces.
+- [x] Remove all production token collection and processing code.
+- [x] Keep machine-resource sampling, settings, and utilities working.
+- [x] Keep prior token preferences inert without deleting user data.
 
 ## Out of Scope
 
@@ -87,23 +87,23 @@ AI token tracking duplicates source-tool controls and dilutes the app's focus on
 
 | Requirement ID | Story | Phase | Status |
 | --- | --- | --- | --- |
-| TOKRM-01 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
-| TOKRM-02 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
-| TOKRM-03 | P1: Machine-Only Monitoring | Implementation | Implemented (T1) |
-| TOKRM-04 | P1: Remove Token Collection | Implementation | Implemented (T2-T3) |
-| TOKRM-05 | P1: Remove Token Collection | Implementation | Implemented (T2) |
-| TOKRM-06 | P1: Remove Token Collection | Implementation | Implemented (T2) |
-| TOKRM-07 | P2: Focused Current Documentation | Implementation | Implemented (T4) |
-| TOKRM-08 | P2: Focused Current Documentation | Implementation | Implemented (T4) |
+| TOKRM-01 | P1: Machine-Only Monitoring | Validation | Passed |
+| TOKRM-02 | P1: Machine-Only Monitoring | Validation | Passed |
+| TOKRM-03 | P1: Machine-Only Monitoring | Validation | Passed |
+| TOKRM-04 | P1: Remove Token Collection | Validation | Passed |
+| TOKRM-05 | P1: Remove Token Collection | Validation | Passed |
+| TOKRM-06 | P1: Remove Token Collection | Validation | Passed |
+| TOKRM-07 | P2: Focused Current Documentation | Validation | Passed |
+| TOKRM-08 | P2: Focused Current Documentation | Validation | Passed |
 
 **Coverage:** 8 total, 8 mapped to tasks, 0 unmapped.
 
 ## Success Criteria
 
-- [ ] `swift test` passes after token-only code and tests are removed.
-- [ ] Debug Xcode build passes after project-file cleanup.
-- [ ] Current UI and documentation expose no token capability.
-- [ ] Existing token keys are neither read nor removed by production code.
+- [x] `swift test` passes after token-only code and tests are removed.
+- [x] Debug Xcode build passes after project-file cleanup.
+- [x] Current UI and documentation expose no token capability.
+- [x] Existing token keys are neither read nor removed by production code.
 
 ## Handoff: Dev -> QA
 

@@ -1,6 +1,6 @@
 # Tasks: Remove Token Usage
 
-Status: in_progress
+Status: done
 Spec: ../specs/spec-remove-token-usage.md
 Design: ../specs/design-remove-token-usage.md
 
@@ -82,7 +82,7 @@ Design: ../specs/design-remove-token-usage.md
 
 ### T5: Validate removal
 
-**Status**: pending
+**Status**: completed
 
 **What**: Run full SwiftPM and Xcode gates, run source/document searches, launch the Debug app, and record independent verification.
 **Where**: `docs/ai/validation/validation-remove-token-usage.md`.
@@ -92,6 +92,8 @@ Design: ../specs/design-remove-token-usage.md
 **Tests**: Full suite, Xcode Debug build, app launch, independent verifier.
 **Gate**: Build.
 **Commit**: `docs(validation): record token removal evidence`
+
+**Evidence**: Fresh `swift test` passed 719 tests, Debug Xcode build succeeded, negative production/Xcode searches were clean, and the Debug app launch request completed. See `../validation/validation-remove-token-usage.md`.
 
 ## Execution Map
 
