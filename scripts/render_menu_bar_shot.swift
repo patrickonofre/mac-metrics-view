@@ -13,7 +13,7 @@ struct Segment { let symbol: String; let value: String }
 // all six metrics fit the 744px shot.
 let segments: [Segment] = [
     Segment(symbol: "cpu", value: "37%"),
-    Segment(symbol: "memorychip", value: "12.4 GB"),
+    Segment(symbol: "memorychip", value: "12.4/16 GB"),
     Segment(symbol: "network", value: "↓1.2M ↑84K"),
     Segment(symbol: "thermometer", value: "61°C"),
     Segment(symbol: "internaldrive", value: "↓4.2M ↑1.1M"),

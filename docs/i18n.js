@@ -14,15 +14,15 @@
       "nav.download": "Download",
       "nav.hub": "Todos os apps",
 
-      "hero.eyebrow": "Versão 2.7 para macOS",
+      "hero.eyebrow": "Versão 2.7.1 para macOS",
       "hero.title": "Seu Mac inteiro, na barra de menus.",
       "hero.lede": "CPU, GPU, memória, rede, temperatura, disco, bateria e tokens de IA — tudo num relance, sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 2.7",
+      "hero.cta": "Baixar 2.7.1",
       "hero.secondary": "Ver o que há de novo",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View na barra de menus do macOS mostrando CPU, RAM, rede, temperatura, disco e bateria",
 
-      "sticky.label": "Mac Metrics View 2.7",
+      "sticky.label": "Mac Metrics View 2.7.1",
       "sticky.cta": "Baixar",
 
       "metric.cpu": "uso e processos",
@@ -36,11 +36,11 @@
 
       "highlights.eyebrow": "Destaques da série 2",
       "highlights.title": "Cada versão, um salto.",
-      "highlights.lede": "GPU na barra, memória usado/total, popover em abas e tokens de IA — os destaques do caminho até a 2.7.",
+      "highlights.lede": "GPU na barra, RAM usado/total real, popover em abas e tokens de IA — os destaques do caminho até a 2.7.1.",
       "highlights.gpuTitle": "GPU na barra",
       "highlights.gpuBody": "Uso do processador gráfico em tempo real, lido direto do sistema — novidade da 2.4.",
       "highlights.usedtotalTitle": "Memória usado/total",
-      "highlights.usedtotalBody": "A barra mostra a memória usada sobre o total do seu Mac, colorida pela pressão — App Memory e Pressão continuam como opções.",
+      "highlights.usedtotalBody": "A barra mostra a RAM usada real sobre o total do seu Mac, sem alternar modos nem contar cache recuperável como uso.",
       "highlights.monoTitle": "Barra monocromática",
       "highlights.monoBody": "Valores no estilo nativo do macOS: a cor padrão do sistema, com vermelho reservado só para o estado crítico.",
       "highlights.popoverTitle": "Popover em abas",
@@ -103,9 +103,9 @@
       "privacy.li3": "Leitura 100% local — nada sai pela rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 2.7.",
+      "download.title": "Baixe a versão 2.7.1.",
       "download.body": "Para macOS 14 ou superior em Macs com Apple Silicon. Na primeira abertura o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, ele se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-2.7.0.zip",
+      "download.cta": "Baixar MacMetricsView-2.7.1.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · Apple Silicon · grátis e de código aberto",
 
       "firstrun.eyebrow": "Primeira abertura",
@@ -121,8 +121,10 @@
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
       "timeline.eyebrow": "Linha do tempo",
-      "timeline.title": "De 1.0 a 2.7.",
-      "timeline.lede": "O caminho até a versão 2.7, em resumo.",
+      "timeline.title": "De 1.0 a 2.7.1.",
+      "timeline.lede": "O caminho até a versão 2.7.1, em resumo.",
+      "timeline.v271Title": "2.7.1 — RAM usado real",
+      "timeline.v271Body": "A barra passa a mostrar apenas usado/total, com cálculo alinhado ao Monitor de Atividade e sem modos alternativos de visualização.",
       "timeline.v27Title": "2.7 — Acordado até de tampa fechada",
       "timeline.v27Body": "O “Manter acordado” ganhou modo de tampa fechada, estilo Amphetamine: um helper autorizado uma única vez mantém o Mac ativo sem monitor externo, com desligamento automático em bateria baixa e proteção contra travas órfãs.",
       "timeline.v26Title": "2.6 — Manter o Mac acordado",
@@ -154,7 +156,7 @@
       "timeline.v10Title": "1.0 — Primeira versão estável",
       "timeline.v10Body": "Modo limpeza, abrir ao iniciar e interface em PT/EN.",
 
-      "footer.tagline": "Versão 2.7 para macOS",
+      "footer.tagline": "Versão 2.7.1 para macOS",
       "footer.rights": "Código aberto · Licença MIT",
       "footer.github": "GitHub"
     },
@@ -166,15 +168,15 @@
       "nav.download": "Download",
       "nav.hub": "All apps",
 
-      "hero.eyebrow": "Version 2.7 for macOS",
+      "hero.eyebrow": "Version 2.7.1 for macOS",
       "hero.title": "Your whole Mac, in the menu bar.",
       "hero.lede": "CPU, GPU, memory, network, temperature, disk, battery, and AI tokens — all at a glance, without opening Activity Monitor.",
-      "hero.cta": "Download 2.7",
+      "hero.cta": "Download 2.7.1",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View in the macOS menu bar showing CPU, RAM, network, temperature, disk, and battery",
 
-      "sticky.label": "Mac Metrics View 2.7",
+      "sticky.label": "Mac Metrics View 2.7.1",
       "sticky.cta": "Download",
 
       "metric.cpu": "usage and processes",
@@ -188,11 +190,11 @@
 
       "highlights.eyebrow": "Series 2 highlights",
       "highlights.title": "Every release, a leap.",
-      "highlights.lede": "GPU in the bar, used/total memory, a tabbed popover, and AI tokens — the highlights on the road to 2.7.",
+      "highlights.lede": "GPU in the bar, real used/total RAM, a tabbed popover, and AI tokens — the highlights on the road to 2.7.1.",
       "highlights.gpuTitle": "GPU in the bar",
       "highlights.gpuBody": "Real-time graphics processor usage, read straight from the system — new in 2.4.",
       "highlights.usedtotalTitle": "Used/total memory",
-      "highlights.usedtotalBody": "The menu bar shows memory used over your Mac's total, tinted by pressure — App Memory and Pressure stay as options.",
+      "highlights.usedtotalBody": "The menu bar shows real RAM used over your Mac's total, with no mode switching and no reclaimable cache counted as usage.",
       "highlights.monoTitle": "Monochrome menu bar",
       "highlights.monoBody": "Native macOS values: the standard system color, with red reserved for the critical state only.",
       "highlights.popoverTitle": "Tabbed popover",
@@ -255,9 +257,9 @@
       "privacy.li3": "100% local reads — nothing leaves over the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 2.7.",
+      "download.title": "Download version 2.7.1.",
       "download.body": "For macOS 14 or later on Apple Silicon Macs. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-2.7.0.zip",
+      "download.cta": "Download MacMetricsView-2.7.1.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · Apple Silicon · free and open source",
 
       "firstrun.eyebrow": "First launch",
@@ -273,8 +275,10 @@
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
       "timeline.eyebrow": "Timeline",
-      "timeline.title": "From 1.0 to 2.7.",
-      "timeline.lede": "The road to version 2.7, in brief.",
+      "timeline.title": "From 1.0 to 2.7.1.",
+      "timeline.lede": "The road to version 2.7.1, in brief.",
+      "timeline.v271Title": "2.7.1 — Real used RAM",
+      "timeline.v271Body": "The menu bar now shows used/total only, with an Activity-Monitor-aligned calculation and no alternate display modes.",
       "timeline.v27Title": "2.7 — Awake even with the lid closed",
       "timeline.v27Body": "“Keep awake” gains an Amphetamine-style closed-lid mode: a once-approved helper keeps the Mac running with no external display, with an automatic low-battery cutoff and protection against orphaned sleep locks.",
       "timeline.v26Title": "2.6 — Keep your Mac awake",
@@ -306,7 +310,7 @@
       "timeline.v10Title": "1.0 — First stable release",
       "timeline.v10Body": "Cleaning mode, open at login, and a PT/EN interface.",
 
-      "footer.tagline": "Version 2.7 for macOS",
+      "footer.tagline": "Version 2.7.1 for macOS",
       "footer.rights": "Open source · MIT License",
       "footer.github": "GitHub"
     }
