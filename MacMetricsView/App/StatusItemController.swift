@@ -89,10 +89,10 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         guard let button = statusItem.button else { return }
 
         let attributedTitle = NSMutableAttributedString()
-        // Spacing-only grouping: a kerned gap between metrics, wider than the single
-        // space inside a metric, so each metric reads as one chunk without a divider glyph.
+        // Spacing-only grouping: a compact kerned gap keeps each metric legible without
+        // adding a divider glyph or consuming unnecessary menu-bar width.
         var separatorAttributes = baseAttributes(color: .labelColor)
-        separatorAttributes[.kern] = 6.0
+        separatorAttributes[.kern] = 5.0
         let separator = NSAttributedString(string: " ", attributes: separatorAttributes)
 
         if state.metrics.visibility.showCPU {
