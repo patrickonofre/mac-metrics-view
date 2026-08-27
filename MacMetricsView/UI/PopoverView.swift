@@ -56,7 +56,7 @@ struct PopoverView: View {
             // tab's body each take exactly the room they need, top to bottom. The popover
             // resizes to fit; nothing scrolls. Width is fixed (sizing contract with
             // StatusItemController).
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 10) {
                 headerBar
 
                 // Critical banners pinned above the tab bar so they show on every tab.
@@ -91,13 +91,10 @@ struct PopoverView: View {
 
                 tabBody
 
-                Text(Strings.developedBy())
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
             }
             .controlSize(.small)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
             .frame(width: popoverWidth, alignment: .topLeading)
             .onAppear {
                 state.refreshAccessibilityAuthorization()
@@ -118,10 +115,10 @@ struct PopoverView: View {
     private var headerBar: some View {
         HStack(alignment: .firstTextBaseline, spacing: 6) {
             Text("Mac Metrics View")
-                .font(.callout.weight(.semibold))
+                .font(.headline)
 
             Text(Strings.appVersion())
-                .font(.caption)
+                .font(.caption2)
                 .foregroundStyle(.secondary)
 
             Spacer()
