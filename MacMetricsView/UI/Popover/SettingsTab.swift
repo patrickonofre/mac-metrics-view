@@ -12,7 +12,7 @@ struct SettingsTab: View {
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             MetricVisibilityControls(
                 cpuVisible: Binding(
                     get: { metrics.visibility.showCPU },
@@ -114,16 +114,8 @@ struct AmbientThemeControls: View {
                     .font(.caption2)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(9)
+                    .padding(.vertical, 2)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .fill(Color(nsColor: .controlBackgroundColor))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8, style: .continuous)
-                            .strokeBorder(Color.primary.opacity(0.08))
-                    )
                     .transition(.opacity.combined(with: .move(edge: .top)))
             }
 
@@ -264,7 +256,7 @@ struct MetricVisibilityControls: View {
     @Binding var updateRate: Int
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: 10) {
             Grid(alignment: .leading, horizontalSpacing: 18, verticalSpacing: 8) {
                 GridRow {
                     SettingSwitch(title: "CPU", isOn: $cpuVisible)
@@ -282,17 +274,11 @@ struct MetricVisibilityControls: View {
                 }
             }
 
-            HStack(spacing: 8) {
-                MetricIdentifierPicker(identifierStyle: $identifierStyle)
-            }
+            Divider()
 
-            HStack(spacing: 8) {
-                UpdateRatePicker(updateRate: $updateRate)
-            }
-
-            HStack(spacing: 8) {
-                DiskMenuBarMetricPicker(diskMenuBarMetric: $diskMenuBarMetric)
-            }
+            MetricIdentifierPicker(identifierStyle: $identifierStyle)
+            UpdateRatePicker(updateRate: $updateRate)
+            DiskMenuBarMetricPicker(diskMenuBarMetric: $diskMenuBarMetric)
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
