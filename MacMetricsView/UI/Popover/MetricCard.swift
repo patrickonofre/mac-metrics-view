@@ -28,10 +28,9 @@ enum MetricCardAccessibility {
     }
 }
 
-/// One metric rendered as a card: header (icon + title), prominent value, sparkline,
-/// and severity color. Detail-heavy kinds (such as Battery) reveal an inline
-/// `expanded` region when `isExpanded` — summary-only kinds ignore the binding and
-/// show no expand affordance. Replaces the flat `MetricRow` of the old popover.
+/// One metric rendered as content inside the popover: icon, label, value, sparkline,
+/// and optional detail. Detail-heavy kinds reveal an inline region through an explicit
+/// button; summary-only kinds ignore the binding and show no expand affordance.
 struct MetricCard<Expanded: View>: View {
     let kind: MetricCardKind
     let symbol: String
@@ -43,13 +42,10 @@ struct MetricCard<Expanded: View>: View {
     @ViewBuilder var expanded: () -> Expanded
 
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     private var isExpandable: Bool { PopoverTabPresentation.isExpandable(kind) }
     private var showsExpanded: Bool { isExpandable && isExpanded }
-
-    /// Fixed summary height so every card is the same size regardless of its data
-    /// (value length, presence of a sparkline). Only the expanded region grows.
-    private let summaryHeight: CGFloat = 66
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -58,45 +54,54 @@ struct MetricCard<Expanded: View>: View {
             if showsExpanded {
                 Divider()
                 expanded()
+                    .padding(.leading, 26)
             }
         }
-        .padding(10)
+        .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .topLeading)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(Color.primary.opacity(0.08))
-        )
-        .contentShape(Rectangle())
-        .modifier(ExpandTapModifier(isExpandable: isExpandable, isExpanded: $isExpanded))
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(MetricCardAccessibility.label(title: title, value: value, severity: severity))
-        .modifier(ExpandAccessibilityModifier(isExpandable: isExpandable, isExpanded: isExpanded))
     }
 
-    /// Fixed-height summary: header (top), prominent value, sparkline anchored to the
-    /// bottom. The sparkline slot is always reserved so cards without a trend line
-    /// (e.g. Battery) match the others' height.
+    /// Stable metric row: value width is driven by monospaced digits and every metric
+    /// reserves a small trend slot, avoiding vertical jitter as samples arrive.
     private var summary: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            header
+        HStack(alignment: .center, spacing: 10) {
+            Image(systemName: symbol)
+                .imageScale(.small)
+                .foregroundStyle(.secondary)
+                .frame(width: 16, alignment: .center)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(title)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+
+                sparklineSlot
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
 
             Text(value)
-                .font(.title3.weight(.semibold))
+                .font(.body.weight(.semibold))
                 .monospacedDigit()
                 .foregroundStyle(valueColor)
                 .lineLimit(1)
-                .minimumScaleFactor(0.6)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .minimumScaleFactor(0.7)
+                .layoutPriority(1)
 
-            Spacer(minLength: 0)
-
-            sparklineSlot
+            if isExpandable {
+                Button(action: toggleExpansion) {
+                    Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
+                        .imageScale(.small)
+                        .frame(width: 18, height: 18)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+                .help(MetricCardAccessibility.expansionLabel(isExpanded: isExpanded))
+                .accessibilityLabel(MetricCardAccessibility.expansionLabel(isExpanded: isExpanded))
+            }
         }
-        .frame(height: summaryHeight, alignment: .topLeading)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(MetricCardAccessibility.label(title: title, value: value, severity: severity))
     }
 
     private var sparklineSlot: some View {
@@ -104,31 +109,19 @@ struct MetricCard<Expanded: View>: View {
             if sparkline.isEmpty {
                 Color.clear
             } else {
-                SparklineView(values: sparkline, height: 18)
+                SparklineView(values: sparkline, height: 14)
                     .foregroundStyle(.tertiary)
             }
         }
-        .frame(height: 18)
+        .frame(height: 14)
     }
 
-    private var header: some View {
-        HStack(spacing: 6) {
-            Image(systemName: symbol)
-                .imageScale(.small)
-                .foregroundStyle(.secondary)
-                .frame(width: 16, alignment: .center)
-
-            Text(title)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-                .lineLimit(1)
-
-            Spacer(minLength: 4)
-
-            if isExpandable {
-                Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
-                    .imageScale(.medium)
-                    .foregroundStyle(Color.accentColor)
+    private func toggleExpansion() {
+        if reduceMotion {
+            isExpanded.toggle()
+        } else {
+            withAnimation(.easeInOut(duration: 0.18)) {
+                isExpanded.toggle()
             }
         }
     }
@@ -143,40 +136,5 @@ struct MetricCard<Expanded: View>: View {
             appearance: appearance
         )
         return Color(nsColor: nsColor)
-    }
-}
-
-/// Adds the whole-card tap toggle only for expandable cards; the binding write is
-/// wrapped in `withAnimation` so the grid reflow (ADR-004) animates.
-private struct ExpandTapModifier: ViewModifier {
-    let isExpandable: Bool
-    @Binding var isExpanded: Bool
-
-    func body(content: Content) -> some View {
-        if isExpandable {
-            content.onTapGesture {
-                withAnimation(.easeInOut(duration: 0.2)) {
-                    isExpanded.toggle()
-                }
-            }
-        } else {
-            content
-        }
-    }
-}
-
-/// Adds button trait + expand/collapse accessibility label only for expandable cards.
-private struct ExpandAccessibilityModifier: ViewModifier {
-    let isExpandable: Bool
-    let isExpanded: Bool
-
-    func body(content: Content) -> some View {
-        if isExpandable {
-            content
-                .accessibilityAddTraits(.isButton)
-                .accessibilityHint(MetricCardAccessibility.expansionLabel(isExpanded: isExpanded))
-        } else {
-            content
-        }
     }
 }
