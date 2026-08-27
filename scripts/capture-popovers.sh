@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # capture-popovers.sh — fully-automated capture of the 4 popover-demo screenshots
-# (CPU / RAM / Network+Disk / Tokens) in both light and dark, straight from the real
+# (CPU / RAM / Network+Disk / GPU+Battery) in both light and dark, straight from the real
 # built app. Replaces the manual popover steps in capture-site-screenshots.sh.
 #
 # How it works
@@ -32,15 +32,31 @@ BIN="$DERIVED/Build/Products/Release/MacMetricsView.app/Contents/MacOS/MacMetric
 test -x "$BIN" || { echo "error: built binary not found"; exit 1; }
 
 ERR="$(mktemp)"
-trap 'killall MacMetricsView 2>/dev/null || true; rm -f "$ERR"' EXIT
+APP_PID=""
+cleanup() {
+  if [ -n "$APP_PID" ]; then
+    kill "$APP_PID" 2>/dev/null || true
+    wait "$APP_PID" 2>/dev/null || true
+  fi
+  rm -f "$ERR"
+}
+trap cleanup EXIT
 
-# tab id (manifest) -> MMV_CAPTURE_CARD value (comma-separated card kinds to expand)
-grab() { # $1 theme  $2 cards  $3 outfile
-  killall MacMetricsView 2>/dev/null || true; sleep 1
+# tab id (manifest) -> MMV_CAPTURE_CARD value (comma-separated metric kinds to expand)
+grab() { # $1 theme  $2 metrics  $3 outfile
+  if [ -n "$APP_PID" ]; then
+    kill "$APP_PID" 2>/dev/null || true
+    wait "$APP_PID" 2>/dev/null || true
+  fi
+  : > "$ERR"
   MMV_CAPTURE=1 MMV_CAPTURE_CARD="$2" "$BIN" 2>"$ERR" >/dev/null &
-  sleep 4
+  APP_PID=$!
   local win
-  win="$(grep -o 'MMV_POPOVER_WINDOW=[0-9]*' "$ERR" | head -1 | cut -d= -f2)"
+  for _ in {1..20}; do
+    win="$(grep -o 'MMV_POPOVER_WINDOW=[0-9]*' "$ERR" | head -1 | cut -d= -f2 || true)"
+    [ -n "$win" ] && break
+    sleep 0.5
+  done
   [ -n "$win" ] || { echo "  !! no popover window id for $3"; return 1; }
   screencapture -o -x -l "$win" "$ASSETS/$3"
   echo "  $3  ->  $(sips -g pixelWidth -g pixelHeight "$ASSETS/$3" | tail -2 | awk '{print $2}' | paste -sd x -)"
@@ -57,7 +73,7 @@ for theme in dark light; do
   grab "$theme" "cpu"          "popover-cpu-$theme.png"
   grab "$theme" "ram"          "popover-ram-$theme.png"
   grab "$theme" "network,disk" "popover-netdisk-$theme.png"
-  grab "$theme" "tokens"       "popover-ai-$theme.png"
+  grab "$theme" "gpu,battery"  "popover-ai-$theme.png"
 done
 
 echo "==> Done. Validate with: node scripts/check-site-assets.mjs"
