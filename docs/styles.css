@@ -538,9 +538,9 @@ h3 {
   padding-top: 0.7rem;
 }
 
-/* ---------- Repository panel ---------- */
+/* ---------- Download panel ---------- */
 
-.repo-panel {
+.download-panel {
   align-items: center;
   background: var(--bg-alt);
   border-radius: var(--radius);
@@ -552,12 +552,12 @@ h3 {
   padding: clamp(2rem, 5vw, 3.2rem);
 }
 
-.repo-panel h2 {
+.download-panel h2 {
   font-size: clamp(1.8rem, 3.4vw, 2.6rem);
   margin-bottom: 0.7rem;
 }
 
-.repo-panel p {
+.download-panel p {
   color: var(--muted);
   font-size: 1.05rem;
   margin: 0;
@@ -670,13 +670,13 @@ h3 {
     margin-inline: auto;
   }
 
-  .repo-panel {
+  .download-panel {
     align-items: stretch;
     flex-direction: column;
     text-align: center;
   }
 
-  .repo-panel .button {
+  .download-panel .button {
     align-self: center;
   }
 }
@@ -842,7 +842,7 @@ h3 {
   margin: 0;
 }
 
-.repo-meta {
+.download-meta {
   color: var(--muted);
   font-size: 0.92rem;
   margin: 0.8rem 0 0;

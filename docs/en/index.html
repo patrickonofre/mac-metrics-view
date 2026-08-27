@@ -55,9 +55,12 @@
       "softwareVersion": "2.7.1",
       "datePublished": "2026-05-26",
       "dateModified": "2026-08-27",
+      "fileSize": "2MB",
       "image": "https://patrickonofre.github.io/mac-metrics-view/assets/popover-cpu-light.png",
       "screenshot": "https://patrickonofre.github.io/mac-metrics-view/assets/popover-cpu-light.png",
       "inLanguage": ["en", "pt-BR"],
+      "downloadUrl": "https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-2.7.1.zip",
+      "installUrl": "https://patrickonofre.github.io/mac-metrics-view/en/#download",
       "releaseNotes": "https://patrickonofre.github.io/mac-metrics-view/en/#timeline",
       "sameAs": "https://github.com/patrickonofre/mac-metrics-view",
       "isAccessibleForFree": true,
@@ -106,10 +109,10 @@
         },
         {
           "@type": "Question",
-          "name": "Where can I get the code?",
+          "name": "How do I open the app the first time?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "The code, release history, and build instructions live in the GitHub repository."
+            "text": "Because the app isn't notarized yet, on first launch right-click the icon and choose Open to confirm. After that it opens normally and keeps itself up to date."
           }
         },
         {
@@ -136,7 +139,7 @@
           <a href="#demo" data-i18n="nav.demo">Demo</a>
           <a href="#features" data-i18n="nav.features">Features</a>
           <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
-          <a href="#repo" data-i18n="nav.repo">Repository</a>
+          <a href="#download" data-i18n="nav.download">Download</a>
         </nav>
         <span class="nav-cross">
           <a href="https://github.com/patrickonofre/mac-metrics-view" data-i18n="footer.github">GitHub</a>
@@ -154,7 +157,7 @@
         <h1 data-i18n="hero.title">Your whole Mac, in the menu bar.</h1>
         <p class="lede" data-i18n="hero.lede">CPU, GPU, memory, network, temperature, disk, battery, and AI tokens — all at a glance, without opening Activity Monitor.</p>
         <div class="actions" aria-label="Acoes principais">
-          <a class="button primary" href="https://github.com/patrickonofre/mac-metrics-view" data-i18n="hero.cta">Open repository</a>
+          <a class="button primary" href="../downloads/MacMetricsView-2.7.1.zip" download data-i18n="hero.cta">Download 2.7.1</a>
           <a class="link-cta" href="#whatsnew"><span data-i18n="hero.secondary">See what's new</span> <span aria-hidden="true">&rsaquo;</span></a>
         </div>
         <p class="note" data-i18n="hero.note">No account. No telemetry. Local-only system readings.</p>
@@ -279,14 +282,14 @@
         </div>
       </section>
 
-      <section class="repo-panel reveal-init" id="repo">
+      <section class="download-panel reveal-init" id="download">
         <div>
-          <p class="eyebrow" data-i18n="repo.eyebrow">Repository</p>
-          <h2 data-i18n="repo.title">Code, releases, and history on GitHub.</h2>
-          <p data-i18n="repo.body">The site no longer offers direct downloads. Use the repository to view the code, follow releases, and build the app locally.</p>
-          <p class="repo-meta" data-i18n="repo.meta">macOS 14+ · Apple Silicon · open source · MIT License</p>
+          <p class="eyebrow" data-i18n="download.eyebrow">Download</p>
+          <h2 data-i18n="download.title">Download version 2.7.1.</h2>
+          <p data-i18n="download.body">For macOS 14 or later on Apple Silicon Macs. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.</p>
+          <p class="download-meta" data-i18n="download.meta">≈ 2 MB · macOS 14+ · Apple Silicon · free and open source</p>
         </div>
-        <a class="button primary large" href="https://github.com/patrickonofre/mac-metrics-view" data-i18n="repo.cta">Open repository</a>
+        <a class="button primary large" href="../downloads/MacMetricsView-2.7.1.zip" download data-i18n="download.cta">Download MacMetricsView-2.7.1.zip</a>
       </section>
 
       <section class="section reveal-init" id="firstrun">
@@ -353,11 +356,11 @@
       </span>
     </footer>
 
-    <!-- Sticky repository CTA — persistent on scroll, hidden near the hero/repo
+    <!-- Sticky download CTA — persistent on scroll, hidden near the hero/download
          panel by popover-demo.js so it never doubles up the primary action. -->
-    <a class="sticky-cta" href="https://github.com/patrickonofre/mac-metrics-view" data-sticky-cta>
-      <span class="sticky-cta-label" data-i18n="sticky.label">Open source on GitHub</span>
-      <span class="sticky-cta-button" data-i18n="sticky.cta">Repository</span>
+    <a class="sticky-cta" href="../downloads/MacMetricsView-2.7.1.zip" download data-sticky-cta>
+      <span class="sticky-cta-label" data-i18n="sticky.label">Mac Metrics View 2.7.1</span>
+      <span class="sticky-cta-button" data-i18n="sticky.cta">Download</span>
     </a>
   </body>
 </html>

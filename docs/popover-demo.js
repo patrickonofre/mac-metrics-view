@@ -4,7 +4,7 @@
 //      2.0 popover screenshots (CPU / RAM / Network-Disk / AI tokens).
 //   2. The scroll-reveal IntersectionObserver that adds .reveal-in to
 //      .reveal-init blocks as they enter the viewport.
-//   3. Suppressing the sticky repository CTA while the hero or the #repo panel
+//   3. Suppressing the sticky download CTA while the hero or the #download panel
 //      is on screen, so the primary action never doubles up.
 // Everything is a no-op when its target is absent, and nothing hides content
 // when JS is off or Reduce Motion is on (the CSS guard owns the hidden state).
@@ -137,7 +137,7 @@
   function initStickyCta() {
     if (!document.querySelector("[data-sticky-cta]")) return;
     var suppressors = [].slice
-      .call(document.querySelectorAll(".hero, #repo"))
+      .call(document.querySelectorAll(".hero, #download"))
       .filter(Boolean);
     if (!suppressors.length || !("IntersectionObserver" in window)) return;
     var visible = new Set();

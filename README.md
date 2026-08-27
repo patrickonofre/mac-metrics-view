@@ -176,8 +176,8 @@ Accessibility one more time, exactly like the EdDSA key custody note above.
 6. Add a new `<item>` to the **top** of `docs/appcast.xml` with the new
    `sparkle:version`, `sparkle:shortVersionString`, `pubDate`, the `enclosure`
    `url`, and the `sparkle:edSignature` / `length` from step 5.
-7. Commit and push — GitHub Pages publishes the new zip for Sparkle and the
-   appcast. The marketing site links to the repository, not directly to the zip.
+7. Update the site download link, commit, and push — GitHub Pages publishes the
+   new zip and appcast.
 
 Updates delivered by Sparkle replace the running bundle without re-applying the
 quarantine flag, so they do **not** re-trigger Gatekeeper. The Gatekeeper
