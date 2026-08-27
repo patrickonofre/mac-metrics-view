@@ -27,16 +27,8 @@ struct RecoveryBanner: View {
 
             Spacer(minLength: 0)
         }
-        .padding(9)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(Color.orange.opacity(0.35))
-        )
         .accessibilityElement(children: .combine)
     }
 }
@@ -116,16 +108,8 @@ struct AmbientSuggestionBanner: View {
 
             HStack(spacing: 8) { actions() }
         }
-        .padding(9)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(tint.opacity(0.35))
-        )
         .accessibilityElement(children: .combine)
     }
 }
@@ -165,16 +149,8 @@ struct UpdateBanner: View {
             .buttonStyle(.borderless)
             .foregroundStyle(Color.accentColor)
         }
-        .padding(9)
+        .padding(.vertical, 4)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .strokeBorder(Color.blue.opacity(0.35))
-        )
         .accessibilityElement(children: .combine)
     }
 }
