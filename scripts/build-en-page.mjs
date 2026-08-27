@@ -66,8 +66,7 @@ body = body
   .replace(/\bsrc="assets\//g, 'src="../assets/')
   .replace(/\bdata-src="assets\//g, 'data-src="../assets/')
   .replace(/\bsrcset="assets\//g, 'srcset="../assets/')
-  .replace(/\bdata-srcset="assets\//g, 'data-srcset="../assets/')
-  .replace(/\bhref="downloads\//g, 'href="../downloads/');
+  .replace(/\bdata-srcset="assets\//g, 'data-srcset="../assets/');
 
 if (missing.length) {
   console.error(`✗ build-en-page: ${missing.length} key(s) missing from en dict: ${[...new Set(missing)].join(", ")}`);
@@ -79,7 +78,7 @@ const faq = [
   ["Is Mac Metrics View free?", "Yes. It's free, open source, with no account and no in-app purchases."],
   ["Which Macs are supported?", "Macs with Apple Silicon (M1 chip or later) running macOS 14 (Sonoma) or later. Version 2.2 was the last to support Intel Macs."],
   ["Does the app collect my data?", "No. Every metric read is local — no telemetry, no account, and nothing sent over the network."],
-  ["How do I open the app the first time?", "Because the app isn't notarized yet, on first launch right-click the icon and choose Open to confirm. After that it opens normally and keeps itself up to date."],
+  ["Where can I get the code?", "The code, release history, and build instructions live in the GitHub repository."],
   ["Does Mac Metrics View update itself?", "Yes. New versions are downloaded and installed with your confirmation via Sparkle, without downloading the app again."],
 ];
 
@@ -138,12 +137,9 @@ const head = `  <head>
       "softwareVersion": "2.7.1",
       "datePublished": "2026-05-26",
       "dateModified": "2026-08-27",
-      "fileSize": "2MB",
       "image": "${SITE}/assets/popover-cpu-light.png",
       "screenshot": "${SITE}/assets/popover-cpu-light.png",
       "inLanguage": ["en", "pt-BR"],
-      "downloadUrl": "${SITE}/downloads/MacMetricsView-2.7.1.zip",
-      "installUrl": "${SITE}/en/#download",
       "releaseNotes": "${SITE}/en/#timeline",
       "sameAs": "https://github.com/patrickonofre/mac-metrics-view",
       "isAccessibleForFree": true,
