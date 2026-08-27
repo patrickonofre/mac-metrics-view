@@ -1,7 +1,6 @@
 import SwiftUI
 
-/// Pure, SwiftUI-free trend derivations for the metric cards: throughput
-/// normalization and RAM series selection. Kept testable (ADR-005).
+/// Pure, SwiftUI-free trend derivations for the metric cards. Kept testable (ADR-005).
 enum MetricTrend {
     /// Scales a throughput series so its peak maps to 100. Empty input stays empty;
     /// an all-zero series is returned unchanged (no division by zero).
@@ -10,18 +9,9 @@ enum MetricTrend {
         return rates.map { $0 / maxRate * 100 }
     }
 
-    /// The RAM sparkline series matching the selected menu-bar metric.
-    static func ramSeries(
-        metric: MetricDisplaySettings.RAMMenuBarMetric,
-        pressure: [Double],
-        appMemory: [Double],
-        usedTotal: [Double]
-    ) -> [Double] {
-        switch metric {
-        case .usedTotal: return usedTotal
-        case .pressure: return pressure
-        case .appMemory: return appMemory
-        }
+    /// RAM uses one series: real used memory as percent of total.
+    static func ramSeries(usedTotal: [Double]) -> [Double] {
+        usedTotal
     }
 }
 
@@ -118,12 +108,7 @@ struct MetricsTab: View {
                 symbol: "memorychip",
                 title: "RAM",
                 value: metrics.ramCardValue,
-                sparkline: MetricTrend.ramSeries(
-                    metric: metrics.ramMenuBarMetric,
-                    pressure: metrics.ramHistory.samples.map(\.pressurePercent),
-                    appMemory: metrics.ramHistory.samples.map(\.appMemoryPercent),
-                    usedTotal: metrics.ramHistory.samples.map(\.usedPercent)
-                ),
+                sparkline: MetricTrend.ramSeries(usedTotal: metrics.ramHistory.samples.map(\.usedPercent)),
                 severity: metrics.ramMenuBarTextStyle,
                 isExpanded: expansionBinding(for: .ram)
             ) {

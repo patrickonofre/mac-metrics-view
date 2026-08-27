@@ -1,14 +1,16 @@
 import XCTest
 @testable import MacMetricsView
 
-/// Coverage for the Used/Total RAM localization keys (task_02), mirroring the
-/// disk/battery key tests.
+/// Coverage for RAM detail localization keys, mirroring the disk/battery key tests.
 final class LocalizationRAMKeysTests: XCTestCase {
-    func testUsedTotalAccessorsReturnNonEmptyStringsInBothLanguages() {
+    func testRAMDetailAccessorsReturnNonEmptyStringsInBothLanguages() {
         let texts: [LocalizedText] = [
-            Strings.ramMetricUsedTotalShort,
-            Strings.ramUsedTotal,
-            Strings.ramUsedTotalHelp
+            Strings.ramAppMemory,
+            Strings.ramPressure,
+            Strings.ramWired,
+            Strings.ramCompressed,
+            Strings.ramCachedFiles,
+            Strings.ramSwapUsed
         ]
 
         for text in texts {
@@ -17,20 +19,16 @@ final class LocalizationRAMKeysTests: XCTestCase {
         }
     }
 
-    func testUsedTotalHelpIsDistinctFromOtherModeHelp() {
-        XCTAssertNotEqual(Strings.ramUsedTotalHelp(.english), Strings.ramAppMemoryHelp(.english))
-        XCTAssertNotEqual(Strings.ramUsedTotalHelp(.english), Strings.ramPressureHelp(.english))
-        XCTAssertNotEqual(Strings.ramUsedTotalHelp(.portuguese), Strings.ramAppMemoryHelp(.portuguese))
-    }
+    func testRAMDetailLabelsAreDistinct() {
+        let labels = [
+            Strings.ramAppMemory(.english),
+            Strings.ramPressure(.english),
+            Strings.ramWired(.english),
+            Strings.ramCompressed(.english),
+            Strings.ramCachedFiles(.english),
+            Strings.ramSwapUsed(.english)
+        ]
 
-    func testUsedTotalShortLabelDistinctFromOtherModeLabels() {
-        XCTAssertNotEqual(
-            Strings.ramMetricUsedTotalShort(.english),
-            Strings.ramMetricAppMemoryShort(.english)
-        )
-        XCTAssertNotEqual(
-            Strings.ramMetricUsedTotalShort(.english),
-            Strings.ramMetricPressureShort(.english)
-        )
+        XCTAssertEqual(Set(labels).count, labels.count)
     }
 }

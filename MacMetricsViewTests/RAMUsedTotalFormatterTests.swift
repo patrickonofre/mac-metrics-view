@@ -1,9 +1,7 @@
 import XCTest
 @testable import MacMetricsView
 
-/// Covers the menu-bar "Used / Total" RAM mode: the compact ratio formatter, the
-/// `valueString` routing, and the pressure-driven color in `usedTotal` mode
-/// (ADR-002 / ADR-003).
+/// Covers the single menu-bar RAM display: real used memory over physical total.
 final class RAMUsedTotalFormatterTests: XCTestCase {
 
     private func sample(
@@ -54,18 +52,26 @@ final class RAMUsedTotalFormatterTests: XCTestCase {
 
     func testValueStringUsedTotalReturnsCompactRatio() {
         let s = sample(usedGB: 11.2, totalGB: 16)
-        XCTAssertEqual(RAMFormatter.valueString(for: s, metric: .usedTotal), "11.2/16 GB")
+        XCTAssertEqual(RAMFormatter.valueString(for: s), "11.2/16 GB")
     }
 
-    // MARK: - menuBarTextStyle (color = pressure, ADR-003)
+    func testMenuBarTitleUsesOnlyUsedTotal() {
+        let s = sample(usedGB: 11.2, totalGB: 16, usedPercent: 70, pressurePercent: 99)
+
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: s), "RAM 11.2/16 GB")
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: s, showLabel: false), "11.2/16 GB")
+        XCTAssertFalse(RAMFormatter.menuBarTitle(for: s).contains("%"))
+    }
+
+    // MARK: - menuBarTextStyle (color = pressure)
 
     func testUsedTotalColorFollowsKernelPressureLevel() {
         XCTAssertEqual(
-            RAMFormatter.menuBarTextStyle(for: sample(pressureLevel: .warning), metric: .usedTotal),
+            RAMFormatter.menuBarTextStyle(for: sample(pressureLevel: .warning)),
             .elevatedCPU
         )
         XCTAssertEqual(
-            RAMFormatter.menuBarTextStyle(for: sample(pressureLevel: .critical), metric: .usedTotal),
+            RAMFormatter.menuBarTextStyle(for: sample(pressureLevel: .critical)),
             .highCPU
         )
     }
@@ -73,11 +79,11 @@ final class RAMUsedTotalFormatterTests: XCTestCase {
     func testUsedTotalColorIgnoresMemoryUsedWhenLevelUnavailable() {
         // High Memory Used but low pressure: must stay normal (color is pressure, not fullness).
         let s = sample(usedPercent: 94, pressurePercent: 20, pressureLevel: nil)
-        XCTAssertEqual(RAMFormatter.menuBarTextStyle(for: s, metric: .usedTotal), .normal)
+        XCTAssertEqual(RAMFormatter.menuBarTextStyle(for: s), .normal)
     }
 
     func testUsedTotalColorUsesPressurePercentFallback() {
         let s = sample(usedPercent: 30, pressurePercent: 85, pressureLevel: nil)
-        XCTAssertEqual(RAMFormatter.menuBarTextStyle(for: s, metric: .usedTotal), .highCPU)
+        XCTAssertEqual(RAMFormatter.menuBarTextStyle(for: s), .highCPU)
     }
 }

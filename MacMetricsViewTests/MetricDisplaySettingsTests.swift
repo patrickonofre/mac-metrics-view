@@ -85,45 +85,13 @@ final class MetricDisplaySettingsTests: XCTestCase {
         XCTAssertEqual(reloadedZero.updateRate, 1)
     }
 
-    // MARK: - usedTotal one-time migration (ADR-002)
-
-    private let migrationKey = "MetricDisplaySettings.usedTotalMigrationApplied"
-    private let ramKey = "MetricDisplaySettings.ramMenuBarMetric"
-
-    func testResolvedMigratesStoredAppMemoryToUsedTotalOnce() {
-        userDefaults.set("appMemory", forKey: ramKey)
+    func testResolvedIgnoresLegacyRAMMenuBarMetricKey() {
+        userDefaults.set("pressure", forKey: "MetricDisplaySettings.ramMenuBarMetric")
 
         let resolved = MetricDisplaySettings.resolved(from: userDefaults)
 
-        XCTAssertEqual(resolved.ramMenuBarMetric, .usedTotal)
-        XCTAssertEqual(userDefaults.string(forKey: ramKey), "usedTotal") // persisted
-        XCTAssertTrue(userDefaults.bool(forKey: migrationKey))           // flag set
-    }
-
-    func testResolvedDoesNotReMigrateOnceFlagIsSet() {
-        // User deliberately picks appMemory after the migration already ran.
-        userDefaults.set(true, forKey: migrationKey)
-        userDefaults.set("appMemory", forKey: ramKey)
-
-        let resolved = MetricDisplaySettings.resolved(from: userDefaults)
-
-        XCTAssertEqual(resolved.ramMenuBarMetric, .appMemory)
-    }
-
-    func testResolvedPreservesExplicitPressureChoice() {
-        userDefaults.set("pressure", forKey: ramKey)
-
-        let resolved = MetricDisplaySettings.resolved(from: userDefaults)
-
-        XCTAssertEqual(resolved.ramMenuBarMetric, .pressure)
-        XCTAssertTrue(userDefaults.bool(forKey: migrationKey))
-    }
-
-    func testResolvedFreshInstallYieldsUsedTotalAndSetsFlag() {
-        let resolved = MetricDisplaySettings.resolved(from: userDefaults)
-
-        XCTAssertEqual(resolved.ramMenuBarMetric, .usedTotal)
-        XCTAssertTrue(userDefaults.bool(forKey: migrationKey))
+        XCTAssertEqual(resolved.diskMenuBarMetric, .combined)
+        XCTAssertEqual(resolved.identifierStyle, .icons)
     }
 
 }

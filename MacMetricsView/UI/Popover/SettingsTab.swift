@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Settings tab body: everything the user *sets* — per-metric menu-bar visibility,
-/// identifier style, RAM/Disk metric variants, and
+/// identifier style, disk metric variants, and
 /// launch-at-login. Controls are relocated verbatim from `PopoverView.swift`
 /// (task_05); no cleaning/update actions live here (those are in `ActionsTab`).
 struct SettingsTab: View {
@@ -41,10 +41,6 @@ struct SettingsTab: View {
                 identifierStyle: Binding(
                     get: { metrics.display.identifierStyle },
                     set: { metrics.setMetricIdentifierStyle($0) }
-                ),
-                ramMenuBarMetric: Binding(
-                    get: { metrics.display.ramMenuBarMetric },
-                    set: { metrics.setRAMMenuBarMetric($0) }
                 ),
                 diskMenuBarMetric: Binding(
                     get: { metrics.display.diskMenuBarMetric },
@@ -264,7 +260,6 @@ struct MetricVisibilityControls: View {
     @Binding var diskVisible: Bool
     @Binding var batteryVisible: Bool
     @Binding var identifierStyle: MetricDisplaySettings.IdentifierStyle
-    @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
     @Binding var diskMenuBarMetric: MetricDisplaySettings.DiskMenuBarMetric
     @Binding var updateRate: Int
 
@@ -293,13 +288,6 @@ struct MetricVisibilityControls: View {
 
             HStack(spacing: 8) {
                 UpdateRatePicker(updateRate: $updateRate)
-            }
-
-            // Always visible: these choose the value shown for RAM and Disk in both the
-            // popover and the menu bar, so they apply even when the metric is hidden from
-            // the menu bar.
-            HStack(spacing: 8) {
-                RAMMenuBarMetricPicker(ramMenuBarMetric: $ramMenuBarMetric)
             }
 
             HStack(spacing: 8) {
@@ -357,78 +345,6 @@ struct DiskMenuBarMetricPicker: View {
     }
 }
 
-/// Relocated from `PopoverView.swift` (task_05).
-struct RAMMenuBarMetricPicker: View {
-    @Binding var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric
-
-    @State private var showHelp = false
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                HStack(spacing: 3) {
-                    Text(Strings.ramMenuBarMetric())
-                        .lineLimit(1)
-                        .foregroundStyle(.primary)
-                    Button {
-                        showHelp.toggle()
-                    } label: {
-                        Image(systemName: showHelp ? "info.circle.fill" : "info.circle")
-                            .foregroundStyle(showHelp ? Color.accentColor : .secondary)
-                            .imageScale(.small)
-                    }
-                    .buttonStyle(.plain)
-                    .help(Strings.ramMenuBarMetricHelpTitle())
-                }
-                .frame(width: 88, alignment: .leading)
-
-                // A `.menu` dropdown (not segmented) so three full-length labels fit at the
-                // fixed 150pt control width without truncation (ADR-002).
-                Picker(Strings.ramMenuBarMetric(), selection: $ramMenuBarMetric) {
-                    ForEach(MetricDisplaySettings.RAMMenuBarMetric.menuBarPickerOrder, id: \.self) { mode in
-                        Text(mode.menuBarPickerLabel()).tag(mode)
-                    }
-                }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .frame(width: 150)
-            }
-
-            if showHelp {
-                VStack(alignment: .leading, spacing: 7) {
-                    helpRow(term: Strings.ramUsedTotal(), detail: Strings.ramUsedTotalHelp())
-                    helpRow(term: Strings.ramAppMemory(), detail: Strings.ramAppMemoryHelp())
-                    helpRow(term: Strings.ramPressure(), detail: Strings.ramPressureHelp())
-                }
-                .padding(9)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color(nsColor: .controlBackgroundColor))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .strokeBorder(Color.primary.opacity(0.08))
-                )
-                .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(.easeInOut(duration: 0.18), value: showHelp)
-    }
-
-    private func helpRow(term: String, detail: String) -> some View {
-        VStack(alignment: .leading, spacing: 1) {
-            Text(term)
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.primary)
-            Text(detail)
-                .font(.caption2)
-                .foregroundStyle(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
-}
 
 /// Relocated from `PopoverView.swift` (task_05).
 struct MetricIdentifierPicker: View {

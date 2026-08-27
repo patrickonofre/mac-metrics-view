@@ -88,11 +88,7 @@ final class SystemMetricsModel: ObservableObject {
     }
 
     var ramMenuBarTextStyle: CPUMenuBarTextStyle {
-        RAMFormatter.menuBarTextStyle(for: latestRAMSample, metric: display.ramMenuBarMetric)
-    }
-
-    var ramMenuBarMetric: MetricDisplaySettings.RAMMenuBarMetric {
-        display.ramMenuBarMetric
+        RAMFormatter.menuBarTextStyle(for: latestRAMSample)
     }
 
     /// Popover RAM card headline: "Used / Total" — more honest than echoing the menu-bar
@@ -279,14 +275,6 @@ final class SystemMetricsModel: ObservableObject {
         display.updateRate = clamped
         display.save(to: userDefaults)
         updateRate = clamped
-        onDisplayChange?()
-    }
-
-    func setRAMMenuBarMetric(_ metric: MetricDisplaySettings.RAMMenuBarMetric) {
-        guard display.ramMenuBarMetric != metric else { return }
-
-        display.ramMenuBarMetric = metric
-        display.save(to: userDefaults)
         onDisplayChange?()
     }
 

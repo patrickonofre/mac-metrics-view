@@ -38,13 +38,14 @@ final class RAMSampleAndReaderTests: XCTestCase {
         XCTAssertEqual(r.appMemoryGB, Double(1_500_000 * 4096) / (1024 * 1024 * 1024), accuracy: 0.001)
     }
 
-    func testUsedComputationUnchanged() {
-        // Regression: "Used" must remain app + wire + compressed.
-        let s = stats(internalPages: 2_000_000, purgeable: 500_000, wire: 400_000, compressor: 600_000)
+    func testUsedComputationExcludesReclaimableCache() {
+        let s = stats(internalPages: 2_000_000, purgeable: 500_000, wire: 400_000, compressor: 600_000, external: 900_000)
         let r = try! XCTUnwrap(MachRAMReader.makeSample(stats: s, totalBytes: totalBytes, pageSize: pageSize))
 
+        // "Used" is app + wired + compressed. External/file-cache pages stay available.
         let expectedUsedPages = (2_000_000.0 - 500_000.0) + 400_000.0 + 600_000.0 // 2_500_000
         XCTAssertEqual(r.usedPercent, expectedUsedPages / totalPages * 100, accuracy: 0.001)
+        XCTAssertEqual(r.usedGB, gb(expectedUsedPages), accuracy: 0.001)
         XCTAssertEqual(r.totalGB, Double(totalBytes) / (1024 * 1024 * 1024), accuracy: 0.001)
     }
 

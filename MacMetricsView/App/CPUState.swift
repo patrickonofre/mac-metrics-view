@@ -145,7 +145,7 @@ final class CPUState: ObservableObject {
         }
 
         if metrics.visibility.showRAM {
-            titles.append(RAMFormatter.menuBarTitle(for: metrics.latestRAMSample, metric: metrics.display.ramMenuBarMetric, showLabel: showLabel))
+            titles.append(RAMFormatter.menuBarTitle(for: metrics.latestRAMSample, showLabel: showLabel))
         }
 
         if metrics.visibility.showNetwork {
@@ -181,7 +181,7 @@ final class CPUState: ObservableObject {
         }
 
         if metrics.visibility.showRAM {
-            segments.append("RAM \(RAMFormatter.valueString(for: metrics.latestRAMSample, metric: metrics.display.ramMenuBarMetric))")
+            segments.append("RAM \(RAMFormatter.valueString(for: metrics.latestRAMSample))")
         }
 
         if metrics.visibility.showNetwork {

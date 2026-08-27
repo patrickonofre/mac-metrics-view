@@ -28,43 +28,6 @@ final class MetricVisibilitySettingsTests: XCTestCase {
         XCTAssertEqual(settings.identifierStyle, .labels)
     }
 
-    func testRAMMenuBarMetricDefaultsToUsedTotal() {
-        let userDefaults = makeUserDefaults()
-
-        let settings = MetricDisplaySettings.load(from: userDefaults)
-
-        XCTAssertEqual(settings.ramMenuBarMetric, .usedTotal)
-    }
-
-    func testRAMMenuBarMetricPersistsAllValues() {
-        for metric in [MetricDisplaySettings.RAMMenuBarMetric.usedTotal, .appMemory, .pressure] {
-            let userDefaults = makeUserDefaults()
-            let settings = MetricDisplaySettings(ramMenuBarMetric: metric)
-
-            settings.save(to: userDefaults)
-
-            XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).ramMenuBarMetric, metric)
-        }
-    }
-
-    func testRAMMenuBarMetricPreservesExplicitAppMemoryChoice() {
-        let userDefaults = makeUserDefaults()
-        userDefaults.set("appMemory", forKey: "MetricDisplaySettings.ramMenuBarMetric")
-
-        let settings = MetricDisplaySettings.load(from: userDefaults)
-
-        XCTAssertEqual(settings.ramMenuBarMetric, .appMemory)
-    }
-
-    func testRAMMenuBarMetricFallsBackToUsedTotalOnGarbageValue() {
-        let userDefaults = makeUserDefaults()
-        userDefaults.set("nonsense", forKey: "MetricDisplaySettings.ramMenuBarMetric")
-
-        let settings = MetricDisplaySettings.load(from: userDefaults)
-
-        XCTAssertEqual(settings.ramMenuBarMetric, .usedTotal)
-    }
-
     func testVisibilitySettingsDefaultToAllMetricsVisible() {
         let userDefaults = makeUserDefaults()
 
@@ -208,26 +171,16 @@ final class MetricVisibilitySettingsTests: XCTestCase {
     }
 
     @MainActor
-    func testRAMMenuBarMetricSelectionDrivesTitleAndPersists() {
+    func testLegacyRAMMenuBarMetricPreferenceDoesNotDriveTitle() {
         let userDefaults = makeUserDefaults()
+        userDefaults.set("pressure", forKey: "MetricDisplaySettings.ramMenuBarMetric")
         let state = CPUState(userDefaults: userDefaults)
         state.metrics.setMetricIdentifierStyle(.labels)
         state.metrics.update(with: RAMSample(usedGB: 14, totalGB: 16, usedPercent: 87, appMemoryGB: 12.4, appMemoryPercent: 77, pressurePercent: 58.6))
 
-        // Default: Used / Total → compact ratio.
         XCTAssertTrue(state.menuBarTitle.contains("RAM 14.0/16 GB"))
-
-        state.metrics.setRAMMenuBarMetric(.appMemory)
-        XCTAssertTrue(state.menuBarTitle.contains("RAM 12.4 GB"))
-
-        state.metrics.setRAMMenuBarMetric(.pressure)
-        XCTAssertTrue(state.menuBarTitle.contains("RAM 59%"))
-        XCTAssertFalse(state.menuBarTitle.contains("GB"))
-
-        // Persisted across a fresh load.
-        XCTAssertEqual(MetricDisplaySettings.load(from: userDefaults).ramMenuBarMetric, .pressure)
-        let reloaded = CPUState(userDefaults: userDefaults)
-        XCTAssertEqual(reloaded.metrics.ramMenuBarMetric, .pressure)
+        XCTAssertFalse(state.menuBarTitle.contains("59%"))
+        XCTAssertTrue(state.accessibilityMenuBarTitle.contains("RAM 14.0/16 GB"))
     }
 
     @MainActor

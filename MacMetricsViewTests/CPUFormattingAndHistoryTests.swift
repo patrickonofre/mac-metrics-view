@@ -8,8 +8,8 @@ final class CPUFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(CPUFormatter.percentageString(nil), "--%")
         XCTAssertEqual(CPUFormatter.fixedWidthPercentageString(nil), " --%")
         XCTAssertEqual(CPUFormatter.percentageString(.nan), "--%")
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil, metric: .appMemory), "RAM -- GB")
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil, metric: .appMemory, showLabel: false), "-- GB")
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil), "RAM --/-- GB")
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil, showLabel: false), "--/-- GB")
         XCTAssertEqual(RAMFormatter.usedGBString(nil), "-- GB")
         XCTAssertEqual(RAMFormatter.fixedWidthUsedGBString(nil), "-- GB")
         XCTAssertEqual(RAMFormatter.usedGBString(.nan), "-- GB")
@@ -58,24 +58,17 @@ final class CPUFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(CPUFormatter.menuBarTextStyle(for: sample), .highCPU)
     }
 
-    func testRAMFormatterReturnsAppMemoryGBWithOneDecimalPlace() {
+    func testRAMFormatterReturnsUsedTotalWithOneDecimalPlace() {
         let sample = RAMSample(usedGB: 14, totalGB: 16, usedPercent: 87, appMemoryGB: 12.44, appMemoryPercent: 77.75)
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: sample, metric: .appMemory), "RAM 12.4 GB")
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: sample, metric: .appMemory, showLabel: false), "12.4 GB")
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: sample), "RAM 14.0/16 GB")
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: sample, showLabel: false), "14.0/16 GB")
         XCTAssertEqual(RAMFormatter.usedGBString(12.46), "12.5 GB")
-        XCTAssertFalse(RAMFormatter.menuBarTitle(for: sample, metric: .appMemory).contains("%"))
-    }
-
-    func testRAMFormatterReturnsPressureAsPercent() {
-        let sample = RAMSample(usedGB: 14, totalGB: 16, usedPercent: 87, appMemoryGB: 12.4, appMemoryPercent: 77, pressurePercent: 58.6)
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: sample, metric: .pressure), "RAM 59%")
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: sample, metric: .pressure, showLabel: false), "59%")
+        XCTAssertFalse(RAMFormatter.menuBarTitle(for: sample).contains("%"))
     }
 
     func testRAMFormatterShowsPlaceholderForMissingSample() {
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil, metric: .appMemory), "RAM -- GB")
-        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil, metric: .pressure), "RAM --%")
-        XCTAssertEqual(RAMFormatter.menuBarTextStyle(for: nil, metric: .pressure), .normal)
+        XCTAssertEqual(RAMFormatter.menuBarTitle(for: nil), "RAM --/-- GB")
+        XCTAssertEqual(RAMFormatter.menuBarTextStyle(for: nil), .normal)
     }
 
     func testRAMFormatterReturnsCompactGBForMenuBar() {
@@ -89,26 +82,23 @@ final class CPUFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(RAMFormatter.usedGBString(.infinity), "-- GB")
     }
 
-    func testRAMAppMemorySeverityUsesPercentOfTotalThresholds() {
+    func testRAMSeverityUsesPressurePercentFallbackThresholds() {
         func style(_ pct: Double) -> CPUMenuBarTextStyle {
             RAMFormatter.menuBarTextStyle(
-                for: RAMSample(usedGB: 10, totalGB: 16, usedPercent: 50, appMemoryPercent: pct),
-                metric: .appMemory
+                for: RAMSample(usedGB: 10, totalGB: 16, usedPercent: 95, pressurePercent: pct)
             )
         }
-        XCTAssertEqual(style(79.9), .normal)
-        XCTAssertEqual(style(80), .elevatedCPU)
-        XCTAssertEqual(style(89.9), .elevatedCPU)
-        XCTAssertEqual(style(90), .highCPU)
-        XCTAssertEqual(style(95), .highCPU)
+        XCTAssertEqual(style(59.9), .normal)
+        XCTAssertEqual(style(60), .elevatedCPU)
+        XCTAssertEqual(style(79.9), .elevatedCPU)
+        XCTAssertEqual(style(80), .highCPU)
     }
 
     func testRAMSeverityPrefersKernelPressureLevelOverPercent() {
-        // Even with App Memory at 95% (would be red via percent), a NORMAL kernel level wins.
+        // Even with used memory at 95%, a NORMAL kernel level wins.
         func style(_ level: MemoryPressureLevel) -> CPUMenuBarTextStyle {
             RAMFormatter.menuBarTextStyle(
-                for: RAMSample(usedGB: 10, totalGB: 16, usedPercent: 50, appMemoryPercent: 95, pressureLevel: level),
-                metric: .appMemory
+                for: RAMSample(usedGB: 15.2, totalGB: 16, usedPercent: 95, pressureLevel: level)
             )
         }
         XCTAssertEqual(style(.normal), .normal)
@@ -133,19 +123,6 @@ final class CPUFormattingAndHistoryTests: XCTestCase {
         XCTAssertEqual(rows.map(\.label), ["App Memory", "Wired", "Compressed", "Cached Files", "Swap Used", "Pressure"])
         XCTAssertEqual(rows.map(\.value), ["5.2 GB", "2.8 GB", "1.4 GB", "3.1 GB", "0.5 GB", "Warning"])
         XCTAssertTrue(RAMFormatter.detailRows(for: nil).isEmpty)
-    }
-
-    func testRAMPressureSeverityUsesPressureThresholds() {
-        func style(_ pct: Double) -> CPUMenuBarTextStyle {
-            RAMFormatter.menuBarTextStyle(
-                for: RAMSample(usedGB: 10, totalGB: 16, usedPercent: 50, pressurePercent: pct),
-                metric: .pressure
-            )
-        }
-        XCTAssertEqual(style(59.9), .normal)
-        XCTAssertEqual(style(60), .elevatedCPU)
-        XCTAssertEqual(style(79.9), .elevatedCPU)
-        XCTAssertEqual(style(80), .highCPU)
     }
 
     func testCPUHistoryKeepsCapacityAndDropsOldestSamples() {

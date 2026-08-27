@@ -101,27 +101,6 @@ enum Strings {
     static let ramPressureNormal = LocalizedText(en: "Normal", pt: "Normal")
     static let ramPressureWarning = LocalizedText(en: "Warning", pt: "Atenção")
     static let ramPressureCritical = LocalizedText(en: "Critical", pt: "Crítica")
-    static let ramMenuBarMetric = LocalizedText(en: "RAM value", pt: "Valor RAM")
-    static let ramMetricUsedTotalShort = LocalizedText(en: "Used / Total", pt: "Usado / Total")
-    static let ramMetricAppMemoryShort = LocalizedText(en: "App", pt: "Apps")
-    static let ramMetricPressureShort = LocalizedText(en: "Pressure", pt: "Pressão")
-    static let ramMenuBarMetricHelpTitle = LocalizedText(
-        en: "Which RAM value is shown",
-        pt: "Qual valor de RAM é exibido"
-    )
-    static let ramUsedTotal = LocalizedText(en: "Used / Total", pt: "Usado / Total")
-    static let ramUsedTotalHelp = LocalizedText(
-        en: "Memory used vs. your Mac's total (GB). The color still reflects memory pressure, not how full memory is.",
-        pt: "Memória usada vs. o total do seu Mac (GB). A cor ainda reflete a pressão de memória, não o quanto está cheia."
-    )
-    static let ramAppMemoryHelp = LocalizedText(
-        en: "Memory actively used by apps (GB). Rises and falls as you open and close apps.",
-        pt: "Memória usada ativamente pelos apps (GB). Sobe e desce ao abrir e fechar apps."
-    )
-    static let ramPressureHelp = LocalizedText(
-        en: "How stressed memory is overall (%). Stays low under normal use; climbs only when the system runs short on memory.",
-        pt: "O quanto a memória está sob estresse no geral (%). Fica baixa no uso normal; só sobe quando falta memória."
-    )
 
     // Network detail rows (loanwords, identical in both). Recent totals/peaks are a
     // rolling sparkline window (~45s) per ADR-002 — labels say so to avoid a

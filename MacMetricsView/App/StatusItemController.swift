@@ -122,7 +122,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
             attributedTitle.append(statusSegment(
                 metric: .ram,
-                value: RAMFormatter.valueString(for: state.metrics.latestRAMSample, metric: state.metrics.ramMenuBarMetric),
+                value: RAMFormatter.valueString(for: state.metrics.latestRAMSample),
                 style: state.metrics.ramMenuBarTextStyle
             ))
         }

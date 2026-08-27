@@ -1,30 +1,21 @@
 import Foundation
 
 enum RAMFormatter {
-    // Pressure severity thresholds (task-001): distinct from CPU/App-Memory percent-of-total.
+    // Pressure severity thresholds stay distinct from displayed fullness.
     static let elevatedPressureThreshold = 60.0
     static let highPressureThreshold = 80.0
 
     static func menuBarTitle(
         for sample: RAMSample?,
-        metric: MetricDisplaySettings.RAMMenuBarMetric,
         showLabel: Bool = true
     ) -> String {
-        let value = valueString(for: sample, metric: metric)
+        let value = valueString(for: sample)
         return showLabel ? "RAM \(value)" : value
     }
 
-    /// Raw value string for the selected metric: Used/Total as `N.N/NN GB`, App Memory as
-    /// `N.N GB`, Pressure as `NN%`.
-    static func valueString(for sample: RAMSample?, metric: MetricDisplaySettings.RAMMenuBarMetric) -> String {
-        switch metric {
-        case .usedTotal:
-            return menuBarUsedTotalString(used: sample?.usedGB, total: sample?.totalGB)
-        case .appMemory:
-            return fixedWidthUsedGBString(sample?.appMemoryGB)
-        case .pressure:
-            return CPUFormatter.percentageString(sample?.pressurePercent)
-        }
+    /// Menu-bar RAM is always real used memory over physical total.
+    static func valueString(for sample: RAMSample?) -> String {
+        menuBarUsedTotalString(used: sample?.usedGB, total: sample?.totalGB)
     }
 
     /// Compact menu-bar ratio, e.g. `11.2/16 GB` (Memory Used over physical total).
@@ -79,15 +70,12 @@ enum RAMFormatter {
         return String(format: "%.1f GB", min(value, 999.9))
     }
 
-    static func menuBarTextStyle(
-        for sample: RAMSample?,
-        metric: MetricDisplaySettings.RAMMenuBarMetric
-    ) -> CPUMenuBarTextStyle {
+    static func menuBarTextStyle(for sample: RAMSample?) -> CPUMenuBarTextStyle {
         guard let sample else { return .normal }
 
         // Kernel pressure level is the honest authority for "is memory a problem now",
-        // independent of which value is displayed. Fall back to percent-of-total
-        // heuristics only when the level is unavailable.
+        // independent of displayed fullness. Fall back to a pressure proxy only when
+        // the level is unavailable.
         if let level = sample.pressureLevel {
             switch level {
             case .normal: return .normal
@@ -96,28 +84,13 @@ enum RAMFormatter {
             }
         }
 
-        switch metric {
-        case .usedTotal:
-            // Color means "memory pressure", never "memory fullness": Memory Used runs high
-            // on healthy Macs by design, so coloring by it would false-alarm (ADR-003).
-            return severity(
-                for: sample.pressurePercent,
-                elevated: elevatedPressureThreshold,
-                high: highPressureThreshold
-            )
-        case .appMemory:
-            return severity(
-                for: sample.appMemoryPercent,
-                elevated: CPUFormatter.elevatedCPUThreshold,
-                high: CPUFormatter.highCPUThreshold
-            )
-        case .pressure:
-            return severity(
-                for: sample.pressurePercent,
-                elevated: elevatedPressureThreshold,
-                high: highPressureThreshold
-            )
-        }
+        // Color means "memory pressure", never "memory fullness": Memory Used can run
+        // high on healthy Macs, so coloring by fullness would false-alarm.
+        return severity(
+            for: sample.pressurePercent,
+            elevated: elevatedPressureThreshold,
+            high: highPressureThreshold
+        )
     }
 
     private static func severity(for percent: Double, elevated: Double, high: Double) -> CPUMenuBarTextStyle {
