@@ -90,7 +90,7 @@ const head = `  <head>
          html.js so content is never stuck hidden when JS is absent. -->
     <script>document.documentElement.classList.add("js");</script>
     <title>Mac Metrics View — CPU, GPU and RAM in the macOS menu bar</title>
-    <meta name="description" content="CPU, GPU, memory, network, temperature, disk, battery, and AI tokens in the macOS menu bar. Native, free, open-source app — 100% local, no telemetry.">
+    <meta name="description" content="CPU, GPU, memory, network, temperature, disk, and battery in the macOS menu bar. Native, free, open-source app — 100% local, no telemetry.">
     <link rel="canonical" href="${SITE}/en/">
     <link rel="alternate" hreflang="pt-br" href="${SITE}/">
     <link rel="alternate" hreflang="en" href="${SITE}/en/">
@@ -104,10 +104,10 @@ const head = `  <head>
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Mac Metrics View">
     <meta property="og:url" content="${SITE}/en/">
-    <meta property="og:title" content="Mac Metrics View 2.7.1 — your Mac's metrics in the menu bar">
-    <meta property="og:description" content="CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens right in the macOS menu bar. Native, local, and telemetry-free.">
+    <meta property="og:title" content="Mac Metrics View 2.8.0 — your Mac's metrics in the menu bar">
+    <meta property="og:description" content="CPU, GPU, RAM, network, temperature, disk, and battery right in the macOS menu bar. Native, local, and telemetry-free.">
     <meta property="og:image" content="${SITE}/assets/og-cover.png">
-    <meta property="og:image:alt" content="Mac Metrics View — CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens monitor in the macOS menu bar">
+    <meta property="og:image:alt" content="Mac Metrics View — CPU, GPU, RAM, network, temperature, disk, and battery monitor in the macOS menu bar">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta property="og:locale" content="en_US">
@@ -115,8 +115,8 @@ const head = `  <head>
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Mac Metrics View 2.7.1 — your Mac's metrics in the menu bar">
-    <meta name="twitter:description" content="CPU, GPU, RAM, network, temperature, disk, battery, and AI tokens right in the macOS menu bar. Native, local, and telemetry-free.">
+    <meta name="twitter:title" content="Mac Metrics View 2.8.0 — your Mac's metrics in the menu bar">
+    <meta name="twitter:description" content="CPU, GPU, RAM, network, temperature, disk, and battery right in the macOS menu bar. Native, local, and telemetry-free.">
     <meta name="twitter:image" content="${SITE}/assets/og-cover.png">
 
     <link rel="icon" href="../assets/app-icon.png">
@@ -133,16 +133,16 @@ const head = `  <head>
       "operatingSystem": "macOS 14+",
       "applicationCategory": "UtilitiesApplication",
       "processorRequirements": "Apple Silicon (M1 or later)",
-      "description": "Native macOS app that shows CPU, GPU, memory, network, temperature, disk, battery, and AI tokens (Claude Code and Codex) right in the menu bar. Local reads, no account, no telemetry.",
+      "description": "Native macOS app that shows CPU, GPU, memory, network, temperature, disk, and battery right in the menu bar. Local reads, no account, no telemetry.",
       "url": "${SITE}/en/",
-      "softwareVersion": "2.7.1",
+      "softwareVersion": "2.8.0",
       "datePublished": "2026-05-26",
-      "dateModified": "2026-08-27",
+      "dateModified": "2026-11-12",
       "fileSize": "2MB",
       "image": "${SITE}/assets/popover-cpu-light.png",
       "screenshot": "${SITE}/assets/popover-cpu-light.png",
       "inLanguage": ["en", "pt-BR"],
-      "downloadUrl": "${SITE}/downloads/MacMetricsView-2.7.1.zip",
+      "downloadUrl": "${SITE}/downloads/MacMetricsView-2.8.0.zip",
       "installUrl": "${SITE}/en/#download",
       "releaseNotes": "${SITE}/en/#timeline",
       "sameAs": "https://github.com/patrickonofre/mac-metrics-view",

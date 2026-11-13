@@ -5,22 +5,18 @@ import Foundation
 /// SwiftUI-free, and fully unit-testable (ADR-005). Reads only local interface
 /// rates already in history — no new counters, no privacy surface (PRD).
 enum NetworkWindowStats {
-    /// Approximate bytes moved over the retained window, integrating each retained
-    /// per-second rate over `interval`. A rolling estimate, not a since-launch total
-    /// (the buffer only keeps the most recent samples — same caveat as disk).
+    /// Integrate each retained rate over its measured interval, falling back to
+    /// `interval` for samples without a recorded measurement duration.
     static func recentTotalBytes(
         in history: NetworkHistory,
         interval: TimeInterval
     ) -> (download: UInt64, upload: UInt64) {
-        guard interval > 0, interval.isFinite else { return (0, 0) }
-
-        let downloadBytes = history.samples.reduce(0.0) { $0 + $1.downloadBytesPerSecond } * interval
-        let uploadBytes = history.samples.reduce(0.0) { $0 + $1.uploadBytesPerSecond } * interval
-
-        return (
-            download: UInt64(max(0, downloadBytes.rounded())),
-            upload: UInt64(max(0, uploadBytes.rounded()))
-        )
+        var totals = TrafficSessionTotals()
+        for sample in history.samples {
+            totals.add(inboundRate: sample.downloadBytesPerSecond, outboundRate: sample.uploadBytesPerSecond,
+                       elapsed: sample.measurementInterval ?? interval)
+        }
+        return (download: totals.inbound, upload: totals.outbound)
     }
 
     /// Highest download/upload rate seen across the retained window. Empty history

@@ -116,6 +116,7 @@ final class CPUStateProcessSamplingTests: XCTestCase {
         XCTAssertEqual(state.metrics.topCPUProcesses[1].cpuPercent, 100.0 / cores)
         
         state.metrics.endProcessSampling()
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty)
     }
     
     func testEndProcessSamplingInvalidatesTimerAndClearsSnapshot() {
@@ -190,5 +191,50 @@ final class CPUStateProcessSamplingTests: XCTestCase {
 
         XCTAssertEqual(executor.queuedReadCount, 1)
         XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty)
+    }
+
+    func testRestartDiscardsOldDeliveryBeforeCapturingNewBaseline() {
+        let executor = DeferredExecutor()
+        let state = makeState(executor: executor)
+        defer { state.metrics.endProcessSampling() }
+        let now = Date()
+        func snapshot(seconds: TimeInterval, cpuNanos: UInt64) -> ProcessCPUSnapshot {
+            ProcessCPUSnapshot(timestamp: now.addingTimeInterval(seconds), entries: [
+                1: .init(name: "p1", cpuNanos: cpuNanos)
+            ])
+        }
+
+        state.metrics.beginProcessSampling()
+        state.metrics.endProcessSampling()
+        state.metrics.beginProcessSampling()
+
+        processReader.snapshotToReturn = snapshot(seconds: 0, cpuNanos: 1_000_000_000)
+        executor.completeNext()
+        processReader.snapshotToReturn = snapshot(seconds: 2, cpuNanos: 2_000_000_000)
+        executor.completeNext()
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty, "First new read must establish a fresh baseline")
+
+        processReader.snapshotToReturn = snapshot(seconds: 4, cpuNanos: 3_000_000_000)
+        state.metrics.processSamplingTick()
+        executor.completeNext()
+        XCTAssertEqual(state.metrics.topCPUProcesses.map(\.pid), [1])
+    }
+
+    func testFirstSuccessfulTickEstablishesBaselineAfterReadFailure() {
+        let state = makeState()
+        defer { state.metrics.endProcessSampling() }
+        let now = Date()
+        state.metrics.beginProcessSampling()
+        processReader.snapshotToReturn = ProcessCPUSnapshot(timestamp: now, entries: [
+            1: .init(name: "p1", cpuNanos: 1_000_000_000)
+        ])
+        state.metrics.processSamplingTick()
+        XCTAssertTrue(state.metrics.topCPUProcesses.isEmpty)
+
+        processReader.snapshotToReturn = ProcessCPUSnapshot(timestamp: now.addingTimeInterval(2), entries: [
+            1: .init(name: "p1", cpuNanos: 2_000_000_000)
+        ])
+        state.metrics.processSamplingTick()
+        XCTAssertEqual(state.metrics.topCPUProcesses.map(\.pid), [1])
     }
 }

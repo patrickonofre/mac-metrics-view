@@ -10,18 +10,11 @@ final class CPUState: ObservableObject {
     /// SwiftUI consumers (`MetricsTab`, `SettingsTab`) observe `metrics` directly.
     let metrics: SystemMetricsModel
 
-    /// The Ambient pillar (TD-012): the latest ambient-light reading, the derived theme
-    /// suggestion, and the opt-in settings. Extracted to `AmbientThemeModel` (task-003).
-    /// `PopoverView` observes `ambient` directly (its own `@ObservedObject`) because, unlike
-    /// the menu bar, the theme-suggestion banner has no AppKit-imperative refresh path —
-    /// it only exists in SwiftUI, so it must react to the model's own publisher.
-    let ambient: AmbientThemeModel
-
     /// The Utilities pillar (TD-012): cleaning-mode input lock + the Accessibility
     /// recovery flow that gates it. Extracted to `CleaningLockModel` (task-004), which
     /// composes `AccessibilityRecoveryModel` and bridges its changes internally. UI
     /// observes `lock` directly at the point of use (`ActionsTab`, `LockOverlayView`,
-    /// `PopoverView`'s recovery banner) — same no-upward-bridge contract as `ambient`.
+    /// `PopoverView`'s recovery banner) without bridging changes to this coordinator.
     let lock: CleaningLockModel
 
     /// The Utilities pillar (TD-012): the keep-awake toggle (feature `keep-awake-toggle`,
@@ -47,13 +40,20 @@ final class CPUState: ObservableObject {
     }
 
 
+    @Published var selectedPopoverTab: PopoverTab = .metrics {
+        didSet {
+            guard isPopoverOpen, oldValue != selectedPopoverTab,
+                  oldValue == .metrics || selectedPopoverTab == .metrics else { return }
+            onMetricsTabChange?()
+        }
+    }
+
+    var isMetricsTabVisible: Bool { isPopoverOpen && selectedPopoverTab == .metrics }
+
     var onPopoverOpenChange: ((Bool) -> Void)?
+    var onMetricsTabChange: (() -> Void)?
     /// Called when the user requests a manual update check; AppDelegate forwards to the updater.
     var onCheckForUpdates: (() -> Void)?
-    /// Fires when the ambient theme settings change so AppDelegate can start/stop the
-    /// ambient sampler in step with the opt-in flag.
-    var onAmbientThemeSettingsChange: ((AmbientThemeSettings) -> Void)?
-
     /// `AppDelegate` wires these against `CPUState` directly; forwarded to `lock`/
     /// `lock.recovery` so the wiring call sites need no change.
     var onStartLock: ((TimeInterval) -> Void)? {
@@ -86,7 +86,6 @@ final class CPUState: ObservableObject {
         accessibilityAuthorization: AccessibilityAuthorizationProtocol = SystemAccessibilityAuthorization(),
         accessibilityProbe: AccessibilityProbing? = nil,
         batteryReader: BatteryReading = IOKitBatteryReader(),
-        systemAppearance: SystemAppearanceControlling? = nil,
         processReader: ProcessReading = LibprocProcessReader(),
         samplingExecutor: SamplingExecutor = BackgroundSamplingExecutor(),
         sleepAssertionService: SleepAssertionControlling = IOPMSleepAssertionService(),
@@ -100,10 +99,6 @@ final class CPUState: ObservableObject {
             processReader: processReader,
             samplingExecutor: samplingExecutor,
             batteryReader: batteryReader
-        )
-        ambient = AmbientThemeModel(
-            userDefaults: userDefaults,
-            systemAppearance: systemAppearance ?? SystemAppearanceController()
         )
         // `SystemAccessibilityProbe` is `@MainActor`, so it cannot be a default
         // argument (those are evaluated in a nonisolated context); build it here in
@@ -202,34 +197,6 @@ final class CPUState: ObservableObject {
 
         guard !segments.isEmpty else { return Strings.metricsPlaceholder() }
         return segments.joined(separator: ", ")
-    }
-
-    // MARK: - Ambient theme suggestion (forwards to `AmbientThemeModel`, task-003)
-
-    /// Lower-frequency read shims (Settings tab, AppDelegate's sampler gate). The
-    /// reactive banner in `PopoverView` observes `ambient` directly instead.
-    var ambientThemeSettings: AmbientThemeSettings { ambient.settings }
-    var latestAmbientSample: AmbientLightSample? { ambient.latestSample }
-    var themeSuggestion: ThemeSuggestion { ambient.suggestion }
-    var lastAppearanceApplyResult: AppearanceApplyResult? { ambient.lastApplyResult }
-
-    func update(with sample: AmbientLightSample) {
-        ambient.update(with: sample)
-    }
-
-    func applyThemeSuggestion() {
-        ambient.apply()
-    }
-
-    func dismissThemeSuggestion() {
-        ambient.dismiss()
-    }
-
-    /// Persists new ambient settings via the model and fires the change callback so
-    /// `AppDelegate` can start/stop the sampler in step with the opt-in flag.
-    func setAmbientThemeSettings(_ settings: AmbientThemeSettings) {
-        guard ambient.setSettings(settings) else { return }
-        onAmbientThemeSettingsChange?(settings)
     }
 
     // MARK: - Cleaning lock + Accessibility recovery (forwards to `CleaningLockModel`, task-004)

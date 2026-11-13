@@ -12,7 +12,7 @@
     { "id": "cpu",     "light": "popover-cpu-light.png",     "dark": "popover-cpu-dark.png",     "role": "CPU tab — top processes" },
     { "id": "ram",     "light": "popover-ram-light.png",     "dark": "popover-ram-dark.png",     "role": "RAM tab — Activity-Monitor breakdown, swap, kernel" },
     { "id": "netdisk", "light": "popover-netdisk-light.png", "dark": "popover-netdisk-dark.png", "role": "Network/Disk tab — expandable detail + session totals" },
-    { "id": "ai",      "light": "popover-ai-light.png",      "dark": "popover-ai-dark.png",      "role": "AI tokens tab — burn rate, USD cost, projection" }
+    { "id": "ai",      "light": "popover-ai-light.png",      "dark": "popover-ai-dark.png",      "role": "Battery detail — charge, time remaining, and cycles" }
   ],
   "$comment_popover": "Real macOS popover-window captures: fixed width, per-tab height (an expanded card sets the height). The gate checks width + light/dark parity per tab, not a single global height.",
   "popoverWidth": 406,

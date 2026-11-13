@@ -18,6 +18,47 @@ final class CPUStatePopoverTests: XCTestCase {
         XCTAssertFalse(makeState().isPopoverOpen)
     }
 
+    func testLegacyAmbientPreferencesRemainInertAndPreserved() {
+        let legacyPreferences: [[String: Any]] = [
+            [
+                "AmbientThemeSettings.isEnabled": true,
+                "AmbientThemeSettings.lowLux": 175.0,
+                "AmbientThemeSettings.highLux": 240.0,
+                "AmbientThemeSettings.dwellSeconds": 20.0
+            ],
+            [
+                "AmbientThemeSettings.isEnabled": true,
+                "AmbientThemeSettings.lowLux": "invalid",
+                "AmbientThemeSettings.highLux": -1.0,
+                "AmbientThemeSettings.dwellSeconds": ["invalid"]
+            ]
+        ]
+
+        for legacy in legacyPreferences {
+            let suiteName = "MacMetricsViewTests.LegacyAmbient.\(UUID().uuidString)"
+            let defaults = UserDefaults(suiteName: suiteName)!
+            defer { defaults.removePersistentDomain(forName: suiteName) }
+            legacy.forEach { defaults.set($0.value, forKey: $0.key) }
+            let display = MetricDisplaySettings(identifierStyle: .labels, diskMenuBarMetric: .split, updateRate: 3)
+            display.save(to: defaults)
+            let visibility = MetricVisibilitySettings.firstRunPreset
+            visibility.save(to: defaults)
+
+            let state = CPUState(
+                userDefaults: defaults,
+                accessibilityAuthorization: FakeAccessibilityAuthorization(isTrusted: false)
+            )
+
+            XCTAssertFalse(state.isPopoverOpen)
+            XCTAssertEqual(state.metrics.visibility, visibility)
+            XCTAssertEqual(state.metrics.display, display)
+            state.metrics.setUpdateRate(2)
+            XCTAssertEqual(MetricDisplaySettings.load(from: defaults).updateRate, 2)
+            let preserved = defaults.dictionaryRepresentation().filter { legacy[$0.key] != nil }
+            XCTAssertEqual(preserved as NSDictionary, legacy as NSDictionary)
+        }
+    }
+
     func testSetIsPopoverOpenPublishesValue() {
         let state = makeState()
         

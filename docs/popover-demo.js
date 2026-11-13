@@ -1,7 +1,7 @@
 // popover-demo.js — vanilla, dependency-free (loaded with defer like i18n.js).
 // Owns three things on the 2.0 marketing site:
 //   1. The interactive popover demo: a WAI-ARIA tabs widget that swaps the four
-//      2.0 popover screenshots (CPU / RAM / Network-Disk / AI tokens).
+//      popover screenshots (CPU / RAM / Network-Disk / Battery).
 //   2. The scroll-reveal IntersectionObserver that adds .reveal-in to
 //      .reveal-init blocks as they enter the viewport.
 //   3. Suppressing the sticky download CTA while the hero or the #download panel

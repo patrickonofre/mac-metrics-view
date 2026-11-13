@@ -28,7 +28,8 @@ enum DiskSampleCalculator {
         return DiskSample(
             timestamp: current.timestamp,
             readBytesPerSecond: readRate,
-            writeBytesPerSecond: writeRate
+            writeBytesPerSecond: writeRate,
+            measurementInterval: elapsedSeconds
         )
     }
 }

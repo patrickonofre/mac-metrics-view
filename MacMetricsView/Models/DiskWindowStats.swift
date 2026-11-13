@@ -5,15 +5,12 @@ enum DiskWindowStats {
         in history: DiskHistory,
         interval: TimeInterval
     ) -> (read: UInt64, written: UInt64) {
-        guard interval > 0, interval.isFinite else { return (0, 0) }
-
-        let readBytes = history.samples.reduce(0.0) { $0 + $1.readBytesPerSecond } * interval
-        let writtenBytes = history.samples.reduce(0.0) { $0 + $1.writeBytesPerSecond } * interval
-
-        return (
-            read: UInt64(max(0, readBytes.rounded())),
-            written: UInt64(max(0, writtenBytes.rounded()))
-        )
+        var totals = TrafficSessionTotals()
+        for sample in history.samples {
+            totals.add(inboundRate: sample.readBytesPerSecond, outboundRate: sample.writeBytesPerSecond,
+                       elapsed: sample.measurementInterval ?? interval)
+        }
+        return (read: totals.inbound, written: totals.outbound)
     }
 
     static func recentPeakRates(in history: DiskHistory) -> (read: Double, write: Double) {

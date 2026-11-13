@@ -109,7 +109,6 @@
 		1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E01 /* AccessibilityProbe.swift */; };
 		1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */; };
 		1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1000000000000000000000E03 /* MenuBarTitleComposer.swift */; };
-		B102B102B102B102B102B102 /* AmbientThemeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A102A102A102A102A102A102 /* AmbientThemeModel.swift */; };
 		B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A103A103A103A103A103A103 /* CleaningLockModel.swift */; };
 		B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */; };
 		B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = A105A105A105A105A105A105 /* SystemMetricsModel.swift */; };
@@ -142,20 +141,11 @@
 		100000000000000000000C05 /* AccessibilityGrantTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */; };
 		100000000000000000000C06 /* AccessibilityAuthorization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000130 /* AccessibilityAuthorization.swift */; };
 		100000000000000000000C08 /* UpdateBannerPresentationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 100000000000000000000C07 /* UpdateBannerPresentationTests.swift */; };
-		324C4A03B03B87F9DECC6FF8 /* IOKitAmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */; };
 		48F14B53373C498D8F676EAD /* IOKitGPUReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C0B31AAC8C295E38C7D8944 /* IOKitGPUReader.swift */; };
-		4E9304DB8458485A81E2F532 /* AmbientSuggestionPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */; };
-		65D017BEA6954CA095B9C64C /* ThemeSuggestionEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */; };
-		6714C7C4693B4956BAFB3424 /* AmbientLightModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */; };
 		7A1263990B23BA8A560A9848 /* GPUFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 08497764461421AB6D8B4EA0 /* GPUFormatter.swift */; };
 		875CADC73E436CBB39539B0B /* GPUHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = B73429D9BBEF7D1EB16D8288 /* GPUHistory.swift */; };
-		910CC55A40BE48D6A324C28F /* AmbientThemeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */; };
-		B272469D84C03AFE9DF74A77 /* AmbientLightReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */; };
-		B47D85D93D584D29AA3AB7AA /* AmbientLightSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */; };
-		C5F503404C4A431C8D2ACC85 /* SystemAppearanceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */; };
 		D16A94B1696B475157F81FE2 /* GPUReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = C38E64F1DE91A42C915E8095 /* GPUReading.swift */; };
 		DDEDDC61492DD84E3E2BF2A9 /* GPUSample.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8258A8D499B46A2DA5927F71 /* GPUSample.swift */; };
-		E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */; };
 		F6DC3C3A03ADD7DD7DA0BCF1 /* GPUSampler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4477DB866D82F1482690F7A3 /* GPUSampler.swift */; };
 		D1DC0000000000000000020C /* KeepAwakeSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC0000000000000000010A /* KeepAwakeSettings.swift */; };
 		D1DC00000000000000000201 /* LidCloseState.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1DC00000000000000000101 /* LidCloseState.swift */; };
@@ -214,7 +204,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientThemeSettings.swift; path = MacMetricsView/Models/AmbientThemeSettings.swift; sourceTree = SOURCE_ROOT; };
 		08497764461421AB6D8B4EA0 /* GPUFormatter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUFormatter.swift; path = Services/GPUFormatter.swift; sourceTree = "<group>"; };
 		10000000000000000000004E /* IOHIDTemperatureSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOHIDTemperatureSensors.swift; sourceTree = "<group>"; };
 		10000000000000000000004F /* IOKitTemperatureReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/IOKitTemperatureReader.swift; sourceTree = "<group>"; };
@@ -241,7 +230,6 @@
 		1000000000000000000000E01 /* AccessibilityProbe.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Services/AccessibilityProbe.swift; sourceTree = "<group>"; };
 		1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityNudgeTracker.swift; sourceTree = "<group>"; };
 		1000000000000000000000E03 /* MenuBarTitleComposer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/MenuBarTitleComposer.swift; sourceTree = "<group>"; };
-		A102A102A102A102A102A102 /* AmbientThemeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AmbientThemeModel.swift; sourceTree = "<group>"; };
 		A103A103A103A103A103A103 /* CleaningLockModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/CleaningLockModel.swift; sourceTree = "<group>"; };
 		A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/AccessibilityRecoveryModel.swift; sourceTree = "<group>"; };
 		A105A105A105A105A105A105 /* SystemMetricsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App/SystemMetricsModel.swift; sourceTree = "<group>"; };
@@ -320,19 +308,11 @@
 		100000000000000000000C01 /* AccessibilityGrantTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/AccessibilityGrantTracker.swift; sourceTree = "<group>"; };
 		100000000000000000000C04 /* AccessibilityGrantTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityGrantTrackerTests.swift; sourceTree = "<group>"; };
 		100000000000000000000C07 /* UpdateBannerPresentationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateBannerPresentationTests.swift; sourceTree = "<group>"; };
-		1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = ThemeSuggestionEngine.swift; path = MacMetricsView/Services/ThemeSuggestionEngine.swift; sourceTree = SOURCE_ROOT; };
-		353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOKitAmbientLightReader.swift; path = MacMetricsView/Services/IOKitAmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
 		3C0B31AAC8C295E38C7D8944 /* IOKitGPUReader.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = IOKitGPUReader.swift; path = Services/IOKitGPUReader.swift; sourceTree = "<group>"; };
 		4477DB866D82F1482690F7A3 /* GPUSampler.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUSampler.swift; path = Services/GPUSampler.swift; sourceTree = "<group>"; };
-		4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightReader.swift; path = MacMetricsView/Services/AmbientLightReader.swift; sourceTree = SOURCE_ROOT; };
-		5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = IOHIDAmbientLightSensors.swift; path = MacMetricsView/Services/IOHIDAmbientLightSensors.swift; sourceTree = SOURCE_ROOT; };
-		60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightModels.swift; path = MacMetricsView/Models/AmbientLightModels.swift; sourceTree = SOURCE_ROOT; };
 		8258A8D499B46A2DA5927F71 /* GPUSample.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUSample.swift; path = Models/GPUSample.swift; sourceTree = "<group>"; };
-		A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientLightSampler.swift; path = MacMetricsView/Services/AmbientLightSampler.swift; sourceTree = SOURCE_ROOT; };
 		B73429D9BBEF7D1EB16D8288 /* GPUHistory.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUHistory.swift; path = Models/GPUHistory.swift; sourceTree = "<group>"; };
-		C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = SystemAppearanceController.swift; path = MacMetricsView/Services/SystemAppearanceController.swift; sourceTree = SOURCE_ROOT; };
 		C38E64F1DE91A42C915E8095 /* GPUReading.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GPUReading.swift; path = Services/GPUReading.swift; sourceTree = "<group>"; };
-		D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AmbientSuggestionPresentation.swift; path = MacMetricsView/UI/AmbientSuggestionPresentation.swift; sourceTree = SOURCE_ROOT; };
 		D1DC0000000000000000010A /* KeepAwakeSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/KeepAwakeSettings.swift; sourceTree = "<group>"; };
 		D1DC00000000000000000101 /* LidCloseState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LidCloseState.swift; sourceTree = "<group>"; };
 		D1DC00000000000000000102 /* LidCloseFailsafePolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models/LidCloseFailsafePolicy.swift; sourceTree = "<group>"; };
@@ -419,15 +399,6 @@
 				100000000000000000000126 /* TemperatureSampler.swift */,
 				10000000000000000000004E /* IOHIDTemperatureSensors.swift */,
 				10000000000000000000004F /* IOKitTemperatureReader.swift */,
-				60D7BF47F3AC469590865FFD /* AmbientLightModels.swift */,
-				04EBD4C339E64D939B160201 /* AmbientThemeSettings.swift */,
-				A2EA4E4D57CC4F399E29DE08 /* AmbientLightSampler.swift */,
-				5E4428D914C844F79C7ED769 /* IOHIDAmbientLightSensors.swift */,
-				C0C7B70379BF48B8A8BEE028 /* SystemAppearanceController.swift */,
-				1C50A69A8B064CD4B28F4E40 /* ThemeSuggestionEngine.swift */,
-				D5FF22A80E9F459DA54B8F3E /* AmbientSuggestionPresentation.swift */,
-				4C354718A5509642A11A8BD7 /* AmbientLightReader.swift */,
-				353F40739C3FDDCB4853AA4B /* IOKitAmbientLightReader.swift */,
 				10000000000000000000011B /* DarwinNetworkReader.swift */,
 				10000000000000000000011D /* NetworkSampleCalculator.swift */,
 				10000000000000000000012B /* Localization.swift */,
@@ -458,7 +429,6 @@
 				1000000000000000000000E01 /* AccessibilityProbe.swift */,
 				1000000000000000000000E02 /* AccessibilityNudgeTracker.swift */,
 				1000000000000000000000E03 /* MenuBarTitleComposer.swift */,
-				A102A102A102A102A102A102 /* AmbientThemeModel.swift */,
 				A103A103A103A103A103A103 /* CleaningLockModel.swift */,
 				A104A104A104A104A104A104 /* AccessibilityRecoveryModel.swift */,
 				A105A105A105A105A105A105 /* SystemMetricsModel.swift */,
@@ -698,15 +668,6 @@
 				100000000000000000000031 /* TemperatureSampler.swift in Sources */,
 				100000000000000000000051 /* IOHIDTemperatureSensors.swift in Sources */,
 				100000000000000000000052 /* IOKitTemperatureReader.swift in Sources */,
-				6714C7C4693B4956BAFB3424 /* AmbientLightModels.swift in Sources */,
-				910CC55A40BE48D6A324C28F /* AmbientThemeSettings.swift in Sources */,
-				B47D85D93D584D29AA3AB7AA /* AmbientLightSampler.swift in Sources */,
-				E0E00CCE44654D069347256A /* IOHIDAmbientLightSensors.swift in Sources */,
-				C5F503404C4A431C8D2ACC85 /* SystemAppearanceController.swift in Sources */,
-				65D017BEA6954CA095B9C64C /* ThemeSuggestionEngine.swift in Sources */,
-				4E9304DB8458485A81E2F532 /* AmbientSuggestionPresentation.swift in Sources */,
-				B272469D84C03AFE9DF74A77 /* AmbientLightReader.swift in Sources */,
-				324C4A03B03B87F9DECC6FF8 /* IOKitAmbientLightReader.swift in Sources */,
 				10000000000000000000001E /* DarwinNetworkReader.swift in Sources */,
 				100000000000000000000020 /* NetworkSampleCalculator.swift in Sources */,
 				10000000000000000000003B /* Localization.swift in Sources */,
@@ -737,7 +698,6 @@
 				1000000000000000000000EB01 /* AccessibilityProbe.swift in Sources */,
 				1000000000000000000000EB02 /* AccessibilityNudgeTracker.swift in Sources */,
 				1000000000000000000000EB03 /* MenuBarTitleComposer.swift in Sources */,
-				B102B102B102B102B102B102 /* AmbientThemeModel.swift in Sources */,
 				B103B103B103B103B103B103 /* CleaningLockModel.swift in Sources */,
 				B104B104B104B104B104B104 /* AccessibilityRecoveryModel.swift in Sources */,
 				B105B105B105B105B105B105 /* SystemMetricsModel.swift in Sources */,
@@ -862,7 +822,7 @@
 				CODE_SIGN_IDENTITY = "Mac Metrics View Self-Signed";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 50;
+				CURRENT_PROJECT_VERSION = 51;
 				DEVELOPMENT_ASSET_PATHS = "";
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -871,7 +831,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.7.1;
+				MARKETING_VERSION = 2.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -887,7 +847,7 @@
 				CODE_SIGN_IDENTITY = "Mac Metrics View Self-Signed";
 				CODE_SIGN_STYLE = Manual;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 50;
+				CURRENT_PROJECT_VERSION = 51;
 				ENABLE_CODE_COVERAGE = NO;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = MacMetricsView/Info.plist;
@@ -896,7 +856,7 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 2.7.1;
+				MARKETING_VERSION = 2.8.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pso.MacMetricsView;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;

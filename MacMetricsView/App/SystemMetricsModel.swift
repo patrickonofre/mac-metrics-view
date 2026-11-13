@@ -6,13 +6,13 @@ import Foundation
 /// last and largest pillar, leaving `CPUState` as a pure coordinator (children +
 /// menu-bar title composition + cross-cutting state). `StatusItemController`
 /// never needs to observe this model reactively: `AppDelegate`'s sampler delegates push
-/// `setNeedsTitleUpdate()` explicitly after every `update(with:)` call. SwiftUI consumers
-/// (`MetricsTab`, `SettingsTab`) observe `metrics` directly as their own `@ObservedObject`.
+/// `setNeedsTitleUpdate()` for visible menu bar metrics. `MetricsTab` observes the
+/// live model. `SettingsTab` subscribes to visibility and display preferences only.
 @MainActor
 final class SystemMetricsModel: ObservableObject {
     @Published private(set) var visibility: MetricVisibilitySettings
     @Published private(set) var display: MetricDisplaySettings
-    @Published private(set) var updateRate: Int
+    var updateRate: Int { display.updateRate }
     @Published private(set) var latestSample: CPUSample?
     @Published private(set) var latestRAMSample: RAMSample?
     @Published private(set) var latestNetworkSample: NetworkSample?
@@ -31,16 +31,12 @@ final class SystemMetricsModel: ObservableObject {
     @Published private(set) var gpuHistory = GPUHistory()
 
     /// Cumulative download/upload and read/write byte totals since launch (in-memory,
-    /// reset each launch), folded from consecutive sample gaps. Surface the since-launch
+    /// reset each launch), folded over measured intervals. Surface the since-launch
     /// rows in the expanded network/disk cards, distinct from the ~45s window stats.
     @Published private(set) var networkSessionTotals = TrafficSessionTotals()
     @Published private(set) var diskSessionTotals = TrafficSessionTotals()
     private var lastNetworkSampleTimestamp: Date?
     private var lastDiskSampleTimestamp: Date?
-
-    /// Interval the disk sampler ticks at, used to convert rolling-window rate
-    /// sums into byte totals for the popover (see DiskWindowStats / ADR-002).
-    let diskSampleInterval: TimeInterval = 1
 
     var onVisibilityChange: ((MetricVisibilitySettings.Metric, Bool) -> Void)?
     var onDisplayChange: (() -> Void)?
@@ -71,9 +67,7 @@ final class SystemMetricsModel: ObservableObject {
         self.samplingExecutor = samplingExecutor
         self.batteryReader = batteryReader
         visibility = MetricVisibilitySettings.load(from: userDefaults)
-        let loadedDisplay = MetricDisplaySettings.resolved(from: userDefaults)
-        display = loadedDisplay
-        updateRate = loadedDisplay.updateRate
+        display = MetricDisplaySettings.resolved(from: userDefaults)
     }
 
     deinit {
@@ -103,7 +97,7 @@ final class SystemMetricsModel: ObservableObject {
     }
 
     /// Rolling-window download/upload totals and peaks for the expanded network card.
-    /// Integrates the retained rates over the configured sampling interval (ADR-002).
+    /// Integrates the retained rates over their measured intervals (ADR-002).
     var networkDetailRows: [(label: String, value: String)] {
         NetworkFormatter.detailRows(
             history: networkHistory,
@@ -113,7 +107,7 @@ final class SystemMetricsModel: ObservableObject {
     }
 
     /// Rolling-window read/write totals and peaks for the expanded disk card.
-    /// Integrates the retained rates over the configured sampling interval (ADR-002).
+    /// Integrates the retained rates over their measured intervals (ADR-002).
     var diskDetailRows: [(label: String, value: String)] {
         DiskFormatter.detailRows(
             history: diskHistory,
@@ -184,11 +178,11 @@ final class SystemMetricsModel: ObservableObject {
     func update(with sample: NetworkSample) {
         latestNetworkSample = sample
         networkHistory.append(sample)
-        if let last = lastNetworkSampleTimestamp {
+        if let elapsed = sample.measurementInterval ?? lastNetworkSampleTimestamp.map({ sample.timestamp.timeIntervalSince($0) }) {
             networkSessionTotals.add(
                 inboundRate: sample.downloadBytesPerSecond,
                 outboundRate: sample.uploadBytesPerSecond,
-                elapsed: sample.timestamp.timeIntervalSince(last)
+                elapsed: elapsed
             )
         }
         lastNetworkSampleTimestamp = sample.timestamp
@@ -202,11 +196,11 @@ final class SystemMetricsModel: ObservableObject {
     func update(with sample: DiskSample) {
         latestDiskSample = sample
         diskHistory.append(sample)
-        if let last = lastDiskSampleTimestamp {
+        if let elapsed = sample.measurementInterval ?? lastDiskSampleTimestamp.map({ sample.timestamp.timeIntervalSince($0) }) {
             diskSessionTotals.add(
                 inboundRate: sample.readBytesPerSecond,
                 outboundRate: sample.writeBytesPerSecond,
-                elapsed: sample.timestamp.timeIntervalSince(last)
+                elapsed: elapsed
             )
         }
         lastDiskSampleTimestamp = sample.timestamp
@@ -274,7 +268,6 @@ final class SystemMetricsModel: ObservableObject {
         let clamped = (rate == 1 || rate == 2 || rate == 3) ? rate : 1
         display.updateRate = clamped
         display.save(to: userDefaults)
-        updateRate = clamped
         onDisplayChange?()
     }
 
@@ -292,10 +285,9 @@ final class SystemMetricsModel: ObservableObject {
     }
 
     private func updateVisibility(metric: MetricVisibilitySettings.Metric, isVisible: Bool) {
-        guard currentVisibility(for: metric) != isVisible else { return }
+        guard isVisibleInMenuBar(metric) != isVisible else { return }
 
-        // Toggling only curates the menu bar. Samplers keep running and history keeps
-        // accumulating, so there is no stale data to reset on re-show.
+        // Keep history when a toggle pauses a sampler outside the Metrics tab.
         switch metric {
         case .cpu:
             visibility.showCPU = isVisible
@@ -317,7 +309,7 @@ final class SystemMetricsModel: ObservableObject {
         onVisibilityChange?(metric, isVisible)
     }
 
-    private func currentVisibility(for metric: MetricVisibilitySettings.Metric) -> Bool {
+    func isVisibleInMenuBar(_ metric: MetricVisibilitySettings.Metric) -> Bool {
         switch metric {
         case .cpu:
             return visibility.showCPU
@@ -340,60 +332,32 @@ final class SystemMetricsModel: ObservableObject {
 
     func beginProcessSampling() {
         guard processSamplingTimer == nil else { return } // idempotent
-        // Baseline read runs off the main thread (PERF-01); the snapshot is stored on the
-        // main actor. The first tick is a no-op until it lands (guarded on a nil baseline).
+        // Collect an immediate baseline off the main thread (PERF-01).
         processSamplingTimer = MainRunLoopTimer.repeating(every: 2) { [weak self] in
             self?.processSamplingTick()
         }
-        processSamplingGate.request { [weak self] finish in
-            guard let self else {
-                finish()
-                return
-            }
-            self.samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] snapshot in
-                guard let self else {
-                    finish()
-                    return
-                }
-                defer { finish() }
-                guard self.processSamplingTimer != nil else { return }
-                self.previousProcessSnapshot = snapshot
-            }
-        }
+        processSamplingTick()
     }
 
     func endProcessSampling() {
+        guard processSamplingTimer != nil else { return }
         processSamplingTimer?.invalidate()
         processSamplingTimer = nil
         processSamplingGate.cancel()
         previousProcessSnapshot = nil
+        if !topCPUProcesses.isEmpty { topCPUProcesses = [] }
     }
 
-    func processSamplingTick(now: Date = Date()) {
+    func processSamplingTick() {
         guard processSamplingTimer != nil else { return }
         // Enumerate all PIDs off the main thread (PERF-01); rank and publish on the main actor.
-        // Re-check the timer in the delivery closure so a stop() between read and delivery
-        // cannot publish a late ranking.
-        processSamplingGate.request { [weak self] finish in
-            guard let self else {
-                finish()
-                return
-            }
-            self.samplingExecutor.run({ [processReader] in processReader.readSnapshot() }) { [weak self] cur in
-                guard let self else {
-                    finish()
-                    return
-                }
-                defer { finish() }
-                guard self.processSamplingTimer != nil,
-                      let previous = self.previousProcessSnapshot,
-                      let cur
-                else {
-                    return
-                }
-                self.topCPUProcesses = ProcessCPURanking.topProcesses(previous: previous, current: cur)
-                self.previousProcessSnapshot = cur
-            }
+        processSamplingGate.request(on: samplingExecutor, read: { [processReader] in
+            processReader.readSnapshot()
+        }) { [weak self] current in
+            guard let self, self.processSamplingTimer != nil, let current else { return }
+            defer { self.previousProcessSnapshot = current }
+            guard let previous = self.previousProcessSnapshot else { return }
+            self.topCPUProcesses = ProcessCPURanking.topProcesses(previous: previous, current: current)
         }
     }
 }

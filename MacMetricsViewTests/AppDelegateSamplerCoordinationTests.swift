@@ -102,6 +102,37 @@ final class AppDelegateSamplerCoordinationTests: XCTestCase {
         XCTAssertFalse(appDelegate.temperatureSampler.isRunning)
         XCTAssertFalse(appDelegate.batterySampler.isRunning)
     }
+
+    func testSwitchingAwayFromMetricsRestoresMenuBarCadenceAndPausesHiddenSamplers() {
+        let state = appDelegate.state
+        state.metrics.setUpdateRate(3)
+        state.metrics.setCPUVisible(true)
+        state.metrics.setNetworkVisible(false)
+        state.metrics.setDiskVisible(false)
+        state.metrics.setGPUVisible(false)
+        state.isPopoverOpen = true
+
+        XCTAssertEqual(appDelegate.cpuSampler.interval, 1)
+        XCTAssertTrue(appDelegate.networkSampler.isRunning)
+        XCTAssertTrue(appDelegate.diskSampler.isRunning)
+        XCTAssertTrue(appDelegate.gpuSampler.isRunning)
+
+        for tab in [PopoverTab.settings, .actions] {
+            state.selectedPopoverTab = tab
+            XCTAssertTrue(state.isPopoverOpen)
+            XCTAssertEqual(appDelegate.cpuSampler.interval, 3)
+            XCTAssertEqual(appDelegate.cpuSampler.tolerance, 0.75)
+            XCTAssertFalse(appDelegate.networkSampler.isRunning)
+            XCTAssertFalse(appDelegate.diskSampler.isRunning)
+            XCTAssertFalse(appDelegate.gpuSampler.isRunning)
+        }
+
+        state.selectedPopoverTab = .metrics
+        XCTAssertEqual(appDelegate.cpuSampler.interval, 1)
+        XCTAssertTrue(appDelegate.networkSampler.isRunning)
+        XCTAssertTrue(appDelegate.diskSampler.isRunning)
+        XCTAssertTrue(appDelegate.gpuSampler.isRunning)
+    }
     
     func testTogglingVisibilityWhenClosedUpdatesSamplerState() {
         appDelegate.state.metrics.setUpdateRate(2)

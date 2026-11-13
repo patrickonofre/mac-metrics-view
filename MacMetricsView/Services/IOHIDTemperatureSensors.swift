@@ -5,6 +5,10 @@ import Foundation
 struct TemperatureSensorReading: Equatable {
     let name: String
     let celsius: Double
+
+    static func isCPUSensor(named name: String) -> Bool {
+        name.contains("tdie") || name.contains("MTR Temp Sensor")
+    }
 }
 
 /// Injectable seam for enumerating hardware temperature sensors. The real
@@ -49,14 +53,11 @@ final class IOHIDTemperatureSensorSource: TemperatureSensorSource {
     private lazy var symbols: Symbols? = Self.resolveSymbols()
     private lazy var client: AnyObject? = makeClient()
 
-    /// Enumerated services paired with their (fixed) `Product` name, resolved once and
-    /// reused every tick (OPT-01). Sensor hardware and names never change while running, so
-    /// the per-tick `copyServices` enumeration and the N `copyProperty` string reads — the
-    /// dominant cost of the temperature poll — collapse to `copyEvent` + `floatValue` per
-    /// service. `nil` means "not yet enumerated"; an empty enumeration is never cached (it
-    /// retries next tick, same cost as before), and a populated cache that stops emitting
-    /// entirely (post sleep/wake, HID event system restart) is dropped so the next tick
-    /// re-enumerates. Retained CF objects are held alive by this array (ARC via AnyObject).
+    /// Cache CPU-eligible services and their fixed `Product` names so other sensors
+    /// never receive event reads. A failed or empty HID enumeration retries next tick.
+    /// A successful enumeration with no eligible sensors caches an empty array. Drop a
+    /// populated cache when every event read fails, for example after sleep/wake.
+    /// ARC retains the CF handles through `AnyObject`.
     private var cachedServices: [(service: AnyObject, name: String)]?
 
     func readSensors() -> [TemperatureSensorReading] {
@@ -66,8 +67,7 @@ final class IOHIDTemperatureSensorSource: TemperatureSensorSource {
         if let cached = cachedServices {
             services = cached
         } else {
-            let enumerated = Self.enumerateServices(symbols: symbols, client: client)
-            guard !enumerated.isEmpty else { return [] }   // don't cache empty — retry next tick
+            guard let enumerated = Self.enumerateServices(symbols: symbols, client: client) else { return [] }
             cachedServices = enumerated
             services = enumerated
         }
@@ -83,15 +83,17 @@ final class IOHIDTemperatureSensorSource: TemperatureSensorSource {
 
         // A populated cache that produced nothing this tick is stale (services invalidated) —
         // drop it so the next tick rebuilds it. Never crashes; falls back to thermal state.
-        if readings.isEmpty { cachedServices = nil }
+        if readings.isEmpty, !services.isEmpty { cachedServices = nil }
         return readings
     }
 
-    private static func enumerateServices(symbols: Symbols, client: AnyObject) -> [(service: AnyObject, name: String)] {
-        guard let services = symbols.copyServices(client)?.takeRetainedValue() as NSArray? else { return [] }
+    private static func enumerateServices(symbols: Symbols, client: AnyObject) -> [(service: AnyObject, name: String)]? {
+        guard let services = symbols.copyServices(client)?.takeRetainedValue() as NSArray?,
+              services.count > 0 else { return nil }
         var result: [(service: AnyObject, name: String)] = []
         for case let service as AnyObject in services {
             let name = symbols.copyProperty(service, "Product" as CFString)?.takeRetainedValue() as? String ?? ""
+            guard TemperatureSensorReading.isCPUSensor(named: name) else { continue }
             result.append((service, name))
         }
         return result

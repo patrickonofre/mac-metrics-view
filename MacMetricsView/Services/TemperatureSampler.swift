@@ -122,20 +122,9 @@ final class TemperatureSampler {
     private func collect() {
         // The numeric SMC/IOKit read runs off the main thread (PERF-01); the sample is
         // delivered on the main actor. A nil read never notifies the delegate.
-        workGate.request { [weak self] finish in
-            guard let self else {
-                finish()
-                return
-            }
-            self.executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
-                guard let self else {
-                    finish()
-                    return
-                }
-                defer { finish() }
-                guard self.isRunning, let sample else { return }
-                self.delegate?.temperatureSampler(self, didProduce: sample)
-            }
+        workGate.request(on: executor, read: { [reader] in reader.readSample() }) { [weak self] sample in
+            guard let self, self.isRunning, let sample else { return }
+            self.delegate?.temperatureSampler(self, didProduce: sample)
         }
     }
 }

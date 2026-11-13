@@ -28,7 +28,8 @@ enum NetworkSampleCalculator {
         return NetworkSample(
             timestamp: current.timestamp,
             downloadBytesPerSecond: downloadRate,
-            uploadBytesPerSecond: uploadRate
+            uploadBytesPerSecond: uploadRate,
+            measurementInterval: elapsedSeconds
         )
     }
 }

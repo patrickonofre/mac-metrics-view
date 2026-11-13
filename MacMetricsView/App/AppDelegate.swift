@@ -1,7 +1,7 @@
 import AppKit
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, BatterySamplerDelegate, AmbientLightSamplerDelegate, GPUSamplerDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RAMSamplerDelegate, NetworkSamplerDelegate, TemperatureSamplerDelegate, DiskSamplerDelegate, BatterySamplerDelegate, GPUSamplerDelegate {
     // Lazy so the first-run metric preset can seed UserDefaults *before* CPUState loads
     // its visibility (see applyFirstRunMetricPresetIfNeeded()). Internal (not private) so
     // wiring tests can observe the published state after a delegate callback.
@@ -15,10 +15,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
     let gpuSampler = GPUSampler()
     // Internal so wiring tests can drive the gated lifecycle and assert routing.
     let batterySampler = BatterySampler()
-    // Ambient-light sampler for the theme suggestion. Gated by the opt-in setting
-    // (not menu-bar visibility): it runs whenever the feature is enabled. Internal so
-    // wiring tests can drive the gated lifecycle.
-    let ambientLightSampler = AmbientLightSampler()
     private var statusItemController: StatusItemController?
 
     /// Battery presence is fixed by hardware for the process lifetime, so the full IOPS
@@ -64,9 +60,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
             self.reevaluateSamplers()
             self.statusItemController?.setNeedsTitleUpdate()
         }
-        state.onPopoverOpenChange = { [weak self] isOpen in
-            guard let self else { return }
-            self.reevaluateSamplers()
+        state.onPopoverOpenChange = { [weak self] _ in
+            self?.reevaluateSamplers()
+        }
+        state.onMetricsTabChange = { [weak self] in
+            self?.reevaluateSamplers()
         }
 
         // Wire cleaning lock: state fires onStartLock → we start the service + overlay.
@@ -127,17 +125,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         diskSampler.delegate = self
         gpuSampler.delegate = self
         batterySampler.delegate = self
-        ambientLightSampler.delegate = self
-
-        // The ambient sampler runs independently of menu-bar visibility / popover state:
-        // it is gated purely by the opt-in flag, so re-evaluate it whenever the setting
-        // changes (the Settings toggle flows through CPUState → this callback).
-        state.onAmbientThemeSettingsChange = { [weak self] _ in
-            self?.reevaluateAmbientSampler()
-        }
-
         reevaluateSamplers()
-        reevaluateAmbientSampler()
     }
 
     func applicationWillTerminate(_ notification: Notification) {
@@ -155,7 +143,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
         diskSampler.stop()
         gpuSampler.stop()
         batterySampler.stop()
-        ambientLightSampler.stop()
     }
 
     /// Handle to the quit-failsafe deactivation (LIDC-11). Internal so wiring tests
@@ -248,132 +235,88 @@ final class AppDelegate: NSObject, NSApplicationDelegate, CPUSamplerDelegate, RA
 
     func cpuSampler(_ sampler: CPUSampler, didProduce sample: CPUSample) {
         state.metrics.update(with: sample)
-        statusItemController?.setNeedsTitleUpdate()
+        scheduleTitleUpdate(for: .cpu)
     }
 
     func ramSampler(_ sampler: RAMSampler, didProduce sample: RAMSample) {
         state.metrics.update(with: sample)
-        statusItemController?.setNeedsTitleUpdate()
+        scheduleTitleUpdate(for: .ram)
     }
 
     func networkSampler(_ sampler: NetworkSampler, didProduce sample: NetworkSample) {
         state.metrics.update(with: sample)
-        statusItemController?.setNeedsTitleUpdate()
+        scheduleTitleUpdate(for: .network)
     }
 
     func temperatureSampler(_ sampler: TemperatureSampler, didProduce sample: TemperatureSample) {
         state.metrics.update(with: sample)
-        statusItemController?.setNeedsTitleUpdate()
+        scheduleTitleUpdate(for: .temperature)
     }
 
     func diskSampler(_ sampler: DiskSampler, didProduce sample: DiskSample) {
         state.metrics.update(with: sample)
-        statusItemController?.setNeedsTitleUpdate()
+        scheduleTitleUpdate(for: .disk)
     }
 
     func gpuSampler(_ sampler: GPUSampler, didProduce sample: GPUSample) {
         state.metrics.update(with: sample)
-        statusItemController?.setNeedsTitleUpdate()
+        scheduleTitleUpdate(for: .gpu)
     }
 
     func batterySampler(_ sampler: BatterySampler, didProduce sample: BatterySample) {
         state.metrics.update(with: sample)
+        scheduleTitleUpdate(for: .battery)
+    }
+
+    private func scheduleTitleUpdate(for metric: MetricVisibilitySettings.Metric) {
+        guard state.metrics.isVisibleInMenuBar(metric) else { return }
         statusItemController?.setNeedsTitleUpdate()
     }
 
-    func ambientLightSampler(_ sampler: AmbientLightSampler, didProduce sample: AmbientLightSample) {
-        // Theme suggestion is a popover-only surface (no menu-bar segment), so no title
-        // rebuild — CPUState republishes `themeSuggestion`/`latestAmbientSample` for the UI.
-        state.update(with: sample)
-    }
-
     func reevaluateSamplers() {
-        let isPopoverOpen = state.isPopoverOpen
-        let bgInterval = TimeInterval(state.metrics.display.updateRate)
-        // Background ticks get 25% tolerance so the kernel coalesces all active samplers
-        // into a single wakeup (ADR-002). The open popover keeps an exact 1s cadence
-        // (tolerance 0) for fluid real-time graphs.
-        let bgTolerance = bgInterval * 0.25
+        let showingMetrics = state.isMetricsTabVisible
+        let visibility = state.metrics.visibility
+        let interval = showingMetrics ? 1 : TimeInterval(state.metrics.updateRate)
+        // Keep exact ticks while graphs are visible. Elsewhere the kernel can group wakeups.
+        let tolerance = showingMetrics ? 0 : interval * 0.25
 
-        if isPopoverOpen {
-            // All samplers active at 1s for fluid real-time updates in popover
-            cpuSampler.start(interval: 1.0, tolerance: 0)
-            ramSampler.start(interval: 1.0, tolerance: 0)
-            networkSampler.start(interval: 1.0, tolerance: 0)
-            // Temperature keeps a slower 2s cadence even with the popover open (OPT-06 /
-            // TD-013); the slow signal reads identically and saves the extra reads.
-            temperatureSampler.start(interval: temperaturePopoverInterval, tolerance: 0)
-            diskSampler.start(interval: 1.0, tolerance: 0)
-            gpuSampler.start(interval: 1.0, tolerance: 0)
-
-            // Battery keeps its event-driven + 30s safety poll cadence even with the popover
-            // open (OPT-05): plug/unplug and charge ticks arrive as IOPS events in real time,
-            // and openPopover() already does a one-shot read, so a 1s poll adds nothing.
-            if batteryIsPresent {
-                batterySampler.start(interval: batterySafetyPollInterval, tolerance: batterySafetyPollInterval * 0.25)
-            } else {
-                batterySampler.stop()
-            }
+        if showingMetrics || visibility.showCPU {
+            cpuSampler.start(interval: interval, tolerance: tolerance)
         } else {
-            // Popover is closed: only run samplers for visible menu bar metrics at the background rate.
-            // Hidden metrics are completely stopped (suspended).
-
-            if state.metrics.visibility.showCPU {
-                cpuSampler.start(interval: bgInterval, tolerance: bgTolerance)
-            } else {
-                cpuSampler.stop()
-            }
-
-            if state.metrics.visibility.showRAM {
-                ramSampler.start(interval: bgInterval, tolerance: bgTolerance)
-            } else {
-                ramSampler.stop()
-            }
-
-            if state.metrics.visibility.showNetwork {
-                networkSampler.start(interval: bgInterval, tolerance: bgTolerance)
-            } else {
-                networkSampler.stop()
-            }
-
-            if state.metrics.visibility.showTemperature {
-                // Fixed 3s background cadence, independent of updateRate (OPT-06 / TD-013).
-                temperatureSampler.start(
-                    interval: temperatureBackgroundInterval,
-                    tolerance: temperatureBackgroundInterval * 0.25
-                )
-            } else {
-                temperatureSampler.stop()
-            }
-
-            if state.metrics.visibility.showDisk {
-                diskSampler.start(interval: bgInterval, tolerance: bgTolerance)
-            } else {
-                diskSampler.stop()
-            }
-
-            if state.metrics.visibility.showGPU {
-                gpuSampler.start(interval: bgInterval, tolerance: bgTolerance)
-            } else {
-                gpuSampler.stop()
-            }
-
-            if state.metrics.visibility.showBattery && batteryIsPresent {
-                batterySampler.start(interval: batterySafetyPollInterval, tolerance: batterySafetyPollInterval * 0.25)
-            } else {
-                batterySampler.stop()
-            }
+            cpuSampler.stop()
         }
-    }
-
-    /// Starts or stops the ambient sampler in step with the opt-in flag. Independent of
-    /// `reevaluateSamplers` (visibility/popover-driven): ambient light changes slowly, so
-    /// it polls on a fixed modest cadence with generous tolerance for wakeup coalescing.
-    func reevaluateAmbientSampler() {
-        if state.ambientThemeSettings.isEnabled {
-            ambientLightSampler.start(interval: 10, tolerance: 2.5)
+        if showingMetrics || visibility.showRAM {
+            ramSampler.start(interval: interval, tolerance: tolerance)
         } else {
-            ambientLightSampler.stop()
+            ramSampler.stop()
+        }
+        if showingMetrics || visibility.showNetwork {
+            networkSampler.start(interval: interval, tolerance: tolerance)
+        } else {
+            networkSampler.stop()
+        }
+        // Temperature follows TD-013 and stays independent of the menu bar update rate.
+        if showingMetrics || visibility.showTemperature {
+            let temperatureInterval = showingMetrics ? temperaturePopoverInterval : temperatureBackgroundInterval
+            temperatureSampler.start(interval: temperatureInterval, tolerance: showingMetrics ? 0 : temperatureInterval * 0.25)
+        } else {
+            temperatureSampler.stop()
+        }
+        if showingMetrics || visibility.showDisk {
+            diskSampler.start(interval: interval, tolerance: tolerance)
+        } else {
+            diskSampler.stop()
+        }
+        if showingMetrics || visibility.showGPU {
+            gpuSampler.start(interval: interval, tolerance: tolerance)
+        } else {
+            gpuSampler.stop()
+        }
+        // IOPS events and the 30s safety poll cover the battery in either mode (OPT-05).
+        if (showingMetrics || visibility.showBattery) && batteryIsPresent {
+            batterySampler.start(interval: batterySafetyPollInterval, tolerance: batterySafetyPollInterval * 0.25)
+        } else {
+            batterySampler.stop()
         }
     }
 }

@@ -6,6 +6,19 @@
         <description>Appcast for Mac Metrics View auto-update.</description>
         <language>en</language>
         <item>
+            <title>2.8.0</title>
+            <description><![CDATA[<ul><li>Popover com visual nativo e coleta rápida na aba Métricas.</li><li>Temperatura mais rápida e lista de processos ao expandir CPU.</li><li>Removidas as sugestões de tema por luz ambiente.</li><li>Sparkle atualizado para 2.10.1.</li></ul>]]></description>
+            <pubDate>Thu, 12 Nov 2026 21:11:14 -0300</pubDate>
+            <sparkle:version>51</sparkle:version>
+            <sparkle:shortVersionString>2.8.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure
+                url="https://patrickonofre.github.io/mac-metrics-view/downloads/MacMetricsView-2.8.0.zip"
+                sparkle:edSignature="BPs0t9g+5b/+h+rTEzeg+KAQe2jBwjd6fesaEiQHx0sVFcCiuMjW3gBHAkUdJZlyIpp0QS0tXT1nD3/uM1cZCA=="
+                length="1925314"
+                type="application/octet-stream" />
+        </item>
+        <item>
             <title>2.7.1</title>
             <pubDate>Thu, 27 Aug 2026 01:03:13 -0300</pubDate>
             <sparkle:version>50</sparkle:version>

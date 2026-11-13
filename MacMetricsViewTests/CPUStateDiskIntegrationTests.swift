@@ -61,6 +61,35 @@ final class CPUStateDiskIntegrationTests: XCTestCase {
         XCTAssertEqual(state.metrics.diskSessionTotals.outbound, 500)
     }
 
+    func testTrafficTotalsCountOnlyMeasuredIntervalsAcrossPause() throws {
+        let state = CPUState(userDefaults: makeUserDefaults())
+        let start = Date(timeIntervalSince1970: 1_000)
+        for (offset, interval) in [(0.0, 3.0), (120.0, 1.0)] {
+            let first = start.addingTimeInterval(offset)
+            let last = first.addingTimeInterval(interval)
+            state.metrics.update(with: try XCTUnwrap(NetworkSampleCalculator.sample(
+                previous: NetworkCounterSnapshot(timestamp: first, receivedBytes: 1_000, sentBytes: 500),
+                current: NetworkCounterSnapshot(timestamp: last, receivedBytes: 1_300, sentBytes: 650)
+            )))
+            state.metrics.update(with: try XCTUnwrap(DiskSampleCalculator.sample(
+                previous: DiskCounterSnapshot(timestamp: first, bytesRead: 2_000, bytesWritten: 500),
+                current: DiskCounterSnapshot(timestamp: last, bytesRead: 2_600, bytesWritten: 800)
+            )))
+        }
+
+        XCTAssertEqual(state.metrics.networkSessionTotals.inbound, 600)
+        XCTAssertEqual(state.metrics.networkSessionTotals.outbound, 300)
+        XCTAssertEqual(state.metrics.diskSessionTotals.inbound, 1_200)
+        XCTAssertEqual(state.metrics.diskSessionTotals.outbound, 600)
+
+        let networkWindow = NetworkWindowStats.recentTotalBytes(in: state.metrics.networkHistory, interval: 3)
+        XCTAssertEqual(networkWindow.download, 600)
+        XCTAssertEqual(networkWindow.upload, 300)
+        let diskWindow = DiskWindowStats.recentTotalBytes(in: state.metrics.diskHistory, interval: 3)
+        XCTAssertEqual(diskWindow.read, 1_200)
+        XCTAssertEqual(diskWindow.written, 600)
+    }
+
     func testSetDiskMenuBarMetricUpdatesDisplayAndFiresCallbackAndPersists() {
         let userDefaults = makeUserDefaults()
         let state = CPUState(userDefaults: userDefaults)

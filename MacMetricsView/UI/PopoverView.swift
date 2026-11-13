@@ -4,17 +4,12 @@ import SwiftUI
 /// Thin tabbed shell for the redesigned popover (ADR-001): pinned banners, a
 /// Metrics/Settings/Actions segmented control, and the selected tab's body. All
 /// metric/config/action content lives in the per-tab views under `UI/Popover/`.
-/// Transient tab/expansion state is ephemeral `@State` (ADR-002) — the popover always
-/// reopens on Metrics with cards collapsed because `StatusItemController` rebuilds
-/// this view on every open.
+/// The coordinator tracks the selected tab for sampling. Expansion stays ephemeral
+/// `@State` (ADR-002). The popover reopens on Metrics with cards collapsed.
 struct PopoverView: View {
     @ObservedObject var state: CPUState
-    /// Observed separately from `state` (task-003): the theme-suggestion banner has no
-    /// AppKit-imperative refresh path (unlike the menu bar), so it must react to
-    /// `AmbientThemeModel`'s own publisher directly to stay live within an open popover.
-    @ObservedObject var ambient: AmbientThemeModel
     /// Observed separately from `state` (task-004): the recovery banner and the 1Hz
-    /// lock countdown have no AppKit-imperative refresh path either, so this view reacts
+    /// lock countdown have no AppKit-imperative refresh path, so this view reacts
     /// to `CleaningLockModel`'s own publisher directly (which itself bridges its nested
     /// `AccessibilityRecoveryModel` — see the comment on `CleaningLockModel`).
     @ObservedObject var lock: CleaningLockModel
@@ -22,7 +17,6 @@ struct PopoverView: View {
     let dismissPopover: () -> Void
     let quit: () -> Void
 
-    @State private var selectedTab: PopoverTab = .metrics
     @State private var expandedCards: Set<MetricCardKind> = PopoverView.captureSeededExpandedCards()
 
     private let popoverWidth: CGFloat = 380
@@ -75,18 +69,6 @@ struct PopoverView: View {
                     RecoveryBanner(wasResetByUpdate: lock.recovery.resetByUpdate)
                 }
 
-                let ambientBanner = AmbientSuggestionPresentation.bannerState(
-                    suggestion: ambient.suggestion,
-                    lastApply: ambient.lastApplyResult
-                )
-                if !Self.isCaptureMode, ambientBanner != .hidden {
-                    AmbientSuggestionBanner(
-                        state: ambientBanner,
-                        apply: { ambient.apply() },
-                        dismiss: { ambient.dismiss() }
-                    )
-                }
-
                 tabBar
 
                 tabBody
@@ -98,13 +80,18 @@ struct PopoverView: View {
             .frame(width: popoverWidth, alignment: .topLeading)
             .onAppear {
                 state.refreshAccessibilityAuthorization()
-                state.metrics.beginProcessSampling()
+            }
+            .onChange(of: state.isMetricsTabVisible && expandedCards.contains(.cpu), initial: true) { _, visible in
+                if visible {
+                    state.metrics.beginProcessSampling()
+                } else {
+                    state.metrics.endProcessSampling()
+                }
             }
             .onDisappear {
                 // If the popover is dismissed mid-recovery, stop the probe poll loop.
                 // No-op unless we were awaiting a grant.
                 lock.recovery.cancelRecovery()
-                state.metrics.endProcessSampling()
             }
         } else {
             Color.clear
@@ -132,7 +119,7 @@ struct PopoverView: View {
     }
 
     private var tabBar: some View {
-        Picker("", selection: $selectedTab) {
+        Picker("", selection: $state.selectedPopoverTab) {
             ForEach(PopoverTabPresentation.tabs, id: \.self) { tab in
                 Text(PopoverTabPresentation.title(tab)).tag(tab)
             }
@@ -144,11 +131,11 @@ struct PopoverView: View {
 
     @ViewBuilder
     private var tabBody: some View {
-        switch selectedTab {
+        switch state.selectedPopoverTab {
         case .metrics:
             MetricsTab(metrics: state.metrics, expandedCards: $expandedCards)
         case .settings:
-            SettingsTab(state: state, metrics: state.metrics, launchAtLoginSettings: launchAtLoginSettings)
+            SettingsTab(metrics: state.metrics, launchAtLoginSettings: launchAtLoginSettings)
         case .actions:
             ActionsTab(
                 state: state,

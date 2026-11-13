@@ -6,8 +6,6 @@ import Foundation
 /// thermal state. Returns `celsius = nil` (never a failure) when no usable sensor
 /// exists, so the UI falls back to the state label without regression.
 struct IOKitTemperatureReader: TemperatureReading {
-    private static let sensorNameNeedles = ["tdie", "MTR Temp Sensor"]
-
     private let source: TemperatureSensorSource
     private let thermalState: () -> TemperatureState
 
@@ -23,9 +21,7 @@ struct IOKitTemperatureReader: TemperatureReading {
         let state = thermalState()
 
         let plausible = source.readSensors()
-            .filter { reading in
-                Self.sensorNameNeedles.contains { reading.name.contains($0) }
-            }
+            .filter { TemperatureSensorReading.isCPUSensor(named: $0.name) }
             .map(\.celsius)
             // Drop NaN, non-positive offsets/calibration artifacts, and anything outside
             // the plausible range, so a bogus reading never reaches TemperatureSample.

@@ -8,8 +8,8 @@ import Combine
 /// Persisted (feature `keep-awake-persistence`, KAWK-05/06/07) via `KeepAwakeSettings`:
 /// the last user selection survives app relaunch and Mac restart, and `init` attempts to
 /// re-create the real assertion immediately when the stored preference is on. Never
-/// bridged upward to `CPUState`'s `objectWillChange` (same contract as `lock`/`ambient`/
-/// `ambient`) — `ActionsTab` observes this model directly at the point of use.
+/// bridged upward to `CPUState`'s `objectWillChange` (same contract as `lock` and
+/// `metrics`). `ActionsTab` observes this model directly at the point of use.
 @MainActor
 final class KeepAwakeModel: ObservableObject {
     /// Whether a sleep assertion is currently held. Read-only to the UI; mutated only

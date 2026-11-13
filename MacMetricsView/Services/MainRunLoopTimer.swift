@@ -59,6 +59,23 @@ final class CoalescingSamplingGate {
         start(work)
     }
 
+    /// A sampler may restart before an old read finishes. Only the active generation
+    /// may publish, even if the sampler is running again by the time delivery arrives.
+    func request<T>(
+        on executor: SamplingExecutor,
+        read: @escaping () -> T,
+        deliver: @escaping @MainActor (T) -> Void
+    ) {
+        request { [weak self] finish in
+            guard let generation = self?.generation else { return }
+            executor.run(read) { [weak self] value in
+                defer { finish() }
+                guard self?.generation == generation else { return }
+                deliver(value)
+            }
+        }
+    }
+
     func cancel() {
         generation &+= 1
         isReadInFlight = false

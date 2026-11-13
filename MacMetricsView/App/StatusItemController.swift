@@ -387,7 +387,6 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
         let hostingController = NSHostingController(
             rootView: PopoverView(
                 state: state,
-                ambient: state.ambient,
                 lock: state.lock,
                 launchAtLoginSettings: launchAtLoginSettings,
                 dismissPopover: { [weak self] in
@@ -433,6 +432,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
     // MARK: - NSPopoverDelegate
 
     func popoverWillShow(_ notification: Notification) {
+        state.selectedPopoverTab = .metrics
         state.isPopoverOpen = true
     }
 
@@ -448,6 +448,7 @@ final class StatusItemController: NSObject, NSPopoverDelegate {
 
     func popoverDidClose(_ notification: Notification) {
         state.isPopoverOpen = false
+        state.metrics.endProcessSampling()
         // Release the SwiftUI graph so nothing observes CPUState's 1 Hz churn while closed
         // (ADR-001). Rebuilt fresh on the next open by makePopoverHostingController().
         popover.contentViewController = nil

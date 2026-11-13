@@ -393,3 +393,31 @@ Implications:
 - Settings no longer expose a RAM value picker.
 - The popover can still show RAM breakdown rows for context.
 - RAM severity still prefers the kernel pressure level, falling back to the existing pressure proxy.
+
+## TD-016: Remove Ambient-Light Theme Control
+
+Status: Accepted
+Date: 2026-11-12
+
+Decision: Remove ambient-light theme suggestions and system-appearance control at the user's request. Remove the Settings controls, suggestion/Automation banners, ambient sensor stack, and Apple Events usage descriptions. The app continues to follow the user's macOS appearance through native dynamic colors. Plan: [remove ambient theme](ai/plans/plan-remove-ambient-theme.md).
+
+Rationale: The feature adds configuration, sensor polling, and Automation permission handling outside the requested product scope. Removing the complete subsystem eliminates those costs instead of retaining an inactive UI toggle.
+
+Implications:
+
+- This supersedes the ambient pillar in TD-012 and its retention in TD-014; those decisions remain historical records.
+- The app no longer samples ambient light or requests System Events control. Temperature sampling, cleaning Accessibility permission, and keep-awake behavior are independent and retained.
+- Existing `AmbientThemeSettings.*` values remain untouched and inert, preserving rollback compatibility without a destructive migration.
+- No system appearance change or TCC permission reset is performed during removal.
+- Native light/dark rendering and historical release notes are retained. No replacement theme selector is introduced.
+
+## TD-017: Sample at the Cadence Required by the Visible Content
+
+Status: Accepted
+Date: 2026-11-12
+
+The Metrics tab uses the existing fast cadence. Settings and Actions use the menu bar cadence and pause collectors for metrics absent from the menu bar. The expanded CPU detail controls the process scan. Each sampler run accepts its own asynchronous results, and traffic totals use the actual measured intervals across cadence changes and pauses.
+
+The HID reader classifies cached services before reading events. The selected sensors and the thermal-state fallback follow TD-013. Settings subscribes to preference publishers. A new sample schedules menu bar rendering only for a visible metric.
+
+See [sampling requirements](ai/specs/spec-sampling-by-demand.md) and [validation](ai/validation/validation-sampling-by-demand.md).

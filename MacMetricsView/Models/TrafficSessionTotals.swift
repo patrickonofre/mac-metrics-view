@@ -3,7 +3,7 @@ import Foundation
 /// Cumulative two-direction byte totals accumulated since app launch, for the network
 /// (download/upload) and disk (read/write) detail cards. Unlike the rolling-window
 /// `…WindowStats`, this is a since-launch running total: each tick adds `rate × elapsed`
-/// where `elapsed` is the real gap between consecutive sample timestamps — and since a
+/// where `elapsed` is the actual interval between the counter snapshots — and since a
 /// sample's rate is `byteDelta / elapsed`, that product recovers the exact byte delta,
 /// so the total is accurate rather than an interval approximation. In-memory only (no
 /// persistence): the count resets to zero each launch. Pure and testable (ADR-005).

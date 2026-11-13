@@ -5,56 +5,61 @@ import SwiftUI
 /// launch-at-login. Controls are relocated verbatim from `PopoverView.swift`
 /// (task_05); no cleaning/update actions live here (those are in `ActionsTab`).
 struct SettingsTab: View {
-    @ObservedObject var state: CPUState
-    /// Observed separately from `state` (task-005): the controls below are the data
-    /// `metrics` owns, so this tab reads/writes it at the point of use.
-    @ObservedObject var metrics: SystemMetricsModel
+    /// The model owns and persists preferences. Keep view snapshots of just those
+    /// publishers so live samples do not invalidate Settings.
+    let metrics: SystemMetricsModel
     @ObservedObject var launchAtLoginSettings: LaunchAtLoginSettings
+    @State private var visibility: MetricVisibilitySettings
+    @State private var display: MetricDisplaySettings
+
+    @MainActor
+    init(metrics: SystemMetricsModel, launchAtLoginSettings: LaunchAtLoginSettings) {
+        self.metrics = metrics
+        self.launchAtLoginSettings = launchAtLoginSettings
+        _visibility = State(initialValue: metrics.visibility)
+        _display = State(initialValue: metrics.display)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             MetricVisibilityControls(
                 cpuVisible: Binding(
-                    get: { metrics.visibility.showCPU },
+                    get: { visibility.showCPU },
                     set: { metrics.setCPUVisible($0) }
                 ),
                 ramVisible: Binding(
-                    get: { metrics.visibility.showRAM },
+                    get: { visibility.showRAM },
                     set: { metrics.setRAMVisible($0) }
                 ),
                 networkVisible: Binding(
-                    get: { metrics.visibility.showNetwork },
+                    get: { visibility.showNetwork },
                     set: { metrics.setNetworkVisible($0) }
                 ),
                 temperatureVisible: Binding(
-                    get: { metrics.visibility.showTemperature },
+                    get: { visibility.showTemperature },
                     set: { metrics.setTemperatureVisible($0) }
                 ),
                 diskVisible: Binding(
-                    get: { metrics.visibility.showDisk },
+                    get: { visibility.showDisk },
                     set: { metrics.setDiskVisible($0) }
                 ),
                 batteryVisible: Binding(
-                    get: { metrics.visibility.showBattery },
+                    get: { visibility.showBattery },
                     set: { metrics.setBatteryVisible($0) }
                 ),
                 identifierStyle: Binding(
-                    get: { metrics.display.identifierStyle },
+                    get: { display.identifierStyle },
                     set: { metrics.setMetricIdentifierStyle($0) }
                 ),
                 diskMenuBarMetric: Binding(
-                    get: { metrics.display.diskMenuBarMetric },
+                    get: { display.diskMenuBarMetric },
                     set: { metrics.setDiskMenuBarMetric($0) }
                 ),
                 updateRate: Binding(
-                    get: { metrics.updateRate },
+                    get: { display.updateRate },
                     set: { metrics.setUpdateRate($0) }
                 )
             )
-
-            Divider()
-
-            AmbientThemeControls(state: state)
 
             Divider()
 
@@ -62,146 +67,12 @@ struct SettingsTab: View {
         }
         .font(.caption)
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-// MARK: - Ambient theme suggestion controls
-
-/// Settings for the ambient-light theme suggestion: opt-in toggle, the live light
-/// readout (FR-10, doubles as a calibration aid), and the dark/light thresholds +
-/// dwell. All bind through `CPUState.setAmbientThemeSettings`, which persists, rebuilds
-/// the engine, and re-evaluates. Threshold setters clamp so `highLux > lowLux` always
-/// holds (otherwise the struct would reset the whole band to defaults).
-struct AmbientThemeControls: View {
-    @ObservedObject var state: CPUState
-
-    @State private var showHelp = false
-
-    private var settings: AmbientThemeSettings { state.ambientThemeSettings }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 9) {
-            HStack(spacing: 6) {
-                HStack(spacing: 3) {
-                    Text(Strings.ambientThemeSectionTitle())
-                        .lineLimit(1)
-                        .foregroundStyle(.primary)
-                    Button { showHelp.toggle() } label: {
-                        Image(systemName: showHelp ? "info.circle.fill" : "info.circle")
-                            .foregroundStyle(showHelp ? Color.accentColor : .secondary)
-                            .imageScale(.small)
-                    }
-                    .buttonStyle(.plain)
-                    .help(Strings.ambientThemeSectionTitle())
-                }
-
-                Spacer()
-
-                Toggle(Strings.ambientThemeEnable(), isOn: Binding(
-                    get: { settings.isEnabled },
-                    set: { newValue in
-                        var copy = settings
-                        copy.isEnabled = newValue
-                        state.setAmbientThemeSettings(copy)
-                    }
-                ))
-                .labelsHidden()
-                .toggleStyle(.switch)
-            }
-
-            if showHelp {
-                Text(Strings.ambientThemeHelp())
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.vertical, 2)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-            }
-
-            if settings.isEnabled {
-                // Live light readout (FR-10) — also the calibration reference for the
-                // thresholds below. Falls back to "no sensor" on hardware without an ALS.
-                HStack(spacing: 6) {
-                    Text(Strings.ambientCurrentLight())
-                        .foregroundStyle(.primary)
-                        .frame(width: 120, alignment: .leading)
-                    if let lux = state.latestAmbientSample?.lux {
-                        Text("\(Int(lux))")
-                            .foregroundStyle(.secondary)
-                            .monospacedDigit()
-                    } else {
-                        Text(Strings.ambientNoSensor())
-                            .font(.caption2)
-                            .foregroundStyle(.secondary)
-                    }
-                }
-
-                stepperRow(
-                    label: Strings.ambientThresholdDark(),
-                    value: Int(settings.lowLux),
-                    binding: Binding(
-                        get: { settings.lowLux },
-                        // Keep a non-empty dead band: dark threshold stays below the light one.
-                        set: { newValue in
-                            var copy = settings
-                            copy.lowLux = min(newValue, copy.highLux - 1)
-                            state.setAmbientThemeSettings(copy)
-                        }
-                    )
-                )
-
-                stepperRow(
-                    label: Strings.ambientThresholdLight(),
-                    value: Int(settings.highLux),
-                    binding: Binding(
-                        get: { settings.highLux },
-                        set: { newValue in
-                            var copy = settings
-                            copy.highLux = max(newValue, copy.lowLux + 1)
-                            state.setAmbientThemeSettings(copy)
-                        }
-                    )
-                )
-
-                stepperRow(
-                    label: Strings.ambientDwellLabel(),
-                    value: Int(settings.dwellSeconds),
-                    binding: Binding(
-                        get: { settings.dwellSeconds },
-                        set: { newValue in
-                            var copy = settings
-                            copy.dwellSeconds = max(0, newValue)
-                            state.setAmbientThemeSettings(copy)
-                        }
-                    ),
-                    range: 0...120
-                )
-            }
+        .onReceive(metrics.$visibility) { newValue in
+            if visibility != newValue { visibility = newValue }
         }
-        .font(.caption)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(.easeInOut(duration: 0.18), value: showHelp)
-    }
-
-    private func stepperRow(
-        label: String,
-        value: Int,
-        binding: Binding<Double>,
-        range: ClosedRange<Double> = 0...2000
-    ) -> some View {
-        HStack(spacing: 6) {
-            Text(label)
-                .lineLimit(1)
-                .foregroundStyle(.primary)
-                .frame(width: 150, alignment: .leading)
-            Stepper(value: binding, in: range, step: 5) {
-                Text("\(value)")
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
-            }
+        .onReceive(metrics.$display) { newValue in
+            if display != newValue { display = newValue }
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 

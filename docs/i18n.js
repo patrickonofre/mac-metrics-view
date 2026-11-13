@@ -13,15 +13,15 @@
       "nav.privacy": "Privacidade",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Versão 2.7.1 para macOS",
+      "hero.eyebrow": "Versão 2.8.0 para macOS",
       "hero.title": "Seu Mac inteiro, na barra de menus.",
-      "hero.lede": "CPU, GPU, memória, rede, temperatura, disco, bateria e tokens de IA — tudo num relance, sem abrir o Monitor de Atividade.",
-      "hero.cta": "Baixar 2.7.1",
+      "hero.lede": "CPU, GPU, memória, rede, temperatura, disco e bateria — tudo num relance, sem abrir o Monitor de Atividade.",
+      "hero.cta": "Baixar 2.8.0",
       "hero.secondary": "Ver o que há de novo",
       "hero.note": "Sem conta. Sem telemetria. Leitura local dos indicadores do sistema.",
       "hero.altMenu": "Mac Metrics View na barra de menus do macOS mostrando CPU, RAM, rede, temperatura, disco e bateria",
 
-      "sticky.label": "Mac Metrics View 2.7.1",
+      "sticky.label": "Mac Metrics View 2.8.0",
       "sticky.cta": "Baixar",
 
       "metric.cpu": "uso e processos",
@@ -31,11 +31,11 @@
       "metric.temp": "estado térmico",
       "metric.disk": "leitura e escrita",
       "metric.bat": "carga e energia",
-      "metric.ai": "tokens e custo",
+
 
       "highlights.eyebrow": "Destaques da série 2",
       "highlights.title": "Cada versão, um salto.",
-      "highlights.lede": "GPU na barra, RAM usado/total real, popover em abas e tokens de IA — os destaques do caminho até a 2.7.1.",
+      "highlights.lede": "Popover com visual nativo e coleta de métricas conforme o que está visível.",
       "highlights.gpuTitle": "GPU na barra",
       "highlights.gpuBody": "Uso do processador gráfico em tempo real, lido direto do sistema — novidade da 2.4.",
       "highlights.usedtotalTitle": "Memória usado/total",
@@ -43,9 +43,9 @@
       "highlights.monoTitle": "Barra monocromática",
       "highlights.monoBody": "Valores no estilo nativo do macOS: a cor padrão do sistema, com vermelho reservado só para o estado crítico.",
       "highlights.popoverTitle": "Popover em abas",
-      "highlights.popoverBody": "Um popover redesenhado, em cartões e abas — CPU, memória, rede/disco e tokens, cada um com seus detalhes.",
-      "highlights.tokensTitle": "Tokens de IA",
-      "highlights.tokensBody": "Acompanhe o consumo e o custo estimado de Claude Code e Codex — ritmo por hora e projeção do dia.",
+      "highlights.popoverBody": "Abas de Métricas, Ajustes e Ações com detalhes expansíveis para os indicadores do sistema.",
+
+
       "highlights.ramTitle": "Memória detalhada",
       "highlights.ramBody": "Uma divisão no estilo Monitor de Atividade: memória de apps, swap e pressão do kernel, ao vivo.",
       "highlights.netdiskTitle": "Rede e disco a fundo",
@@ -61,22 +61,22 @@
 
       "demo.eyebrow": "Experimente",
       "demo.title": "Explore o popover, aba por aba.",
-      "demo.lede": "Clique nas abas para ver o detalhe de cada métrica — é o popover real da série 2.",
+      "demo.lede": "Escolha uma métrica para ver seus detalhes no popover.",
       "demo.tabCPU": "CPU",
       "demo.tabRAM": "Memória",
       "demo.tabNet": "Rede/Disco",
-      "demo.tabAI": "Tokens",
+      "demo.tabBattery": "Bateria",
       "demo.altCPU": "Aba CPU do popover mostrando o uso atual e os principais processos",
       "demo.altRAM": "Aba de memória mostrando a divisão de apps, swap e pressão do kernel",
       "demo.altNet": "Aba de rede e disco com leitura/escrita, download/upload e totais da sessão",
-      "demo.altAI": "Aba de tokens de IA com ritmo de consumo, custo em dólar e projeção",
+      "demo.altBattery": "Popover com detalhes de carga, autonomia e ciclos da bateria",
       "demo.descCPU": "Os processos que mais pesam, em tempo real.",
       "demo.descRAM": "Apps, swap e pressão do kernel, no estilo Monitor de Atividade.",
       "demo.descNet": "Leitura/escrita e download/upload, com totais da sessão.",
-      "demo.descAI": "Ritmo, custo estimado e projeção do dia.",
+      "demo.descBattery": "Carga, autonomia e ciclos da bateria.",
 
       "features.eyebrow": "Tudo que ele mostra",
-      "features.title": "Oito métricas, uma barra de menus.",
+      "features.title": "Sete métricas, uma barra de menus.",
       "features.cpuTitle": "CPU",
       "features.cpuBody": "Uso atual e os processos que mais consomem, no popover.",
       "features.gpuTitle": "GPU",
@@ -91,20 +91,20 @@
       "features.diskBody": "Luz de atividade do SSD com leitura e escrita.",
       "features.batteryTitle": "Bateria",
       "features.batteryBody": "Carga, fonte de energia e condição em notebooks.",
-      "features.tokensTitle": "Tokens de IA",
-      "features.tokensBody": "Consumo e custo de Claude Code e Codex.",
+
+
 
       "privacy.eyebrow": "Privacidade primeiro",
       "privacy.title": "Os dados não saem do seu Mac.",
-      "privacy.body": "O Mac Metrics View lê CPU, memória, rede, disco e os logs locais de IA no seu Mac. Sem login, sem telemetria e sem serviços externos para funcionar.",
+      "privacy.body": "O Mac Metrics View lê métricas do sistema no seu Mac. Sem login, sem telemetria e sem serviços externos para funcionar.",
       "privacy.li1": "Sem conta de usuário",
       "privacy.li2": "Sem analytics dentro do app",
       "privacy.li3": "Leitura 100% local — nada sai pela rede",
 
       "download.eyebrow": "Download",
-      "download.title": "Baixe a versão 2.7.1.",
+      "download.title": "Baixe a versão 2.8.0.",
       "download.body": "Para macOS 14 ou superior em Macs com Apple Silicon. Na primeira abertura o macOS pode pedir confirmação por ser um app ainda não notarizado — depois disso, ele se mantém atualizado sozinho.",
-      "download.cta": "Baixar MacMetricsView-2.7.1.zip",
+      "download.cta": "Baixar MacMetricsView-2.8.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · Apple Silicon · grátis e de código aberto",
 
       "firstrun.eyebrow": "Primeira abertura",
@@ -120,8 +120,10 @@
       "firstrun.update": "Isso só vale para esta primeira instalação manual. As próximas versões chegam pelo próprio app, com atualizações assinadas que não disparam o Gatekeeper de novo.",
 
       "timeline.eyebrow": "Linha do tempo",
-      "timeline.title": "De 1.0 a 2.7.1.",
-      "timeline.lede": "O caminho até a versão 2.7.1, em resumo.",
+      "timeline.title": "De 1.0 a 2.8.0.",
+      "timeline.lede": "O caminho até a versão 2.8.0, em resumo.",
+      "timeline.v280Title": "2.8.0 — Coleta sob demanda",
+      "timeline.v280Body": "Popover com visual nativo, leitura de temperatura mais rápida e lista de processos coletada ao expandir CPU. O app segue a aparência do macOS.",
       "timeline.v271Title": "2.7.1 — RAM usado real",
       "timeline.v271Body": "A barra passa a mostrar apenas usado/total, com cálculo alinhado ao Monitor de Atividade e sem modos alternativos de visualização.",
       "timeline.v27Title": "2.7 — Acordado até de tampa fechada",
@@ -155,7 +157,7 @@
       "timeline.v10Title": "1.0 — Primeira versão estável",
       "timeline.v10Body": "Modo limpeza, abrir ao iniciar e interface em PT/EN.",
 
-      "footer.tagline": "Versão 2.7.1 para macOS",
+      "footer.tagline": "Versão 2.8.0 para macOS",
       "footer.rights": "Código aberto · Licença MIT",
       "footer.github": "GitHub"
     },
@@ -166,15 +168,15 @@
       "nav.privacy": "Privacy",
       "nav.download": "Download",
 
-      "hero.eyebrow": "Version 2.7.1 for macOS",
+      "hero.eyebrow": "Version 2.8.0 for macOS",
       "hero.title": "Your whole Mac, in the menu bar.",
-      "hero.lede": "CPU, GPU, memory, network, temperature, disk, battery, and AI tokens — all at a glance, without opening Activity Monitor.",
-      "hero.cta": "Download 2.7.1",
+      "hero.lede": "CPU, GPU, memory, network, temperature, disk, and battery — all at a glance, without opening Activity Monitor.",
+      "hero.cta": "Download 2.8.0",
       "hero.secondary": "See what's new",
       "hero.note": "No account. No telemetry. Local-only system readings.",
       "hero.altMenu": "Mac Metrics View in the macOS menu bar showing CPU, RAM, network, temperature, disk, and battery",
 
-      "sticky.label": "Mac Metrics View 2.7.1",
+      "sticky.label": "Mac Metrics View 2.8.0",
       "sticky.cta": "Download",
 
       "metric.cpu": "usage and processes",
@@ -184,11 +186,11 @@
       "metric.temp": "thermal state",
       "metric.disk": "read and write",
       "metric.bat": "charge and power",
-      "metric.ai": "tokens and cost",
+
 
       "highlights.eyebrow": "Series 2 highlights",
       "highlights.title": "Every release, a leap.",
-      "highlights.lede": "GPU in the bar, real used/total RAM, a tabbed popover, and AI tokens — the highlights on the road to 2.7.1.",
+      "highlights.lede": "A native popover that samples metrics based on what you are viewing.",
       "highlights.gpuTitle": "GPU in the bar",
       "highlights.gpuBody": "Real-time graphics processor usage, read straight from the system — new in 2.4.",
       "highlights.usedtotalTitle": "Used/total memory",
@@ -196,9 +198,9 @@
       "highlights.monoTitle": "Monochrome menu bar",
       "highlights.monoBody": "Native macOS values: the standard system color, with red reserved for the critical state only.",
       "highlights.popoverTitle": "Tabbed popover",
-      "highlights.popoverBody": "A redesigned popover in cards and tabs — CPU, memory, network/disk, and tokens, each with its own detail.",
-      "highlights.tokensTitle": "AI tokens",
-      "highlights.tokensBody": "Track usage and estimated cost for Claude Code and Codex — hourly pace and a daily projection.",
+      "highlights.popoverBody": "Metrics, Settings, and Actions tabs with expandable system metric details.",
+
+
       "highlights.ramTitle": "Detailed memory",
       "highlights.ramBody": "An Activity-Monitor-style breakdown: app memory, swap, and kernel pressure, live.",
       "highlights.netdiskTitle": "Network and disk in depth",
@@ -214,22 +216,22 @@
 
       "demo.eyebrow": "Try it",
       "demo.title": "Explore the popover, tab by tab.",
-      "demo.lede": "Click the tabs to see each metric's detail — it's the real series-2 popover.",
+      "demo.lede": "Choose a metric to see its details in the popover.",
       "demo.tabCPU": "CPU",
       "demo.tabRAM": "Memory",
       "demo.tabNet": "Network/Disk",
-      "demo.tabAI": "Tokens",
+      "demo.tabBattery": "Battery",
       "demo.altCPU": "Popover CPU tab showing current usage and the top processes",
       "demo.altRAM": "Memory tab showing the app, swap, and kernel-pressure breakdown",
       "demo.altNet": "Network and disk tab with read/write, download/upload, and session totals",
-      "demo.altAI": "AI tokens tab with usage pace, dollar cost, and projection",
+      "demo.altBattery": "Popover with battery charge, time remaining, and cycle count",
       "demo.descCPU": "The heaviest processes, in real time.",
       "demo.descRAM": "Apps, swap, and kernel pressure, Activity-Monitor style.",
       "demo.descNet": "Read/write and download/upload, with session totals.",
-      "demo.descAI": "Pace, estimated cost, and a daily projection.",
+      "demo.descBattery": "Battery charge, time remaining, and cycle count.",
 
       "features.eyebrow": "Everything it shows",
-      "features.title": "Eight metrics, one menu bar.",
+      "features.title": "Seven metrics, one menu bar.",
       "features.cpuTitle": "CPU",
       "features.cpuBody": "Current usage and the top-consuming processes, in the popover.",
       "features.gpuTitle": "GPU",
@@ -244,20 +246,20 @@
       "features.diskBody": "An SSD activity light with read and write.",
       "features.batteryTitle": "Battery",
       "features.batteryBody": "Charge, power source, and condition on laptops.",
-      "features.tokensTitle": "AI tokens",
-      "features.tokensBody": "Usage and cost for Claude Code and Codex.",
+
+
 
       "privacy.eyebrow": "Privacy first",
       "privacy.title": "Your data never leaves your Mac.",
-      "privacy.body": "Mac Metrics View reads CPU, memory, network, disk, and local AI logs on your Mac. No login, no telemetry, and no external services to work.",
+      "privacy.body": "Mac Metrics View reads system metrics on your Mac. No login, no telemetry, and no external services to work.",
       "privacy.li1": "No user account",
       "privacy.li2": "No in-app analytics",
       "privacy.li3": "100% local reads — nothing leaves over the network",
 
       "download.eyebrow": "Download",
-      "download.title": "Download version 2.7.1.",
+      "download.title": "Download version 2.8.0.",
       "download.body": "For macOS 14 or later on Apple Silicon Macs. On first launch macOS may ask for confirmation because the app isn't notarized yet — after that, it keeps itself up to date.",
-      "download.cta": "Download MacMetricsView-2.7.1.zip",
+      "download.cta": "Download MacMetricsView-2.8.0.zip",
       "download.meta": "≈ 2 MB · macOS 14+ · Apple Silicon · free and open source",
 
       "firstrun.eyebrow": "First launch",
@@ -273,8 +275,10 @@
       "firstrun.update": "This only applies to this first manual install. Later versions arrive through the app itself, as signed updates that don't re-trigger Gatekeeper.",
 
       "timeline.eyebrow": "Timeline",
-      "timeline.title": "From 1.0 to 2.7.1.",
-      "timeline.lede": "The road to version 2.7.1, in brief.",
+      "timeline.title": "From 1.0 to 2.8.0.",
+      "timeline.lede": "The road to version 2.8.0, in brief.",
+      "timeline.v280Title": "2.8.0 — On-demand sampling",
+      "timeline.v280Body": "Native popover styling, faster temperature reads, and process sampling when CPU details are expanded. The app follows macOS appearance.",
       "timeline.v271Title": "2.7.1 — Real used RAM",
       "timeline.v271Body": "The menu bar now shows used/total only, with an Activity-Monitor-aligned calculation and no alternate display modes.",
       "timeline.v27Title": "2.7 — Awake even with the lid closed",
@@ -308,7 +312,7 @@
       "timeline.v10Title": "1.0 — First stable release",
       "timeline.v10Body": "Cleaning mode, open at login, and a PT/EN interface.",
 
-      "footer.tagline": "Version 2.7.1 for macOS",
+      "footer.tagline": "Version 2.8.0 for macOS",
       "footer.rights": "Open source · MIT License",
       "footer.github": "GitHub"
     }

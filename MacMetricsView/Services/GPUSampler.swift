@@ -92,20 +92,9 @@ final class GPUSampler {
     private func collect() {
         // Read off-main (OPT-03); deliver on the main actor. Re-check `isRunning` in the
         // delivery so a stop() between read and delivery cannot publish a late sample.
-        workGate.request { [weak self] finish in
-            guard let self else {
-                finish()
-                return
-            }
-            self.executor.run({ [reader] in reader.readSample() }) { [weak self] sample in
-                guard let self else {
-                    finish()
-                    return
-                }
-                defer { finish() }
-                guard self.isRunning, let sample else { return }
-                self.delegate?.gpuSampler(self, didProduce: sample)
-            }
+        workGate.request(on: executor, read: { [reader] in reader.readSample() }) { [weak self] sample in
+            guard let self, self.isRunning, let sample else { return }
+            self.delegate?.gpuSampler(self, didProduce: sample)
         }
     }
 }
